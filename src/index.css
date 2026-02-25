@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  /* Typografi – Figma Foundations */
+  --f-sans:    'Satoshi Variable', ui-sans-serif, sans-serif;
+  --f-mono:    'DM Mono', monospace;
+  --f-display: 'Satoshi Variable', sans-serif;
+
+  /* Ytor – Figma Semantic */
+  --c-bg:            #F2F2F2; /* grey/50  – background/primary  */
+  --c-sidebar:       #F9F9F9; /* grey/25  */
+  --c-white:         #FFFFFF;
+  --c-border:        #C4C4C4; /* grey/200 – border/default      */
+  --c-border-strong: #969696; /* grey/400 – border/strong       */
+
+  /* Text – Figma Semantic */
+  --c-ink:           #242424; /* grey/900 – text/primary   */
+  --c-ink-2:         #525252; /* grey/700 – text/secondary */
+  --c-ink-3:         #696969; /* grey/600 – text/subtle    */
+  --c-ink-4:         #ADADAD; /* grey/300 – text/disabled  */
+
+  /* Primärfärg – Figma interactive/primary */
+  --c-indigo:        #245BD1; /* blue/500 */
+  --c-indigo-mid:    #1E4DB3; /* blue/600 */
+  --c-indigo-light:  #E9EFFB; /* blue/50  */
+  --c-indigo-border: #C2D2F5; /* blue/100 */
+
+  /* Orange – varning/medel konfidens */
+  --c-orange:        #F98806; /* orange/500 */
+  --c-orange-light:  #FEF3E6; /* orange/50  */
+  --c-orange-border: #FDDEB9; /* orange/100 */
+  --c-orange-text:   #9F5704; /* orange/700 */
+
+  /* Rött – låg konfidens / fel */
+  --c-red:           #DC2626; /* red/500 */
+  --c-red-light:     #FBE9E9; /* red/50  */
+  --c-red-border:    #F5C2C2; /* red/100 */
+
+  /* Grönt – hög konfidens / ok */
+  --c-green:         #38852D; /* green/700 */
+  --c-green-light:   #EDF8EC; /* green/50  */
+  --c-green-border:  #CEEDCA; /* green/100 */
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: var(--f-sans);
+  background: var(--c-bg);
+  color: var(--c-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Utilities ─────────────────────────────────────────────────────────────── */
+.card-enter {
+  opacity: 0;
+  animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+.mono { font-family: var(--f-mono); }
+
+/* Table row hover */
+.data-row { transition: background 0.12s ease; }
+.data-row:hover { background: rgba(67, 56, 202, 0.03); }
+
+/* Sidebar active left-border */
+.nav-active {
+  background: var(--c-indigo-light);
+  color: var(--c-indigo);
+  font-weight: 500;
+  border-left: 2px solid var(--c-indigo);
+}
+.nav-idle {
+  color: var(--c-ink-2);
+  border-left: 2px solid transparent;
+}
+.nav-idle:hover { background: rgba(0,0,0,0.03); }
+
+/* Button transitions */
+button { transition: opacity 0.12s ease, background 0.12s ease, box-shadow 0.12s ease; }

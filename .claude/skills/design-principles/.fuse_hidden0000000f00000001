@@ -1,0 +1,171 @@
+---
+name: design-principles
+description: Reference design principles and guidelines for AI interfaces in high-risk domains. Use when creating, evaluating, or discussing any UI component or design decision in this project.
+---
+
+# Designprinciper – AI-beslutsstöd i högriskdomäner
+
+> **Aktiveras när:** En UI-komponent skapas, utvärderas eller diskuteras. Läs alltid igenom relevanta delar innan du föreslår eller implementerar något. Om du saknar tillräcklig grund för ett beslut – sök på nätet efter relevant forskning eller riktlinjer innan du föreslår.
+
+---
+
+## 1. Projektkontext
+
+**Domäner:** Finans (kredit), Vård (triage)
+**Kärnproblem:** Användare kan inte avgöra när AI har fel → övertillit (automation bias) eller undertillit (algorithm aversion).
+**Mål:** Göra AI förklarbart, kontrollerbart och säkert i beslut med höga konsekvenser.
+
+---
+
+## 2. Mina designkrav (primär källa)
+
+> Dessa krav är hämtade ur projektets egna riktlinjer (CLAUDE.md + Notion). De väger tyngst.
+
+### Transparens
+- Systemet ska tydligt **skilja på AI-genererat innehåll och källdata/fakta**
+- Systemet ska visa **källor/proveniens och datafärskhet** (datum/tid) för centrala datapunkter
+- Systemet ska kunna visa en kort **"Varför?"-förklaring** – vilka faktorer/antaganden som påverkat rekommendationen
+- Komponenter: AI Recommendation Card, Source/Provenance Panel, Why/Explanation Drawer, Assumption & Limitations Banner
+
+### Osäkerhet
+- Systemet ska visa **konfidens/osäkerhet med orsak** – aldrig bara en siffra
+- Systemet ska markera vilka **datapunkter som bidrar till osäkerhet** (inaktuell, saknad, konflikt)
+- Vid låg tillförlitlighet ska systemet visa **nästa steg** (kontrollera, begär komplettering, eskalera)
+- Komponenter: Confidence Indicator, Uncertainty Reasons List, Data Quality Inline Tag, Next Best Action Chip(s)
+
+### Human-in-the-loop (HITL)
+- Användaren ska kunna **acceptera, redigera eller avvisa** AI:s förslag
+- Systemet ska kräva **aktivt val** innan beslut blir slutgiltigt – ingen autopilot
+- Systemet ska stödja att användaren kan lägga till **domänkontext** snabbt
+- Komponenter: Decision Action Bar, Review Gate, Override Flow, Add Context / Observation Input
+
+### Spårbarhet
+- Systemet ska **logga** input/underlag, AI-output, användarens beslut, tidsstämpel och användaridentitet
+- Systemet ska kunna visa **AI-förslag vs slutbeslut** (diff/versionshistorik)
+- Systemet ska ha en **audit trail-vy** och möjlighet till export
+- Komponenter: Decision Log (Timeline), Version & Model Info Block, Diff View, Export Control
+
+### Felhantering & eskalering
+- Vid systemfel ska systemet erbjuda **manual mode i samma vy**
+- Systemet ska erbjuda tydlig **eskaleringsväg** (ansvarig handläggare/kliniker)
+- Åtgärder i felläge ska **loggas i audit trail**
+- Komponenter: AI Failure State Card, Manual Mode Panel, Escalation CTA, Incident/Unavailable Tag
+
+### Kontroll/constraints
+- Systemet ska tydligt visa **vad AI får göra** (sammanfatta, föreslå, ställa frågor)
+- Vid låg konfidens/hög risk ska systemet **begränsa AI:s output** och styra mot säkrare flöde
+- Komponenter: AI Mode Selector, Risk Gate Rules, Permission & Role Badge
+
+---
+
+## 3. Domänspecifika krav
+
+### Vård (Maya, triage)
+- **Extrem tidspress:** kärninfo ska förstås utan scroll, inom ~60 sek
+- **Osäkerhet inline:** direkt på mätvärden, inte i separat sektion
+- **Klinisk observation:** snabbval (chips/checkboxes), inte fritext
+- **Eskalering:** 1-klick, alltid synlig ("Kontakta ansvarig läkare")
+- Komponent: Triage Compact View
+
+### Finans (Sara, kredit)
+- **Djupare granskning:** drill-down till proveniens per datapunkt + uppdateringsdatum
+- **Inaktuell/saknad data:** föreslå åtgärd + möjlighet att stoppa/nedtona beslut
+- **Override:** obligatorisk kategori + valfri kort fritext (låg friktion, 2 klick)
+- **Audit trail:** läsbar av tredje part (compliance) i skrivskyddat läge + exporterbar
+- Komponent: Case Review View
+
+---
+
+## 4. Externa riktlinjer
+
+### EU AI Act (2024, gäller från aug 2026)
+> Källa: https://artificialintelligenceact.eu
+
+**Risk-baserad klassificering:**
+Kredit- och vårdbeslutsstöd faller typiskt under **högrisk-AI** (Annex III) – de strängaste kraven gäller.
+
+**Artikel 13 – Transparens (högrisk-AI):**
+- Systemen måste vara transparenta så att användarna förstår dem korrekt
+- Klar dokumentation om kapaciteter, begränsningar, och hur output tolkas
+- Provenance/spårbarhet av AI-systemets beslut ska vara möjlig
+
+**Artikel 14 – Mänsklig tillsyn:**
+- Högrisk-AI ska utformas med interface-stöd för **effektiv mänsklig tillsyn**
+- Ansvariga personer ska kunna: (a) förstå systemets begränsningar, (b) vara medvetna om **automation bias**, (c) korrekt tolka systemets output, (d) välja att **inte följa** systemets rekommendation
+- "Stop-knapp" eller liknande måste finnas – möjlighet att pausa/avbryta
+
+**Artikel 12 – Loggning:**
+- Högrisk-AI-system ska **automatiskt logga** relevanta händelser (input, output, beslut)
+- Driftsättare måste spara loggar i minst 6 månader
+
+**Praktisk implikation för designsystemet:**
+- Varje komponent som presenterar AI-output måste märkas som AI-genererat
+- Konfidensnivå och förklaring är inte valfritt – det är ett rättsligt krav
+- Override-flödet måste dokumenteras i logg
+- Audit trail är inte bara UX-nice-to-have – det är compliance-krav
+
+---
+
+### NIST AI RMF 1.0 (2023, USA – frivillig men globalt referensramverk)
+> Källa: https://www.nist.gov/itl/ai-risk-management-framework
+
+**De sju egenskaperna för pålitlig AI:**
+1. **Giltig och tillförlitlig** – presterar som förväntat, konsistent
+2. **Säker** – minimerar skada
+3. **Säker och resilient** – motståndskraftig mot missbruk
+4. **Ansvarig och transparent** – spårbar, dokumenterad
+5. **Förklarbar och tolkbar** – *"Vad hände?" (transparency), "Hur?" (explainability), "Varför?" (interpretability)*
+6. **Integritetsförstärkande** – skyddar persondata
+7. **Rättvis** – hanterar bias
+
+**Distinktionen transparens/förklarbarhet/tolkbarhet:**
+- **Transparens** → "Vad hände?" (logg, spårbarhet)
+- **Förklarbarhet** → "Hur togs beslutet?" (faktorer, vikt)
+- **Tolkbarhet** → "Vad betyder det för mig i det här sammanhanget?" (kontext, konsekvens)
+
+> **Designimplikation:** Why/Explanation Drawer bör täcka alla tre nivåerna – inte bara faktorer utan också vad de innebär i domänkontexten.
+
+**Automation bias:**
+> "Due to the complexity and increasing reliability of AI technology, over time, humans may over-rely on AI systems – an example of automation bias, or excessive deference to automated systems."
+
+> **Designimplikation:** Review Gate och Override Flow är direkt svar på detta. Disabled-state på Godkänn-knappen med förklaring är ett konkret anti-automation-bias-mönster.
+
+**GOVERN/MAP/MEASURE/MANAGE:**
+- AI-risker är **socio-tekniska** – inte bara tekniska
+- Kräver kontinuerlig audit och feedback-loop
+- Designsystemet ska stödja mänskliga aktörers förmåga att korrigera, rapportera och lära
+
+---
+
+### Ytterligare relevanta externa källor att söka på
+
+Om du behöver djupare motivering för ett designbeslut, sök alltid på dessa:
+
+- **WHO Ethics and Governance of AI for Health** (2021) – vård-specifika principer om ansvar, inkludering och autonomi
+- **EMA/FDA AI/ML-based SaMD Guidelines** – medicintekniska AI-krav
+- **Amershi et al. (2019) – "Guidelines for Human-AI Interaction" (CHI 2019, Microsoft)** – 18 evidensbaserade designriktlinjer för human-AI interaction
+- **Cai et al. (2019) – "Human-centered tools for coping with imperfect algorithms" (CHI 2019)** – hur användare hanterar AI-fel
+- **Lai et al. (2021) – "Human decisions and machine predictions" (Quarterly Journal of Economics)** – empirisk studie om automation bias i domänbeslut
+- **Kaur et al. (2020) – "Interpreting Interpretability" (CHI 2020)** – hur data scientists faktiskt använder förklarbarhet
+
+> **Sökstrategi:** Sök på [titel + "site:dl.acm.org" eller "arxiv.org"] eller använd Google Scholar. Sammanfatta nyckelresultat och koppla dem till det specifika designproblemet.
+
+---
+
+## 5. Designbeslut & constraints (projektspecifika regler)
+
+| Beslut | Regel |
+|--------|-------|
+| Varningsfärg | Orange (`#F97316` / `orange-500`) – aldrig rött för osäkerhet |
+| Godkänn disabled | Alltid synlig förklaring direkt under/bredvid knappen |
+| Proveniens | Alltid synlig i huvudvy (kredit) – aldrig bakom drawer |
+| Override | 3–5 förifyllda kategorier + fritextfält, max 2 klick |
+| Konfidens | Alltid med orsak – aldrig ensam procentsiffra |
+| Audit trail | Loggas automatiskt vid varje statebyte – kan inte stängas av |
+| Färg som signal | Aldrig ensam – alltid ikon + text + färg |
+
+---
+
+## 6. Komponentlistan är förslag, inte krav
+
+> De komponenter som listas i designkraven är ett **förslag**. Om du ser ett bättre eller mer effektivt sätt att lösa ett problem – föreslå det och motivera utifrån principerna ovan. Se `design-advisor` skill för hur förslag ska formuleras.
