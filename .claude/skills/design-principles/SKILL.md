@@ -11,7 +11,7 @@ description: Reference design principles and guidelines for AI interfaces in hig
 
 ## 1. Projektkontext
 
-**Domäner:** Finans (kredit), Vård (triage)
+**Domäner:** Finans (kredit)
 **Kärnproblem:** Användare kan inte avgöra när AI har fel → övertillit (automation bias) eller undertillit (algorithm aversion).
 **Mål:** Göra AI förklarbart, kontrollerbart och säkert i beslut med höga konsekvenser.
 
@@ -58,25 +58,7 @@ description: Reference design principles and guidelines for AI interfaces in hig
 
 ---
 
-## 3. Domänspecifika krav
-
-### Vård (Maya, triage)
-- **Extrem tidspress:** kärninfo ska förstås utan scroll, inom ~60 sek
-- **Osäkerhet inline:** direkt på mätvärden, inte i separat sektion
-- **Klinisk observation:** snabbval (chips/checkboxes), inte fritext
-- **Eskalering:** 1-klick, alltid synlig ("Kontakta ansvarig läkare")
-- Komponent: Triage Compact View
-
-### Finans (Sara, kredit)
-- **Djupare granskning:** drill-down till proveniens per datapunkt + uppdateringsdatum
-- **Inaktuell/saknad data:** föreslå åtgärd + möjlighet att stoppa/nedtona beslut
-- **Override:** obligatorisk kategori + valfri kort fritext (låg friktion, 2 klick)
-- **Audit trail:** läsbar av tredje part (compliance) i skrivskyddat läge + exporterbar
-- Komponent: Case Review View
-
----
-
-## 4. Externa riktlinjer och forskning
+## 3. Externa riktlinjer och forskning
 
 > Dessa sammanfattningar är baserade på källmaterial från projektets forskningsbibliotek. Filerna finns i `Artiklar och research/`.
 
@@ -205,7 +187,7 @@ Formativ usability-studie av ett XAI-gränssnitt för kliniker (intensivvård). 
 ---
 
 ### Horsky et al. (2012) – "Interface Design Principles for Usable Decision Support"
-> Fil: `nterface design principles for usable decision support- A targeted review of best practices for clinical prescribing interventions.pdf`
+> Fil: `Interface design principles for usable decision support- A targeted review of best practices for clinical prescribing interventions.pdf`
 
 Riktad granskning av designprinciper för kliniska beslutsstödssystem (CDSS), med fokus på ordination/prescribing. Identifierar 10 designprinciper för användbara beslutsstöd.
 
@@ -320,7 +302,6 @@ Kredit- och vårdbeslutsstöd faller under **högrisk-AI** (Annex III) – de st
 
 | Beslut | Regel |
 |--------|-------|
-| Varningsfärg | Orange (`#F97316` / `orange-500`) – aldrig rött för osäkerhet |
 | Godkänn disabled | Alltid synlig förklaring direkt under/bredvid knappen |
 | Proveniens | Alltid synlig i huvudvy (kredit) – aldrig bakom drawer |
 | Override | 3–5 förifyllda kategorier + fritextfält, max 2 klick |

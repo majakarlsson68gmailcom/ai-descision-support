@@ -28,7 +28,7 @@ description: Rules and workflow for implementing React components in the AI inte
 
 - **Syfte:** En mening som kopplar komponenten till ett designkrav (transparens / osäkerhet / HITL / spårbarhet / felhantering / kontroll)
 - **ID:** Följa namnkonventionen nedan (T1, U2, H3, S4 etc.)
-- **Domänstöd:** Stödja antingen vård (Maya), finans (Sara) eller båda
+- **Domänstöd:** Stödja finans (Sara)
 - **Tillstånd:** Dokumentera vilka states komponenten har (default, disabled, error, etc.)
 
 ---
@@ -95,11 +95,10 @@ src/components/
 
 ```jsx
 // Alltid: tydliga prop-typer med PropTypes eller JSDoc
-// Alltid: domän som prop om komponenten skiljer sig per domän
 // Alltid: callback-props för användaråtgärder som loggas
 
 const ComponentName = ({
-  domain = 'finance',       // 'finance' | 'healthcare'
+  domain = 'finance',       // 'finance'
   data,                     // domändata från constants.js eller mockdata
   onAction,                 // callback – loggas i audit trail
   isDisabled = false,       // alltid med förklaring om disabled
@@ -107,30 +106,7 @@ const ComponentName = ({
 }) => { ... }
 ```
 
-### Domänvarianter via props (inte separata komponenter)
 
-```jsx
-// Rätt – en komponent, domänbeteende via prop
-<ConfidenceIndicator
-  domain="healthcare"    // kompakt inline-variant
-  confidence={72}
-  reasons={[...]}
-/>
-
-<ConfidenceIndicator
-  domain="finance"       // mer detaljerad variant med drill-down
-  confidence={61}
-  reasons={[...]}
-/>
-
-// Fel – separata komponenter per domän
-<HealthcareConfidenceIndicator />
-<FinanceConfidenceIndicator />
-```
-
-**Undantag:** Om domänvarianterna är fundamentalt olika till struktur (t.ex. Triage Compact View vs Case Review View), kan separata komponenter motiveras. Presentera alltid skälet och få godkännande.
-
----
 
 ## 4. Tillgänglighet (ARIA)
 
@@ -147,7 +123,7 @@ const ComponentName = ({
 <span
   role="status"
   aria-live="polite"
-  aria-label="Konfidensindikator: 61% – låg"
+  aria-label="Konfidensindikator: "låg"
 >
 
 // Dialoger/drawers
@@ -216,7 +192,7 @@ OK/aktuell:          emerald-500 (#10B981)
 ```
 - Aldrig isolerat block
 - Alltid inline nära rekommendationen
-- Hög ≥80% → emerald, Medel 70-79% → yellow, Låg <70% → orange
+- Hög → emerald, Medel → orange, Låg → red
 ```
 
 ---

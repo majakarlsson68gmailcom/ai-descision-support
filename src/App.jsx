@@ -4,6 +4,7 @@ import SourceDrawer from './components/SourceDrawer'
 import SimulationView from './components/SimulationView'
 import CashFlowSourceDrawer from './components/CashFlowSourceDrawer'
 import CashFlowSimulationView from './components/CashFlowSimulationView'
+import KeyMetricSourceDrawer from './components/KeyMetricSourceDrawer'
 import DecisionLogTimeline from './components/DecisionLogTimeline'
 import {
   FileText, Users, ClipboardList, LayoutGrid, Bell, Sparkles, Lightbulb,
@@ -35,6 +36,15 @@ function SectionLabel({ children }) {
       {children}
     </p>
   )
+}
+
+function getConfidenceBadge(confidence) {
+  const level = typeof confidence === 'number'
+    ? confidence >= 80 ? 'high' : confidence >= 60 ? 'medium' : 'low'
+    : confidence // 'high' | 'medium' | 'low'
+  if (level === 'high') return { label: 'Hög konfidens', dot: 'bg-green-500', cls: 'bg-green-50 border-green-200 text-green-800' }
+  if (level === 'medium') return { label: 'Medel konfidens', dot: 'bg-[#f97316]', cls: 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]' }
+  return { label: 'Låg konfidens', dot: 'bg-red-500', cls: 'bg-red-50 border-red-200 text-red-800' }
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -122,11 +132,15 @@ function PageHeader({ d }) {
 }
 
 function CaseInfoCard({ d }) {
+  const amountStr = typeof d.amount === 'number'
+    ? `${d.amount.toLocaleString('sv-SE')} kr`
+    : d.amount
   const fields = [
     { label: 'Företag', value: d.company },
     { label: 'Org.nr', value: d.orgNr, mono: true },
-    { label: 'Belopp', value: `${d.amount.toLocaleString('sv-SE')} kr`, mono: true },
+    { label: 'Belopp', value: amountStr, mono: true },
     { label: 'Ändamål', value: d.purpose },
+    ...(d.contact ? [{ label: 'Kontakt', value: d.contact }] : []),
     { label: 'Handläggare', value: d.officer },
     { label: 'Ärendenummer', value: d.id, mono: true },
   ]
@@ -150,18 +164,15 @@ function CaseInfoCard({ d }) {
 // ── AI Recommendation ─────────────────────────────────────────────────────────
 
 function AIRecommendationSection({ d, confidence, factors }) {
-  const confBadge = confidence >= 80
-    ? { label: 'Hög konfidens', dot: 'bg-green-500', cls: 'bg-green-50 border-green-200 text-green-800' }
-    : confidence >= 60
-      ? { label: 'Medel konfidens', dot: 'bg-[#f97316]', cls: 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]' }
-      : { label: 'Låg konfidens', dot: 'bg-red-500', cls: 'bg-red-50 border-red-200 text-red-800' }
+  const confBadge = getConfidenceBadge(d.confidence ?? confidence)
 
   const renderValue = (f) => {
     const hasUp = f.value.includes('↑')
     const hasDown = f.value.includes('↓')
     const clean = f.value.replace(/↑|↓/g, '').trim()
+    const isPositive = f.direction === 'positiv'
     return (
-      <div className="flex items-center gap-0.5 text-[#dc2626] text-xs font-medium">
+      <div className={`flex items-center gap-0.5 text-xs font-medium whitespace-nowrap ${isPositive ? 'text-green-600' : 'text-[#dc2626]'}`}>
         {hasDown && <ArrowDown size={12} />}
         {hasUp && <ArrowUp size={12} />}
         <span>{clean}</span>
@@ -183,7 +194,7 @@ function AIRecommendationSection({ d, confidence, factors }) {
   const activeFactors = factors ?? d.topFactors
 
   return (
-    <section className="bg-white border border-gray-300 rounded-2xl shadow-sm overflow-hidden mt-2 text-left">
+    <section className="bg-white border border-gray-300 rounded-2xl shadow-sm mt-2 text-left">
 
       {/* Header: AI badge + AVSLAG + konfidensgrad */}
       <div className="px-3 py-4 border-b border-gray-200 flex flex-col gap-3">
@@ -192,7 +203,7 @@ function AIRecommendationSection({ d, confidence, factors }) {
           AI-recommendation
         </div>
         <div className="flex items-end justify-between">
-          <p className="text-2xl font-semibold text-[#dc2626] leading-8">{d.aiRecommendation}</p>
+          <p className={`text-2xl font-semibold leading-8 ${d.aiRecommendation === 'GODKÄNN' ? 'text-green-600' : 'text-[#dc2626]'}`}>{d.aiRecommendation}</p>
           <div className="flex flex-col items-end gap-1">
             <span className="text-xs text-gray-500 flex items-center gap-1">
               Konfidensgrad <Info size={12} />
@@ -201,6 +212,7 @@ function AIRecommendationSection({ d, confidence, factors }) {
               <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
               {confBadge.label}
             </div>
+            <p className="text-xs text-gray-500 mt-0.5">{d.aiSummaryShort}</p>
           </div>
         </div>
       </div>
@@ -212,10 +224,7 @@ function AIRecommendationSection({ d, confidence, factors }) {
           <p className="text-xs font-medium text-gray-900 flex-1">Faktor</p>
           <div className="flex items-center gap-9 justify-end w-[340px]">
             <p className="text-xs font-medium text-gray-900 w-10 text-center">Värde</p>
-            <div className="flex items-center gap-0.5">
-              <p className="text-xs font-medium text-gray-900">Påverkan</p>
-              <Info size={12} className="text-gray-500" />
-            </div>
+            <PaverkanLabel align="right" direction="down" />
             <p className="text-xs font-medium text-gray-900 w-40 text-center">Källa</p>
           </div>
         </div>
@@ -229,7 +238,7 @@ function AIRecommendationSection({ d, confidence, factors }) {
             <p className="text-xs font-medium text-gray-500 leading-relaxed">{f.description}</p>
           </div>
           <div className="flex items-center gap-9 justify-end shrink-0 w-[340px]">
-            <div className="w-10 flex justify-center">{renderValue(f)}</div>
+            <div className="w-24 flex justify-center">{renderValue(f)}</div>
             <div className="flex justify-center">{renderDots(f.weight)}</div>
             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium w-40 justify-center
               ${f.stale ? 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]' : 'bg-[#f2f2f2] border-[#dbdbdb] text-[#525252]'}`}>
@@ -245,27 +254,61 @@ function AIRecommendationSection({ d, confidence, factors }) {
   )
 }
 
+// ── Påverkan tooltip ──────────────────────────────────────────────────────────
+function PaverkanLabel({ align = 'left', direction = 'up' }) {
+  const isDown = direction === 'down'
+  return (
+    <div className="relative group inline-flex items-center gap-0.5 cursor-default">
+      <span className="text-xs font-medium text-gray-900 whitespace-nowrap">Påverkan</span>
+      <Info size={11} className="text-gray-500" />
+      <div className={`absolute hidden group-hover:block z-[9999] w-64 bg-gray-900 text-white rounded-xl px-4 py-3 shadow-xl pointer-events-none
+        ${isDown ? 'top-full mt-2' : 'bottom-full mb-2'}
+        ${align === 'right' ? 'right-0' : 'left-0'}`}>
+        <p className="text-sm font-bold leading-snug mb-1.5">Visar hur mycket faktorn påverkat rekommendationen</p>
+        <p className="text-xs text-gray-300 leading-relaxed">
+          Prickarna visar AI:ns viktning av faktorn:<br />
+          <span className="text-white font-medium">●●●&nbsp;Hög</span> – faktorn vägde tungt och hade stor inverkan på rekommendationen.<br />
+          <span className="text-white font-medium">●●○&nbsp;Medel</span> – faktorn bidrog men var inte avgörande.<br />
+          <span className="text-white font-medium">●○○&nbsp;Låg</span> – faktorn ingick men hade liten inverkan.
+        </p>
+        {isDown
+          ? <div className={`absolute bottom-full border-4 border-transparent border-b-gray-900 ${align === 'right' ? 'right-4' : 'left-4'}`} />
+          : <div className={`absolute top-full border-4 border-transparent border-t-gray-900 ${align === 'right' ? 'right-4' : 'left-4'}`} />
+        }
+      </div>
+    </div>
+  )
+}
+
 // ── Nyckeldata cards ──────────────────────────────────────────────────────────
 
 function MetricCard({ factor, onGranska }) {
   const isOver = factor.diffDirection === 'över'
   const isStale = factor.stale
+  const isPositive = factor.direction === 'positiv'
+  const isUnknown = !factor.value || factor.value === 'Okänt'
   const paverkanLevel = factor.weight === 'hög' ? 3 : factor.weight === 'medel' ? 2 : 1
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col">
 
       {/* Header: värde + badges + titel */}
       <div className="px-6 pt-6 pb-0 flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-[32px] font-bold text-gray-900 leading-10">
-              {factor.value.replace(/↑|↓/g, '').trim()}
+              {isUnknown ? 'Okänt' : factor.value.replace(/↑|↓/g, '').trim()}
             </span>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-[#fbe9e9] border border-[#f5c2c2] text-[#8c1717] text-xs font-medium">
-              {isOver ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-              {isOver ? 'Överstiger gräns' : 'Under gräns'}
-            </div>
+            {isUnknown ? (
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl text-xs font-medium bg-gray-100 border border-gray-300 text-gray-500">
+                Kan ej bedömas
+              </div>
+            ) : (
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-xl text-xs font-medium ${isPositive ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-[#fbe9e9] border border-[#f5c2c2] text-[#8c1717]'}`}>
+                {!isPositive && (isOver ? <ArrowUp size={16} /> : <ArrowDown size={16} />)}
+                {isPositive ? 'Uppfyller krav' : (isOver ? 'Överstiger gräns' : 'Under gräns')}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium">
             <Sparkles size={14} />
@@ -279,13 +322,17 @@ function MetricCard({ factor, onGranska }) {
       <div className="px-6 pt-5 pb-0">
         <div className="flex items-center gap-5">
           <p className="text-lg font-semibold text-gray-500">
-            {isOver ? 'Gräns' : 'Krav'}:{' '}
+            {factor.limitLabel ?? (isOver ? 'Gräns' : 'Krav')}:{' '}
             <span className="text-gray-900">{factor.limit}</span>
           </p>
-          <div className="w-0.5 h-14 bg-gray-300" />
-          <p className="text-lg font-semibold text-gray-900">
-            {factor.diff} {factor.diffDirection}
-          </p>
+          {!isUnknown && (
+            <>
+              <div className="w-0.5 h-14 bg-gray-300" />
+              <p className="text-lg font-semibold text-gray-900">
+                {factor.diff} {factor.diffDirection}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -298,7 +345,7 @@ function MetricCard({ factor, onGranska }) {
       {isStale && (
         <div className="px-6 pt-3">
           <p className="text-xs text-amber-700 leading-relaxed">
-            Källan är föråldrad. Bankens policy: Max 12 månader.
+            {factor.staleReason ?? 'Källan är föråldrad.'}
           </p>
         </div>
       )}
@@ -306,15 +353,13 @@ function MetricCard({ factor, onGranska }) {
       {/* Footer */}
       <div className="mt-5 border-t border-gray-200 px-3 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
+          <div className="relative group flex items-center gap-2 cursor-default">
             <div className="flex gap-1">
               {[1, 2, 3].map(i => (
                 <div key={i} className={`w-2 h-2 rounded-full ${i <= paverkanLevel ? 'bg-[#245bd1]' : 'bg-gray-200'}`} />
               ))}
             </div>
-            <span className="text-xs text-gray-500 flex items-center gap-0.5 whitespace-nowrap">
-              Påverkan <Info size={10} className="inline ml-0.5" />
-            </span>
+            <PaverkanLabel />
           </div>
           <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-xl border text-xs font-medium whitespace-nowrap
             ${isStale ? 'bg-amber-50 text-amber-900 border-amber-200' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>
@@ -412,13 +457,8 @@ function AIAnalysisProgress({ onComplete }) {
 }
 
 function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
-  const statusLabel = { ok: 'Aktuell', stale: 'Inaktuell' }
-
-  const confidenceBadge = confidence >= 80
-    ? { label: 'Hög konfidens', dot: 'bg-green-500', badge: 'bg-green-50 text-green-800 border-green-200' }
-    : confidence >= 60
-      ? { label: 'Medel konfidens', dot: 'bg-[#F98806]', badge: 'bg-[#FEF3E6] text-[#9f5704] border-[#FDDEB9]' }
-      : { label: 'Låg konfidens', dot: 'bg-red-500', badge: 'bg-red-50 text-red-800 border-red-200' }
+  const statusLabel = { ok: 'Aktuell', stale: 'Inaktuell', current: 'Aktuell', warning: 'Inaktuell' }
+  const confidenceBadge = getConfidenceBadge(d.confidence ?? confidence)
 
   return (
     <section className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 mt-2">
@@ -435,7 +475,7 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
         <span className="text-xs text-gray-500 flex items-center gap-1">
           Konfidensgrad <Info size={12} className="text-gray-400" />
         </span>
-        <div className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border w-fit ${confidenceBadge.badge}`}>
+        <div className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border w-fit ${confidenceBadge.cls}`}>
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${confidenceBadge.dot}`} />
           {confidenceBadge.label}
         </div>
@@ -450,7 +490,7 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
         <div className="flex flex-col gap-3 flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-medium text-gray-500">Rekommendation:</span>
-            <span className="text-2xl font-medium text-red-600">{d.aiRecommendation.charAt(0).toUpperCase() + d.aiRecommendation.slice(1).toLowerCase()}</span>
+            <span className={`text-2xl font-medium ${d.aiRecommendation === 'GODKÄNN' ? 'text-green-600' : 'text-red-600'}`}>{d.aiRecommendation.charAt(0).toUpperCase() + d.aiRecommendation.slice(1).toLowerCase()}</span>
           </div>
           <p className="text-sm text-gray-500 leading-6">{d.aiSummary}</p>
           <div className="mt-2">
@@ -483,9 +523,9 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
                   </td>
                   <td className="pr-8 align-middle text-xs font-medium text-gray-900 whitespace-nowrap">{s.period}</td>
                   <td className="align-middle">
-                    <div className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'stale' ? 'text-amber-700' : 'text-green-700'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'stale' ? 'bg-amber-500' : 'bg-green-500'}`} />
-                      {statusLabel[s.status]}
+                    <div className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'ok' || s.status === 'current' ? 'text-green-700' : 'text-amber-700'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'ok' || s.status === 'current' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                      {s.statusLabel ?? statusLabel[s.status] ?? s.status}
                     </div>
                   </td>
                 </tr>
@@ -521,26 +561,19 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
   )
 }
 
-function DecisionPanel({ aiReviewed, onUnlocked, onOpenCF, analysisComplete, onReject }) {
+function DecisionPanel({ d, aiReviewed, onUnlocked, analysisComplete, onOverride, onApprove }) {
   const unlocked = analysisComplete || aiReviewed
+  const warningText = d?.dataQualityWarning ?? 'Kassaflöde baseras på inaktuell källa (2022)'
   return (
     <aside className="bg-white border border-grey-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-fit">
 
-      {/* Warning Top Section – döljs efter analys */}
-      {!analysisComplete && (
-        <div className="p-4 bg-red-50/30 border-b border-gray-200">
-          <h3 className="text-sm font-semibold text-red-800 mb-2">Kritisk granskning saknas</h3>
+      {/* Warning Top Section – döljs när AI-underlag granskats */}
+      {!unlocked && (
+        <div className="p-4 bg-amber-50/30 border-b border-gray-200">
+          <h3 className="text-sm font-semibold text-amber-800 mb-2">Datakvalitet kräver uppmärksamhet</h3>
           <div className="flex items-center gap-2 text-sm text-gray-700">
             <AlertTriangle size={16} className="text-amber-600" />
-            Kassaflöde (föråldrad källa)
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Rekommenderade nästa steg</h4>
-            <button onClick={onOpenCF} className="flex items-center justify-between w-full text-sm text-blue-700 hover:text-blue-800 transition-colors py-1">
-              <span>Granska kassaflöde</span>
-              <ChevronRight size={16} />
-            </button>
+            {warningText}
           </div>
         </div>
       )}
@@ -552,37 +585,15 @@ function DecisionPanel({ aiReviewed, onUnlocked, onOpenCF, analysisComplete, onR
           <h3 className="text-base font-semibold text-gray-900 mb-3">Beslut</h3>
           <div className="flex flex-col gap-3">
 
-            {/* Avslå – primär CTA efter analys */}
+            {/* Godkänn – primär CTA (AI-rekommendation) */}
             <div>
               <button
                 disabled={!unlocked}
-                onClick={unlocked ? onReject : undefined}
+                onClick={unlocked ? onApprove : undefined}
                 className={`w-full flex items-center justify-center gap-2 py-3 rounded-md text-sm font-medium transition-colors
                   ${unlocked
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-300/80 text-gray-500 border border-gray-300 cursor-not-allowed'}`}
-              >
-                Avslå {!unlocked && <Lock size={14} />}
-              </button>
-              {!unlocked && (
-                <div className="flex justify-between items-start mt-1.5">
-                  <p className="text-xs italic text-gray-500">Låst tills AI-underlaget har granskats.</p>
-                  <Info size={14} className="text-gray-400" />
-                </div>
-              )}
-              {unlocked && (
-                <p className="text-xs text-gray-400 mt-1">Kräver motivering – loggas automatiskt</p>
-              )}
-            </div>
-
-            {/* Godkänn – sekundär */}
-            <div>
-              <button
-                disabled={!unlocked}
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-md text-sm font-medium transition-colors
-                  ${unlocked
-                    ? 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50'
-                    : 'bg-gray-300/80 text-gray-600 border border-gray-300 cursor-not-allowed'}`}
               >
                 Godkänn {!unlocked && <Lock size={14} />}
               </button>
@@ -593,7 +604,30 @@ function DecisionPanel({ aiReviewed, onUnlocked, onOpenCF, analysisComplete, onR
                 </div>
               )}
               {unlocked && (
-                <p className="text-xs text-gray-400 mt-1">Bekräftar beviljat kreditbeslut</p>
+                <p className="text-xs text-gray-400 mt-1">Följer AI-rekommendation – loggas automatiskt</p>
+              )}
+            </div>
+
+            {/* Avslå – sekundär (override av AI) */}
+            <div>
+              <button
+                disabled={!unlocked}
+                onClick={unlocked ? onOverride : undefined}
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-md text-sm font-medium transition-colors
+                  ${unlocked
+                    ? 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50'
+                    : 'bg-gray-300/80 text-gray-600 border border-gray-300 cursor-not-allowed'}`}
+              >
+                Avslå {!unlocked && <Lock size={14} />}
+              </button>
+              {!unlocked && (
+                <div className="flex justify-between items-start mt-1.5">
+                  <p className="text-xs italic text-gray-500">Låst tills AI-underlaget har granskats.</p>
+                  <Info size={14} className="text-gray-400" />
+                </div>
+              )}
+              {unlocked && (
+                <p className="text-xs text-gray-400 mt-1">Avviker från AI – kräver motivering</p>
               )}
             </div>
           </div>
@@ -629,102 +663,45 @@ function DecisionPanel({ aiReviewed, onUnlocked, onOpenCF, analysisComplete, onR
   )
 }
 
-// ── Bottom action bar ─────────────────────────────────────────────────────────
+// ── OverrideModal ─────────────────────────────────────────────────────────────
 
-function BottomActionBar({ aiReviewed }) {
-  const [rejected, setRejected] = useState(false)
-  const [requested, setRequested] = useState(false)
-
-  if (rejected) return (
-    <div className="border-t border-grey-200 bg-red-50 px-6 py-3 flex items-center gap-3">
-      <X size={14} className="text-red-600" />
-      <p className="text-sm font-medium text-red-700">Ansökan avslagen. Åtgärden loggad.</p>
-    </div>
-  )
-  if (requested) return (
-    <div className="border-t border-grey-200 bg-blue-50 px-6 py-3 flex items-center gap-3">
-      <RotateCcw size={14} className="text-blue-500" />
-      <p className="text-sm font-medium text-blue-800">Komplettering begärd. Ärendet pausat.</p>
-    </div>
-  )
-
-  return (
-    <div className="border-t border-grey-200 bg-white px-6 py-3 flex items-center justify-between flex-shrink-0">
-      <span className="text-xsm font-semibold uppercase tracking-widest text-grey-400">Hantera ärende</span>
-      <div className="flex items-center gap-3">
-        {/* Begär komplettering */}
-        <button
-          disabled={!aiReviewed}
-          onClick={() => setRequested(true)}
-          className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold border transition-colors
-            ${aiReviewed
-              ? 'bg-white text-grey-700 border-grey-300 hover:bg-grey-50'
-              : 'bg-grey-50 text-grey-300 border-grey-200 cursor-not-allowed'}`}
-        >
-          {!aiReviewed && <Lock size={12} />}
-          <RotateCcw size={13} /> Begär komplettering
-        </button>
-
-        {/* Godkänn */}
-        <div className="flex flex-col items-start">
-          <button
-            disabled
-            className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold bg-grey-100 text-grey-400 border border-grey-200 cursor-not-allowed"
-          >
-            <Lock size={12} /> Godkänn
-          </button>
-          <span className="text-xsm text-orange-700 mt-0.5 flex items-center gap-1">
-            <Lock size={9} /> {DISABLED_APPROVE_REASON}
-          </span>
-        </div>
-
-        {/* Avslå */}
-        <div className="flex flex-col items-start">
-          <button
-            onClick={() => setRejected(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
-          >
-            <X size={13} /> Avslå
-          </button>
-          <span className="text-xsm text-grey-400 mt-0.5">{REJECT_WARNING}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── MotivationModal ───────────────────────────────────────────────────────────
-
-const MOTIVATION_CATEGORIES = [
-  'Uppfyller ej kreditkrav',
-  'Otillräcklig återbetalningsförmåga',
-  'Förhöjd kreditrisk',
-  'Bristfälligt underlag',
+const OVERRIDE_CATEGORIES = [
+  'Felaktig datakälla',
+  'Kontextuell bedömning',
+  'Kompletterande information',
+  'Riskbedömning avviker',
+  'Annan',
 ]
 
-function MotivationModal({ d, onConfirm, onCancel }) {
+function OverrideModal({ d, onConfirm, onCancel }) {
   const [selected, setSelected] = useState(null)
   const [freetext, setFreetext] = useState('')
-
-  const handleConfirm = () => {
-    onConfirm(selected + (freetext.trim() ? ': ' + freetext.trim() : ''))
-  }
+  const now = new Date().toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-[520px] flex flex-col gap-5">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-[560px] flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+
+        {/* Header */}
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Bekräfta avslag</h2>
-          <p className="text-sm text-gray-500 mt-1">Välj en kategori och lägg till en kommentar om du vill. Motiveringen loggas.</p>
-          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg mt-3">
-            <span className="text-sm font-medium text-gray-800">{d.company}</span>
-            <span className="text-gray-400">·</span>
-            <span className="text-sm text-gray-600">{d.amount.toLocaleString('sv-SE')} kr</span>
+          <h2 className="text-base font-semibold text-gray-900">Du avviker från AI:ns rekommendation</h2>
+          <p className="text-sm text-gray-500 mt-1">Välj en kategori som beskriver din bedömning. Avvikelsen loggas.</p>
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
+              <CheckCircle size={14} className="text-green-600" />
+              <span className="text-sm font-medium text-green-800">AI rekommenderade: GODKÄNN</span>
+            </div>
+            <span className="text-gray-400">→</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 border border-gray-200 rounded-lg">
+              <X size={14} className="text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">Ditt beslut: AVSLAG</span>
+            </div>
           </div>
         </div>
 
+        {/* Categories */}
         <div className="flex flex-col gap-2">
-          {MOTIVATION_CATEGORIES.map(cat => (
+          {OVERRIDE_CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setSelected(cat)}
@@ -739,6 +716,7 @@ function MotivationModal({ d, onConfirm, onCancel }) {
           ))}
         </div>
 
+        {/* Freetext */}
         <textarea
           value={freetext}
           onChange={e => setFreetext(e.target.value)}
@@ -747,12 +725,27 @@ function MotivationModal({ d, onConfirm, onCancel }) {
           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
 
+        {/* Preview section */}
+        {selected && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col gap-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Följande loggas</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-700">
+              <span className="text-gray-400">Ärende</span><span className="font-medium">{d.id}</span>
+              <span className="text-gray-400">Handläggare</span><span className="font-medium">{d.officer}</span>
+              <span className="text-gray-400">Tidsstämpel</span><span className="font-medium">{now}</span>
+              <span className="text-gray-400">Kategori</span><span className="font-medium">{selected}</span>
+              <span className="text-gray-400">Avvikelse</span><span className="font-medium text-orange-700">AI: GODKÄNN → Beslut: AVSLAG</span>
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
         <div className="flex items-center justify-between pt-1">
           <button onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
             Avbryt
           </button>
           <button
-            onClick={handleConfirm}
+            onClick={() => onConfirm({ category: selected, text: freetext.trim() })}
             disabled={!selected}
             className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors
               ${selected ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
@@ -768,13 +761,9 @@ function MotivationModal({ d, onConfirm, onCancel }) {
 // ── ClosedCaseView ────────────────────────────────────────────────────────────
 
 function ClosedCaseView({ d, confidence, motivation, onClose }) {
-  const confBadge = confidence >= 80
-    ? { label: 'Hög konfidens', dot: 'bg-green-500', cls: 'text-green-800 bg-green-50 border-green-200' }
-    : confidence >= 60
-      ? { label: 'Medel konfidens', dot: 'bg-orange-500', cls: 'text-orange-800 bg-orange-50 border-orange-200' }
-      : { label: 'Låg konfidens', dot: 'bg-red-500', cls: 'text-red-800 bg-red-50 border-red-200' }
-
   const today = new Date().toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' })
+  const timeNow = new Date().toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+  const confBadge = getConfidenceBadge(d.confidence ?? confidence)
 
   const auditEvents = [
     {
@@ -789,7 +778,7 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
           { label: 'Handläggare', value: d.officer },
           { label: 'Ärende-ID', value: d.id },
           { label: 'Bolag', value: d.company },
-          { label: 'Belopp', value: '2 500 000 kr' },
+          { label: 'Belopp', value: typeof d.amount === 'number' ? `${d.amount.toLocaleString('sv-SE')} kr` : d.amount },
         ]
       }
     },
@@ -800,70 +789,33 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
       actor: 'AI',
       label: 'AI-analys klar',
       chips: [
-        { label: 'Medel konfidens', style: 'medium' },
+        { label: confBadge.label, style: confBadge.label.includes('Låg') ? 'low' : confBadge.label.includes('Medel') ? 'medium' : 'high' },
       ],
       detail: {
-        intro: 'Initiell analys baserad på 3 datakällor. En källa äldre än 180 dagar.',
-        confidenceReason: 'Årsredovisning 2022 är 250 dagar gammal – sänker konfidens.',
-        factors: [
-          { name: 'Räntetäckningsgrad', value: '0.8x', limit: '≥ 1.2x', direction: 'negativ', source: 'Årsredovisning 2022', quality: 'stale' },
-          { name: 'Skuldkvot', value: '1.2x', limit: '≤ 0.8x', direction: 'negativ', source: 'Kreditupplysning UC', quality: 'ok' },
-          { name: 'Kassaflöde', value: '−240 000 kr', limit: '> 0', direction: 'negativ', source: 'Årsredovisning 2022', quality: 'stale' },
-        ],
-        sources: [
-          { name: 'Kreditupplysning UC', date: '2024-12-15', status: 'ok' },
-          { name: 'Skatteregistret', date: '2024-10-20', status: 'ok' },
-          { name: 'Årsredovisning 2022', date: '2024-04-10', status: 'stale', note: '250 dagar gammal' },
-        ]
+        intro: `Initiell analys baserad på ${d.dataSources.length} datakällor.${d.uncertaintyReasons?.length ? ' ' + d.uncertaintyReasons[0] + '.' : ''}`,
+        confidenceReason: d.uncertaintyReasons?.join(' ') || '',
+        factors: d.topFactors.map(f => ({
+          name: f.factor,
+          value: f.value,
+          limit: f.limit ?? 'N/A',
+          direction: f.direction,
+          source: f.source,
+          quality: f.stale ? 'stale' : 'ok',
+        })),
+        sources: d.dataSources.map(s => ({
+          name: s.name,
+          date: s.date || s.period,
+          status: s.status === 'current' ? 'ok' : s.status,
+          note: s.staleReason,
+        })),
       }
     },
     {
       id: 3,
-      time: '10:31',
+      time: '10:28',
       type: 'user',
       actor: 'Handläggare',
-      label: 'Nytt underlag uppladdad',
-      chips: [],
-      detail: {
-        rows: [
-          { label: 'Fil', value: 'Årsredovisning_2025.pdf' },
-          { label: 'Period', value: 'Januari – December 2025' },
-          { label: 'Ersätter', value: 'Årsredovisning 2022 (inaktuell)' },
-          { label: 'Uppladdad av', value: d.officer },
-        ]
-      }
-    },
-    {
-      id: 4,
-      time: '10:32',
-      type: 'ai',
-      actor: 'AI',
-      label: 'AI-analys uppdaterad',
-      chips: [
-        { label: 'Konfidens höjd', style: 'high' },
-      ],
-      detail: {
-        intro: 'Ny källa analyserad. Alla datakällor nu aktuella. Rekommendation oförändrad.',
-        confidenceReason: 'Inaktuell källa ersatt med aktuell årsredovisning. Skuldkvot och räntetäckningsgrad fortfarande kritiska.',
-        confidenceChange: { from: 61, fromLevel: 'medium', to: 87, toLevel: 'high' },
-        factors: [
-          { name: 'Räntetäckningsgrad', value: '0.8x', limit: '≥ 1.2x', direction: 'negativ', source: 'Årsredovisning 2025', quality: 'ok' },
-          { name: 'Skuldkvot', value: '1.2x', limit: '≤ 0.8x', direction: 'negativ', source: 'Kreditupplysning UC', quality: 'ok' },
-          { name: 'Kassaflöde', value: '−240 000 kr', limit: '> 0', direction: 'negativ', source: 'Årsredovisning 2025', quality: 'ok' },
-        ],
-        sources: [
-          { name: 'Kreditupplysning UC', date: '2024-12-15', status: 'ok' },
-          { name: 'Skatteregistret', date: '2024-10-20', status: 'ok' },
-          { name: 'Årsredovisning 2025', date: '2025-01-10', status: 'ok', note: 'Ny källa' },
-        ]
-      }
-    },
-    {
-      id: 5,
-      time: '10:33',
-      type: 'user',
-      actor: 'Handläggare',
-      label: 'AI-underlag granskat och bekräftat',
+      label: 'AI-underlag granskat',
       chips: [],
       detail: {
         rows: [
@@ -873,19 +825,19 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
       }
     },
     {
-      id: 6,
-      time: '10:34',
+      id: 4,
+      time: timeNow,
       type: 'decision',
       actor: 'Handläggare',
-      label: 'Beslut fattat: AVSLAG',
+      label: 'Beslut fattat: AVSLAG (avviker från AI)',
       chips: [
-        { label: '✓ Följde AI-rekommendation', style: 'aligned' },
+        { label: '⚠ Avvek från AI-rekommendation', style: 'medium' },
       ],
       detail: {
         decision: 'AVSLAG',
-        motivationCategory: 'Otillräcklig återbetalningsförmåga',
-        motivationText: motivation,
-        alignment: 'Följde AI-rekommendation',
+        motivationCategory: motivation?.category || '',
+        motivationText: motivation?.text || '',
+        alignment: 'Avvek från AI-rekommendation',
         rows: [
           { label: 'Handläggare', value: d.officer },
           { label: 'Modell', value: 'Kreditrisk v2.3 · Tränad nov 2024' },
@@ -902,45 +854,44 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
         <main className="flex-1 overflow-y-auto p-6 pt-4">
           <div className="max-w-[760px] flex flex-col gap-5">
 
-            {/* Confirmation banner */}
-            <div className="bg-blue-600 text-white rounded-xl px-6 py-5 flex items-start gap-4">
-              <CheckCircle size={20} className="mt-0.5 flex-shrink-0" />
+            {/* Override banner */}
+            <div className="bg-orange-500 text-white rounded-xl px-6 py-5 flex items-start gap-4">
+              <AlertTriangle size={20} className="mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-semibold">Avslag bekräftat – ärende avslutat</p>
-                <p className="text-sm text-blue-100 mt-0.5">{today} · Sara Lindgren · {d.id}</p>
+                <p className="font-semibold">Avvikelse från AI-rekommendation registrerad</p>
+                <p className="text-sm text-orange-100 mt-0.5">{today} · {timeNow} · {d.officer} · {d.id}</p>
               </div>
             </div>
 
-            {/* Decision summary */}
+            {/* DiffView (S3) */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-                <p className="text-sm font-semibold text-gray-700">Beslutssummering</p>
+                <p className="text-sm font-semibold text-gray-700">AI-rekommendation vs Beslut</p>
               </div>
-              <div className="px-6 py-5 grid grid-cols-2 gap-5">
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5">AI rekommenderade</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-lg font-bold text-[#D03027]">AVSLAG</span>
-                    <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${confBadge.cls}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
-                      {confBadge.label}
+              <div className="grid grid-cols-2 divide-x divide-gray-200">
+                {/* Left: AI */}
+                <div className="px-6 py-5">
+                  <p className="text-xs text-gray-400 mb-2">AI rekommenderade</p>
+                  <span className={`text-xl font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-green-600' : 'text-red-600'}`}>{d.aiRecommendation}</span>
+                  <div className={`mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${confBadge.cls}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
+                    {confBadge.label}
+                  </div>
+                </div>
+                {/* Right: Decision */}
+                <div className="px-6 py-5">
+                  <p className="text-xs text-gray-400 mb-2">Saras beslut</p>
+                  <span className="text-xl font-bold text-gray-900">AVSLAG</span>
+                  <div className="mt-2 flex items-center gap-1.5 text-xs text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full w-fit">
+                    <AlertTriangle size={12} />
+                    Avviker från AI-rekommendation
+                  </div>
+                  {motivation && (
+                    <div className="mt-3 flex flex-col gap-1">
+                      <p className="text-xs text-gray-500">Kategori: <span className="font-medium text-gray-700">{motivation.category}</span></p>
+                      {motivation.text && <p className="text-xs text-gray-600 mt-0.5">{motivation.text}</p>}
                     </div>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5">Saras beslut</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-lg font-bold text-gray-900">AVSLAG</span>
-                    <span className="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">Följde AI-rekommendation</span>
-                  </div>
-                </div>
-                <div className="col-span-2 border-t border-gray-100 pt-4">
-                  <p className="text-xs text-gray-400 mb-1">Motivering</p>
-                  <p className="text-sm text-gray-800 font-medium">{motivation}</p>
-                </div>
-                <div className="col-span-2 border-t border-gray-100 pt-3 flex justify-between text-xs text-gray-400">
-                  <span>Handläggare: Sara Lindgren</span>
-                  <span>{today} · 10:34</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -977,20 +928,93 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
   )
 }
 
+// ── ApprovedCaseView ──────────────────────────────────────────────────────────
+
+function ApprovedCaseView({ d, confidence, onClose }) {
+  const today = new Date().toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' })
+  const timeNow = new Date().toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+  const confBadge = getConfidenceBadge(d.confidence ?? confidence)
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#F6F6F6] font-sans">
+      <Sidebar />
+      <div className="flex flex-col flex-1 min-w-0 h-full">
+        <PageHeader d={d} />
+        <main className="flex-1 overflow-y-auto p-6 pt-4">
+          <div className="max-w-[760px] flex flex-col gap-5">
+
+            {/* Confirmation banner */}
+            <div className="bg-green-600 text-white rounded-xl px-6 py-5 flex items-start gap-4">
+              <CheckCircle size={20} className="mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Kreditansökan godkänd – ärende avslutat</p>
+                <p className="text-sm text-green-100 mt-0.5">{today} · {d.officer} · {d.id}</p>
+              </div>
+            </div>
+
+            {/* Decision summary */}
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
+                <p className="text-sm font-semibold text-gray-700">Beslutssummering</p>
+              </div>
+              <div className="px-6 py-5 grid grid-cols-2 gap-5">
+                <div>
+                  <p className="text-xs text-gray-400 mb-1.5">AI rekommenderade</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-lg font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-green-600' : 'text-red-600'}`}>{d.aiRecommendation}</span>
+                    <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${confBadge.cls}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
+                      {confBadge.label}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1.5">Saras beslut</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-lg font-bold text-gray-900">GODKÄNN</span>
+                    <span className="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">Följde AI-rekommendation</span>
+                  </div>
+                </div>
+                <div className="col-span-2 border-t border-gray-100 pt-3 flex justify-between text-xs text-gray-400">
+                  <span>Handläggare: {d.officer}</span>
+                  <span>{today} · {timeNow}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between pb-6">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Download size={14} /> Exportera logg
+              </button>
+              <button onClick={onClose} className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                ← Tillbaka till ärendelistan
+              </button>
+            </div>
+
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [aiReviewed, setAiReviewed] = useState(false)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const [isSimulationMode, setIsSimulationMode] = useState(false)
-  const [isCFDrawerOpen, setIsCFDrawerOpen] = useState(false)
-  const [isCFSimulationMode, setIsCFSimulationMode] = useState(false)
+
+  // Track which metric's drawer or simulation is currently open
+  const [activeDrawerMetric, setActiveDrawerMetric] = useState(null)
+  const [activeSimulationMetric, setActiveSimulationMetric] = useState(null)
+
   const [cfUploadState, setCfUploadState] = useState('idle') // 'idle' | 'analyzing' | 'complete'
   const [liveConfidence, setLiveConfidence] = useState(CASE.confidence)
   const [liveSources, setLiveSources] = useState(CASE.dataSources)
   const [liveFactors, setLiveFactors] = useState(CASE.topFactors)
-  const [rejectionState, setRejectionState] = useState('idle') // 'idle' | 'motivating' | 'rejected'
-  const [rejectionMotivation, setRejectionMotivation] = useState('')
+  const [overrideState, setOverrideState] = useState('idle') // 'idle' | 'confirming' | 'completed'
+  const [overrideMotivation, setOverrideMotivation] = useState(null)
+  const [approvedState, setApprovedState] = useState('idle') // 'idle' | 'completed'
 
   const handleCFAnalysisComplete = () => {
     setCfUploadState('complete')
@@ -1004,22 +1028,35 @@ export default function App() {
     ))
   }
 
-  if (isSimulationMode) return <SimulationView onClose={() => setIsSimulationMode(false)} />
-  if (isCFSimulationMode) return <CashFlowSimulationView onClose={() => setIsCFSimulationMode(false)} />
-  if (rejectionState === 'rejected') return (
+  if (activeSimulationMetric) {
+    if (activeSimulationMetric.factor.includes('Kassaflöde')) {
+      return <CashFlowSimulationView onClose={() => setActiveSimulationMetric(null)} />
+    } else {
+      return <SimulationView onClose={() => setActiveSimulationMetric(null)} />
+    }
+  }
+  if (overrideState === 'completed') return (
     <ClosedCaseView
       d={CASE}
       confidence={liveConfidence}
-      motivation={rejectionMotivation}
-      onClose={() => { setRejectionState('idle'); setCfUploadState('idle'); setLiveConfidence(CASE.confidence); setLiveSources(CASE.dataSources); setLiveFactors(CASE.topFactors); setRejectionMotivation('') }}
+      motivation={overrideMotivation}
+      onClose={() => { setOverrideState('idle'); setCfUploadState('idle'); setLiveConfidence(CASE.confidence); setLiveSources(CASE.dataSources); setLiveFactors(CASE.topFactors); setOverrideMotivation(null) }}
+    />
+  )
+  if (approvedState === 'completed') return (
+    <ApprovedCaseView
+      d={CASE}
+      confidence={liveConfidence}
+      onClose={() => { setApprovedState('idle'); setCfUploadState('idle'); setLiveConfidence(CASE.confidence); setLiveSources(CASE.dataSources); setLiveFactors(CASE.topFactors) }}
     />
   )
 
   // Nyckeldata – koppla "Granska underlag" till respektive drawer/sim
   const granskaHandlers = [
-    () => { setIsCFDrawerOpen(false); setIsDrawerOpen(false) }, // Skuldkvot – ingen drawer ännu
-    () => setIsDrawerOpen(true),      // Räntetäckningsgrad
-    () => setIsCFDrawerOpen(true),    // Kassaflöde
+    () => setActiveDrawerMetric(liveFactors[2]), // Omsättningsdata
+    () => setActiveDrawerMetric(liveFactors[0]), // Betalningshistorik
+    () => setActiveDrawerMetric(liveFactors[1]), // Utnyttjandegrad
+    () => setActiveDrawerMetric(liveFactors[3]), // Branschrisk
   ]
 
   return (
@@ -1041,8 +1078,7 @@ export default function App() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4 tracking-tight">Nyckeldata</h2>
                 <div className="flex flex-col gap-4">
-                  {/* Skuldkvot, Räntetäckningsgrad, Kassaflöde */}
-                  {[liveFactors[2], liveFactors[0], liveFactors[1]].map((f, i) => (
+                  {[liveFactors[2], liveFactors[0], liveFactors[1], liveFactors[3]].map((f, i) => (
                     <MetricCard key={f.factor} factor={f} onGranska={granskaHandlers[i]} />
                   ))}
                 </div>
@@ -1060,11 +1096,12 @@ export default function App() {
             {/* ── Höger kolumn ───────────────────────────────────────── */}
             <div className="w-[360px] flex-shrink-0 sticky top-6">
               <DecisionPanel
+                d={CASE}
                 aiReviewed={aiReviewed}
                 onUnlocked={setAiReviewed}
-                onOpenCF={() => setIsCFDrawerOpen(true)}
                 analysisComplete={cfUploadState === 'complete'}
-                onReject={() => setRejectionState('motivating')}
+                onOverride={() => setOverrideState('confirming')}
+                onApprove={() => setApprovedState('completed')}
               />
             </div>
 
@@ -1072,25 +1109,29 @@ export default function App() {
         </main>
       </div>
 
-      <SourceDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onSimulate={() => { setIsDrawerOpen(false); setIsSimulationMode(true) }}
-      />
-      <CashFlowSourceDrawer
-        isOpen={isCFDrawerOpen}
-        onClose={() => setIsCFDrawerOpen(false)}
-        onSimulate={() => { setIsCFDrawerOpen(false); setIsCFSimulationMode(true) }}
-        onUpload={() => { setIsCFDrawerOpen(false); setCfUploadState('analyzing') }}
+      <KeyMetricSourceDrawer
+        isOpen={!!activeDrawerMetric}
+        onClose={() => setActiveDrawerMetric(null)}
+        metric={activeDrawerMetric}
+        caseData={CASE}
+        onSimulate={() => {
+          const metric = activeDrawerMetric;
+          setActiveDrawerMetric(null);
+          setActiveSimulationMetric(metric);
+        }}
+        onUpload={() => {
+          setActiveDrawerMetric(null);
+          setCfUploadState('analyzing');
+        }}
       />
       {cfUploadState === 'analyzing' && (
         <AIAnalysisProgress onComplete={handleCFAnalysisComplete} />
       )}
-      {rejectionState === 'motivating' && (
-        <MotivationModal
+      {overrideState === 'confirming' && (
+        <OverrideModal
           d={CASE}
-          onConfirm={motivation => { setRejectionMotivation(motivation); setRejectionState('rejected') }}
-          onCancel={() => setRejectionState('idle')}
+          onConfirm={motivation => { setOverrideMotivation(motivation); setOverrideState('completed') }}
+          onCancel={() => setOverrideState('idle')}
         />
       )}
     </div>

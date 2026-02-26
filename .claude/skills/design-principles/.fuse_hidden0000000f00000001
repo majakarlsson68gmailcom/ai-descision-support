@@ -11,7 +11,7 @@ description: Reference design principles and guidelines for AI interfaces in hig
 
 ## 1. Projektkontext
 
-**Domäner:** Finans (kredit), Vård (triage)
+**Domäner:** Finans (kredit)
 **Kärnproblem:** Användare kan inte avgöra när AI har fel → övertillit (automation bias) eller undertillit (algorithm aversion).
 **Mål:** Göra AI förklarbart, kontrollerbart och säkert i beslut med höga konsekvenser.
 
@@ -56,33 +56,16 @@ description: Reference design principles and guidelines for AI interfaces in hig
 - Vid låg konfidens/hög risk ska systemet **begränsa AI:s output** och styra mot säkrare flöde
 - Komponenter: AI Mode Selector, Risk Gate Rules, Permission & Role Badge
 
----
-
-## 3. Domänspecifika krav
-
-### Vård (Maya, triage)
-- **Extrem tidspress:** kärninfo ska förstås utan scroll, inom ~60 sek
-- **Osäkerhet inline:** direkt på mätvärden, inte i separat sektion
-- **Klinisk observation:** snabbval (chips/checkboxes), inte fritext
-- **Eskalering:** 1-klick, alltid synlig ("Kontakta ansvarig läkare")
-- Komponent: Triage Compact View
-
-### Finans (Sara, kredit)
-- **Djupare granskning:** drill-down till proveniens per datapunkt + uppdateringsdatum
-- **Inaktuell/saknad data:** föreslå åtgärd + möjlighet att stoppa/nedtona beslut
-- **Override:** obligatorisk kategori + valfri kort fritext (låg friktion, 2 klick)
-- **Audit trail:** läsbar av tredje part (compliance) i skrivskyddat läge + exporterbar
-- Komponent: Case Review View
 
 ---
 
-## 4. Externa riktlinjer
+## 3. Externa riktlinjer
 
 ### EU AI Act (2024, gäller från aug 2026)
 > Källa: https://artificialintelligenceact.eu
 
 **Risk-baserad klassificering:**
-Kredit- och vårdbeslutsstöd faller typiskt under **högrisk-AI** (Annex III) – de strängaste kraven gäller.
+Kredit beslutsstöd faller typiskt under **högrisk-AI** (Annex III) – de strängaste kraven gäller.
 
 **Artikel 13 – Transparens (högrisk-AI):**
 - Systemen måste vara transparenta så att användarna förstår dem korrekt
@@ -156,9 +139,8 @@ Om du behöver djupare motivering för ett designbeslut, sök alltid på dessa:
 
 | Beslut | Regel |
 |--------|-------|
-| Varningsfärg | Orange (`#F97316` / `orange-500`) – aldrig rött för osäkerhet |
 | Godkänn disabled | Alltid synlig förklaring direkt under/bredvid knappen |
-| Proveniens | Alltid synlig i huvudvy (kredit) – aldrig bakom drawer |
+| Proveniens | Alltid synlig i huvudvy – aldrig bakom drawer |
 | Override | 3–5 förifyllda kategorier + fritextfält, max 2 klick |
 | Konfidens | Alltid med orsak – aldrig ensam procentsiffra |
 | Audit trail | Loggas automatiskt vid varje statebyte – kan inte stängas av |
