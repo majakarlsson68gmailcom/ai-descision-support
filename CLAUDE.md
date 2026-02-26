@@ -121,8 +121,8 @@ npm run preview   # förhandsgranska bygge
 
 | State | Beskrivning | Nyckelkomponenter |
 |-------|-------------|-------------------|
-| 1 – Normalfallet | AI avslag, konfidens 89%, alla källor aktuella | Grundflödet |
-| **2 – Osäkerhetsfallet** | **AI avslag, konfidens 61%, en källa >6 mån gammal** | **T2, U1, U3, U4, H1 (Godkänn disabled)** |
+| 1 – Normalfallet | AI avslag, konfidens hög, alla källor aktuella | Grundflödet |
+| **2 – Osäkerhetsfallet** | **AI avslag, konfidens medium, en källa >6 mån gammal** | **T2, U1, U3, U4, H1 (Godkänn disabled)** |
 | 3 – Override-fallet | Sara godkänner trots AI-avslag | H3, H2, S1 |
 | 4 – Audit-fallet | Compliance-vy, skrivskyddad | S1, S2, S3, S4 |
 
@@ -139,8 +139,8 @@ const CASE = {
   purpose: "Rörelsekapital och maskinköp",
   officer: "Sara Lindgren",
   aiRecommendation: "AVSLAG",
-  confidence: 61,
-  confidenceLevel: "low", // high > 80, medium 70-80, low < 70
+  confidence: "medium",
+  confidenceLevel: "medium", // high > 80, medium 70-80, low < 70
   uncertaintyReasons: [
     "Årsredovisning är äldre än 6 månader",
     "Kassaflödesdata saknas för Q3 2024",

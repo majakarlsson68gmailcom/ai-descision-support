@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { X, Upload, FileText, ArrowUpRight, HelpCircle, ArrowRight, Trash2, Copy, Info, AlertTriangle, ExternalLink, ChevronRight, ChevronsRight, Maximize2 } from 'lucide-react'
+import { X, Upload, FileText, ArrowUpRight, HelpCircle, ArrowRight, Trash2, Copy, Info, AlertTriangle, ExternalLink, ChevronRight, ChevronsRight, Maximize2, FileSearch, ShieldAlert, Sparkles } from 'lucide-react'
 
 // Helper component for AI Badge
 function AIBadge() {
     return (
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold tracking-wider uppercase">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium">
+            <Sparkles size={14} />
             AI
         </div>
     )
@@ -246,30 +246,30 @@ export default function CashFlowSourceDrawer({ isOpen, onClose, onSimulate, onUp
 
                         {/* ACTION 1: Ladda upp nytt (Recommended) */}
                         <div
-                            className={`bg-white rounded-xl p-5 border cursor-pointer transition-colors relative overflow-hidden ${selectedAction === 'upload' ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50/20' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}`}
+                            className={`bg-white rounded-xl p-5 border cursor-pointer transition-colors relative overflow-hidden flex flex-col gap-4 ${selectedAction === 'upload' ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50/20' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}`}
                             onClick={() => setSelectedAction('upload')}
                         >
-                            <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-bl-lg">
-                                Rekommenderat steg
+                            <div className="absolute top-0 right-0 bg-[#E8EFFC] text-[#24488A] text-xs font-medium px-4 py-1.5 rounded-bl-[10px]">
+                                Rekommenderat
                             </div>
-                            <div className="flex items-start gap-3 mb-1">
-                                <div className={`p-1.5 rounded-md shrink-0 mt-0.5 ${selectedAction === 'upload' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                    <Upload size={16} />
+                            <div className="flex items-start gap-4">
+                                <div className="p-2.5 rounded border border-gray-200 bg-gray-50 text-gray-700 shrink-0 mt-0.5">
+                                    <Upload size={22} strokeWidth={1.5} />
                                 </div>
-                                <div>
-                                    <h3 className={`font-semibold text-base mb-1 ${selectedAction === 'upload' ? 'text-blue-900' : 'text-gray-900'}`}>Ersätt källdata</h3>
-                                    <p className="text-sm text-gray-500 mb-0">
-                                        Ladda upp ett nyare dokument som ersätter den nuvarande källan i analysen. Förbättrar konfidensgraden.
+                                <div className="pr-16">
+                                    <h3 className={`font-semibold text-base mb-1.5 ${selectedAction === 'upload' ? 'text-gray-900' : 'text-gray-900'}`}>Ladda upp ett nytt underlag</h3>
+                                    <p className="text-[14px] text-gray-600 leading-relaxed mb-0">
+                                        Ladda upp ett nyare dokument som ersätter den nuvarande källan i analysen
                                     </p>
                                 </div>
                             </div>
 
                             {/* Expanded Area for Upload */}
                             {selectedAction === 'upload' && (
-                                <div className="mt-4 pt-4 border-t border-gray-100 animate-[fadeIn_0.2s_ease-out]">
+                                <div className="mt-2 pt-5 border-t border-gray-100 animate-[fadeIn_0.2s_ease-out]">
                                     {/* Upload Dropzone */}
                                     <div className="border border-dashed border-blue-200 bg-blue-50/50 rounded-lg p-6 flex flex-col items-center justify-center mb-4">
-                                        <Upload className="text-gray-600 mb-2" size={20} />
+                                        <Upload className="text-gray-600 mb-2" size={24} strokeWidth={1.5} />
                                         <div className="text-sm text-center">
                                             <span className="text-blue-600 font-medium">Välj fil</span> <span className="text-gray-600">eller dra och släpp här</span>
                                         </div>
@@ -278,41 +278,17 @@ export default function CashFlowSourceDrawer({ isOpen, onClose, onSimulate, onUp
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-between items-center mb-6">
-                                        <div className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 cursor-pointer">
-                                            Hjälp <HelpCircle size={12} />
+                                    <div className="flex justify-between items-center mb-1">
+                                        <div className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 cursor-pointer font-medium">
+                                            Hjälp <HelpCircle size={14} />
                                         </div>
                                         <div className="flex gap-2">
-                                            <button className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">
+                                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm transition-colors">
                                                 Avbryt
                                             </button>
-                                            <button onClick={() => onUpload?.()} className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 flex items-center gap-1.5">
-                                                Importera källor <Upload size={14} />
+                                            <button onClick={() => onUpload?.()} className="px-4 py-2 text-sm font-medium text-white bg-[#3059CE] rounded-md hover:bg-blue-700 shadow-sm flex items-center gap-2 transition-colors">
+                                                Importera källor <Upload size={16} strokeWidth={2} />
                                             </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Current File */}
-                                    <div className="pt-2">
-                                        <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Nuvarande underlag</div>
-                                        <div className="flex items-center justify-between border border-gray-200 bg-white rounded-lg p-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded bg-gray-50 shrink-0">
-                                                    <FileText size={16} className="text-gray-400" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-medium text-gray-900">Årsredovisning-2022.pdf</div>
-                                                    <div className="text-xs text-gray-500 mt-0.5">15 MB • Uppladdad via UC</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-1.5">
-                                                <button className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Öppna källa">
-                                                    <ExternalLink size={16} />
-                                                </button>
-                                                <button className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Ta bort">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -321,31 +297,31 @@ export default function CashFlowSourceDrawer({ isOpen, onClose, onSimulate, onUp
 
                         {/* ACTION 2: Simulera */}
                         <div
-                            className={`bg-white rounded-xl p-5 border cursor-pointer transition-colors ${selectedAction === 'simulate' ? 'border-gray-500 ring-1 ring-gray-600 bg-gray-50/50' : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'}`}
+                            className={`bg-white rounded-xl p-5 border cursor-pointer transition-colors mt-4 flex flex-col gap-4 ${selectedAction === 'simulate' ? 'border-blue-500 ring-1 ring-blue-500 bg-white shadow-sm' : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'}`}
                             onClick={() => setSelectedAction('simulate')}
                         >
-                            <div className="flex items-start gap-3 mb-1">
-                                <div className={`p-1.5 rounded-md shrink-0 mt-0.5 ${selectedAction === 'simulate' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                    <ArrowUpRight size={16} />
+                            <div className="flex items-start gap-4">
+                                <div className="p-2.5 rounded border border-gray-200 bg-gray-50 text-gray-700 shrink-0 mt-0.5">
+                                    <FileSearch size={22} strokeWidth={1.5} />
                                 </div>
-                                <div>
-                                    <h3 className={`font-semibold text-base mb-1 ${selectedAction === 'simulate' ? 'text-gray-900' : 'text-gray-900'}`}>Simulera framtid</h3>
-                                    <p className="text-sm text-gray-500 mb-0">
-                                        Genomför en fiktiv vad-om-analys. Påverkar varken beslutet eller loggen för ärendet.
+                                <div className="pr-4">
+                                    <h3 className={`font-semibold text-base mb-1.5 ${selectedAction === 'simulate' ? 'text-gray-900' : 'text-gray-900'}`}>Simulera med en annan källa</h3>
+                                    <p className="text-[14px] text-gray-600 leading-relaxed mb-0">
+                                        Se hur AI:ns rekommendation och konfidens skulle ändras om du väljer ett annat underlag. Inget beslut registreras.
                                     </p>
                                 </div>
                             </div>
 
                             {selectedAction === 'simulate' && (
-                                <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center animate-[fadeIn_0.2s_ease-out]">
-                                    <div className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 cursor-pointer">
-                                        Hur fungerar simulering? <HelpCircle size={12} />
+                                <div className="mt-2 pt-5 border-t border-gray-200 flex justify-between items-center animate-[fadeIn_0.2s_ease-out]">
+                                    <div className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 cursor-pointer font-medium">
+                                        Hur fungerar simulering? <HelpCircle size={14} />
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); onSimulate(); }}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 shadow-sm flex items-center gap-1.5"
+                                        className="px-4 py-2 text-[14px] font-medium text-white bg-[#3059CE] border border-transparent rounded-md hover:bg-blue-700 shadow-sm flex items-center gap-2 transition-colors"
                                     >
-                                        Öppna simuleringsvy <ArrowUpRight size={14} />
+                                        Öppna simuleringsvy <ArrowUpRight size={16} />
                                     </button>
                                 </div>
                             )}
@@ -353,53 +329,66 @@ export default function CashFlowSourceDrawer({ isOpen, onClose, onSimulate, onUp
 
                         {/* ACTION 3: Godkänn utan uppladdning (Override/Undantag) */}
                         <div
-                            className={`bg-white rounded-xl p-5 border cursor-pointer transition-colors ${selectedAction === 'approve' ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50/20' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40'}`}
+                            className={`bg-white rounded-xl p-5 border cursor-pointer transition-colors mt-4 flex flex-col gap-4 ${selectedAction === 'approve' ? 'border-blue-500 ring-1 ring-blue-500 bg-white shadow-sm' : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'}`}
                             onClick={() => setSelectedAction('approve')}
                         >
-                            <div className="flex items-start gap-3 mb-1">
-                                <div className={`p-1.5 rounded-md shrink-0 mt-0.5 ${selectedAction === 'approve' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-600'}`}>
-                                    <AlertTriangle size={16} />
+                            <div className="flex items-start gap-4">
+                                <div className="p-2.5 rounded border border-gray-200 bg-gray-50 text-gray-700 shrink-0 mt-0.5">
+                                    <ShieldAlert size={22} strokeWidth={1.5} />
                                 </div>
-                                <div>
-                                    <h3 className={`font-semibold text-base mb-1 ${selectedAction === 'approve' ? 'text-indigo-900' : 'text-gray-900'}`}>Godkänn befintligt underlag</h3>
-                                    <p className="text-sm text-gray-500 mb-0">
-                                        Behåll varningen om gammal data och motivera ett undantag. Låser den befintliga källan för rekommendationen.
+                                <div className="pr-4">
+                                    <h3 className={`font-semibold text-base mb-1.5 ${selectedAction === 'approve' ? 'text-gray-900' : 'text-gray-900'}`}>Godkänn utan uppladdning</h3>
+                                    <p className="text-[14px] text-gray-600 leading-relaxed mb-0">
+                                        Godkänn granskning utan nytt underlag. Använd om du har tillgång till information som inte kan laddas upp i systemet.
                                     </p>
                                 </div>
                             </div>
 
                             {/* Expanded Area for Override */}
                             {selectedAction === 'approve' && (
-                                <div className="mt-4 pt-4 border-t border-indigo-100 animate-[fadeIn_0.2s_ease-out]">
-                                    <div className="bg-white rounded-lg p-5 border border-indigo-200 ring-4 ring-indigo-50 shadow-sm">
-                                        <h4 className="font-semibold text-gray-900 text-sm mb-3">Varför godkänns underlaget trots hög ålder?</h4>
+                                <div className="mt-2 pt-5 border-t border-gray-200 animate-[fadeIn_0.2s_ease-out]">
+                                    <div className="mb-6">
+                                        <h4 className="font-semibold text-gray-900 text-[15px] mb-1">Godkänn befintligt underlag (undantag)</h4>
+                                        <p className="text-gray-500 text-[13px] italic mb-0">
+                                            Du godkänner granskningen utan att ladda upp nytt underlag. Varningen kvarstår och ditt skäl loggas för spårbarhet.
+                                        </p>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <h4 className="font-semibold text-gray-900 text-sm mb-3">Varför godkänner du trots att underlaget är gammalt?</h4>
 
                                         {/* Structured Override Chips */}
-                                        <div className="flex flex-wrap gap-2 mb-4">
-                                            <button className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 rounded-md hover:bg-indigo-50 hover:text-indigo-700 border border-gray-200 transition-colors">
-                                                Beslut grundas ej på detta underlag
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            <button className="px-3 py-1.5 text-[13px] font-medium bg-[#EAEAEA] text-gray-800 rounded hover:bg-gray-300 border border-gray-300 transition-colors">
+                                                Gammal datakälla
                                             </button>
-                                            <button className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 rounded-md hover:bg-indigo-50 hover:text-indigo-700 border border-gray-200 transition-colors">
-                                                Avvikelsen marginell (verifierat)
+                                            <button className="px-3 py-1.5 text-[13px] font-medium bg-[#EAEAEA] text-gray-800 rounded hover:bg-gray-300 border border-gray-300 transition-colors">
+                                                Avvikelsen är liten och verifierad
                                             </button>
-                                            <button className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 rounded-md hover:bg-indigo-50 hover:text-indigo-700 border border-gray-200 transition-colors">
-                                                Ny data bekräftad muntligt
+                                            <button className="px-3 py-1.5 text-[13px] font-medium bg-[#EAEAEA] text-gray-800 rounded hover:bg-gray-300 border border-gray-300 transition-colors">
+                                                Ny information verifierad utanför systemet
                                             </button>
                                         </div>
+                                    </div>
 
+                                    <div className="mb-2">
+                                        <h4 className="text-[14px] text-gray-800 mb-2">Motivering (valfritt men rekommenderas)</h4>
                                         <textarea
-                                            className="w-full h-24 p-3 border border-gray-300 rounded-md text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 mb-2 resize-none"
-                                            placeholder='Valfritt: Skriv en djupare motivering här. (Ex: "Telefon med VD styrker kassaflöde")'
+                                            className="w-full h-32 p-3 border border-gray-300 rounded-md text-[14px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none mb-1 shadow-inner"
+                                            placeholder='Beskriv kort vad som verifierats och hur. Ex: "Kontakt med VD 2026-02-24. Kassaflöde bekräftat mot bankutdrag."'
                                         ></textarea>
-
-                                        <div className="flex justify-between items-center pt-2">
-                                            <div className="text-xs text-indigo-700 w-2/3 flex items-center gap-1.5 font-medium leading-tight">
-                                                <Info size={14} className="shrink-0" /> Din motivering loggas i ärendets historik och krävs inför beslut.
-                                            </div>
-                                            <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 shadow-sm shrink-0 whitespace-nowrap transition-colors">
-                                                Spara undantag
-                                            </button>
+                                        <div className="flex justify-between items-start mt-1">
+                                            <p className="text-[13px] text-gray-600 leading-snug w-2/3">
+                                                Din motivering loggas i ärendets historik och kan granskas i efterhand.
+                                            </p>
+                                            <span className="text-[13px] text-gray-500">0/500 tecken</span>
                                         </div>
+                                    </div>
+
+                                    <div className="flex justify-end mt-4">
+                                        <button className="px-4 py-2 text-[14px] font-medium text-white bg-[#3059CE] border border-transparent rounded hover:bg-blue-700 shadow-sm transition-colors">
+                                            Spara underlag
+                                        </button>
                                     </div>
                                 </div>
                             )}
