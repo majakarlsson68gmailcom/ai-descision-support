@@ -59,19 +59,19 @@ export const CASE = {
     },
     {
       factor: "Branschrisk (SNI 41.20)",
-      value: "Förhöjd",
+      value: null,
       direction: "negativ",
       weight: "hög",
-      description: "Förhöjd branschrisk för byggbranschen (SNI 41.20). Branschdata är 30 dagar gammal och överskrider bankens policy på max 14 dagar.",
-      source: "Branschdata",
+      description: "Branschdata-API:t svarade inte vid analystillfället. Faktorn har exkluderats från AI:ns beräkning.",
+      source: "Branschdata (API)",
       sourceCount: 0,
-      stale: true,
-      staleReason: "Källan är inaktuell. Bankens policy: Max 14 dagar.",
+      status: "unavailable",
+      stale: false,
       period: "Okt 2024",
       limit: "Normal",
       limitLabel: "Jämförelse",
-      diff: "+1 nivå",
-      diffDirection: "över",
+      diff: "–",
+      diffDirection: "uppfyller",
     },
   ],
   dataSources: [
@@ -98,9 +98,8 @@ export const CASE = {
     {
       name: "Branschdata (SNI 41.20)",
       date: "2024-10-15",
-      period: "Okt 2024",
-      status: "stale",
-      staleReason: "30 dagar gammal. Bankens policy: Max 14 dagar.",
+      period: "–",
+      status: "unavailable",
     },
   ],
   nextBestActions: [
@@ -110,7 +109,7 @@ export const CASE = {
   aiSummary: "AI rekommenderar godkännande baserat på felfri betalningshistorik (36 månader) och acceptabel skuldkvot. Omsättnings- och kassaflödesdata baseras på oreviderat bokslut från maj 2023 — en källa som är äldre än 12 månader. Limitökningen om 80% i kombination med förhöjd branschrisk sänker konfidensen till låg nivå.",
   uncertaintyReasons: [
     "Bokslut (oreviderat) är 18 månader gammalt",
-    "Branschdata är 30 dagar gammal (policy: max 14 dagar)",
+    "Källa otillgänglig - branschrisk kan ej bedömas",
   ],
   dataQualityWarning: "Bokslut (oreviderat) är 18 månader gammalt",
 };
@@ -118,3 +117,35 @@ export const CASE = {
 export const DISABLED_APPROVE_REASON = "Låst tills kritisk granskning är genomförd.";
 export const DISABLED_SUPPLEMENT_REASON = "Låst tills AI-underlaget har granskats.";
 export const REJECT_WARNING = "Kräver motivering om granskning ej genomförts";
+
+export const BOKSLUT_DOCUMENT = {
+  title: "Bokslut 2022",
+  company: "Lindström Bygg AB",
+  orgNr: "556832-4471",
+  period: "1 januari – 31 december 2022",
+  preparedBy: "Ej reviderat",
+  preparedDate: "Maj 2023",
+  isUnreviewed: true,
+  staleWarning: "Oreviderat bokslut – 18 månader gammalt. Bankens policy kräver underlag yngre än 12 månader.",
+  sections: [
+    { id: "heading-resultat",     type: "heading",   text: "Resultaträkning" },
+    { id: "row-nettoomsattning",  type: "row",       label: "Nettoomsättning",                    value: "44 230",  highlight: true  },
+    { id: "row-aktiverat",        type: "row",       label: "Aktiverat arbete för egen räkning",   value: "1 850",   highlight: false },
+    { id: "row-ovriga-intakter",  type: "row",       label: "Övriga rörelseintäkter",              value: "410",     highlight: false },
+    { id: "heading-kostnader",    type: "heading",   text: "Rörelsekostnader" },
+    { id: "row-material",         type: "row-sub",   label: "Råvaror och förnödenheter",           value: "−22 140", highlight: false },
+    { id: "row-personal",         type: "row-sub",   label: "Personalkostnader",                   value: "−12 450", highlight: false },
+    { id: "row-avskrivningar",    type: "row-sub",   label: "Avskrivningar",                       value: "−1 920",  highlight: false },
+    { id: "row-ovriga-kostnader", type: "row-sub",   label: "Övriga rörelsekostnader",             value: "−2 400",  highlight: false },
+    { id: "row-ebit",             type: "row-bold",  label: "Rörelseresultat (EBIT)",              value: "7 570",   highlight: true  },
+    { id: "row-finansnetto",      type: "row",       label: "Finansnetto",                         value: "−680",    highlight: false },
+    { id: "row-resultat-ef",      type: "row",       label: "Resultat efter finansiella poster",   value: "6 890",   highlight: false },
+    { id: "row-skatt",            type: "row",       label: "Skatt på årets resultat",             value: "−1 516",  highlight: false },
+    { id: "row-arets-resultat",   type: "row-total", label: "Årets resultat",                      value: "5 374",   highlight: true  },
+  ],
+  stamps: [
+    { id: "stamp-1", label: "Nettoomsättning",        value: "44 230 TSEK", location: "Sida 1 · Rad 1",  rowId: "row-nettoomsattning" },
+    { id: "stamp-2", label: "Rörelseresultat (EBIT)",  value: "7 570 TSEK",  location: "Sida 1 · Rad 9",  rowId: "row-ebit"            },
+    { id: "stamp-3", label: "Årets resultat",          value: "5 374 TSEK",  location: "Sida 1 · Rad 13", rowId: "row-arets-resultat"  },
+  ],
+};

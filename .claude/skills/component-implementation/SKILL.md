@@ -9,6 +9,55 @@ description: Rules and workflow for implementing React components in the AI inte
 
 ---
 
+## Komponentbibliotek (16 komponenter)
+
+### Transparens
+| ID | Komponent | Syfte |
+|----|-----------|-------|
+| T1 | AI Recommendation Card | Visa AI-förslag tydligt som förslag (inte sanning). Label "AI-förslag" alltid synlig. |
+| T2 | Source/Provenance Panel | Visa källa + datum per datapunkt. Flagga inaktuell/saknas. |
+| T3 | Why/Explanation Drawer | 3-sek-sammanfattning (Top 3 faktorer). Mer detaljer vid behov. |
+| T4 | Assumption & Limitations Banner | Visas när underlag saknas/konflikt. Beskriver vad som saknas + nästa steg. |
+
+### Osäkerhet
+| ID | Komponent | Syfte |
+|----|-----------|-------|
+| U1 | Confidence Indicator | Nivåer hög/medel/låg + tooltip "varför". Aldrig ensam utan kontext. |
+| U2 | Uncertainty Reasons List | Max 3 orsaker i huvudvy, resten i drawer. |
+| U3 | Data Quality Inline Tag | Status: ok / osäker / saknas / inaktuell / konflikt – direkt på datapunkten. |
+| U4 | Next Best Action Chip | Vid låg/medel konfidens: 1–2 föreslagna åtgärder (kontrollera, begär, eskalera). |
+
+### Human-in-the-loop
+| ID | Komponent | Syfte |
+|----|-----------|-------|
+| H1 | Decision Action Bar | Godkänn/Avslå/Begär komplettering. Alltid synlig. Kan vara disabled + förklaring. |
+| H2 | Review Gate | Bekräftelsesteg innan slutbeslut. Max 1 steg i tidspresskläge. |
+| H3 | Override Flow | Avvika från AI: obligatorisk kategori + valfri fritext. Ska inte kännas som "försvara sig". |
+| H4 | Add Context Input | Snabbval (chips) + kort text. Lägga till domänsignal AI saknar. Loggas. |
+
+### Spårbarhet
+| ID | Komponent | Syfte |
+|----|-----------|-------|
+| S1 | Decision Log Timeline | Händelsekedja: input → AI-analys → beslut → motivering. Tidsstämplar + användaridentitet. |
+| S2 | Version & Model Info Block | Vilken modell/version/dataset användes. Alltid i audit-vy. |
+| S3 | Diff View | Skillnad mellan AI-förslag och slutbeslut. Visas efter beslut eller i audit-vy. |
+| S4 | Export Control | Exportera logg (PDF/CSV). Skrivskyddat läge. Inkluderar ID + datum + version. |
+
+## Byggsordning
+
+1. `tokens.js` – design tokens
+2. T2 Source/Provenance Panel + U3 Data Quality Tag
+3. U1 Confidence Indicator + U2 Uncertainty Reasons
+4. T1 AI Recommendation Card (beror på U1)
+5. U4 Next Best Action Chip
+6. H1 Decision Action Bar (med disabled-logik)
+7. T3 Why/Explanation Drawer
+8. H3 Override Flow
+9. S1 Decision Log Timeline
+10. S4 Export Control
+
+---
+
 ## 0. Obligatoriskt arbetsflöde
 
 ```

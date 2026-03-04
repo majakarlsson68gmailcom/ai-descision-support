@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, FileText, Sparkles, User, Scale } from 'lucide-react'
 import { confidence as confTokens, dataQuality as dqTokens, statusLabels } from '../tokens'
 
 // ── Chip styles ────────────────────────────────────────────────────────────────
@@ -7,6 +7,7 @@ import { confidence as confTokens, dataQuality as dqTokens, statusLabels } from 
 const chipStyles = {
   high:    `${confTokens.high.bg} ${confTokens.high.text} border ${confTokens.high.border}`,
   medium:  `${confTokens.medium.bg} ${confTokens.medium.text} border ${confTokens.medium.border}`,
+  low:     `${confTokens.low.bg} ${confTokens.low.text} border ${confTokens.low.border}`,
   neutral: 'bg-gray-100 text-gray-500 border border-gray-200',
   aligned: 'bg-green-50 text-green-700 border border-green-200',
 }
@@ -19,22 +20,51 @@ function Chip({ label, style = 'neutral' }) {
   )
 }
 
-// ── Actor label (plain text, no badge) ─────────────────────────────────────────
+// ── Actor badge ────────────────────────────────────────────────────────────────
 
-function ActorLabel({ actor }) {
+function ActorBadge({ actor }) {
   if (!actor) return null
   return (
-    <span className="text-xs text-gray-400 flex-shrink-0">{actor}</span>
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-gray-100 text-gray-500 border border-gray-200 flex-shrink-0">
+      {actor}
+    </span>
   )
 }
 
-// ── Dot colors by event type ───────────────────────────────────────────────────
+// ── Event icon ─────────────────────────────────────────────────────────────────
 
-const dotColor = {
-  system:   'bg-gray-300',
-  ai:       'bg-blue-500',
-  user:     'bg-gray-400',
-  decision: 'bg-blue-700',
+const iconConfig = {
+  system:   { Icon: FileText, cls: 'bg-gray-100 text-gray-500' },
+  ai:       { Icon: Sparkles, cls: 'bg-blue-100 text-blue-600' },
+  user:     { Icon: User,     cls: 'bg-gray-100 text-gray-500' },
+  decision: { Icon: Scale,    cls: 'bg-blue-600 text-white' },
+}
+
+function EventIcon({ type }) {
+  const { Icon, cls } = iconConfig[type] || iconConfig.system
+  return (
+    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${cls}`}>
+      <Icon size={15} strokeWidth={1.8} />
+    </div>
+  )
+}
+
+// ── Expand button ──────────────────────────────────────────────────────────────
+
+function ExpandButton({ isExpanded, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1 px-2 py-1 rounded bg-gray-100 border border-gray-200 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors flex-shrink-0 shadow-[inset_0px_-1px_2px_rgba(0,0,0,0.05),inset_0px_1px_1px_rgba(255,255,255,0.8)]"
+      aria-label={isExpanded ? 'Dölj detaljer' : 'Visa detaljer'}
+    >
+      {isExpanded ? (
+        <>Dölj <ChevronUp size={13} /></>
+      ) : (
+        <>Visa detaljer <ChevronDown size={13} /></>
+      )}
+    </button>
+  )
 }
 
 // ── Expanded detail sub-components ────────────────────────────────────────────
@@ -55,8 +85,8 @@ function DetailRows({ rows }) {
 function SourcesTable({ sources }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Datakällor</p>
-      <div className="flex flex-col gap-1">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Datakällor</p>
+      <div className="flex flex-col gap-1.5">
         {sources.map(src => {
           const q = dqTokens[src.status] || dqTokens.ok
           const isOk = src.status === 'ok'
@@ -84,7 +114,7 @@ function SourcesTable({ sources }) {
 function FactorsTable({ factors }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nyckelfaktorer</p>
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Nyckelfaktorer</p>
       <div className="flex flex-col gap-1.5">
         {factors.map(f => {
           const isStale = f.quality === 'stale'
@@ -132,13 +162,14 @@ export default function DecisionLogTimeline({ events }) {
 
   return (
     <div className="relative">
-      {/* Vertical connector line */}
-      <div className="absolute left-[7px] top-3 bottom-3 w-px bg-gray-200" />
+      {/* Vertical connector line – centred on icon column (w-12 time + 4 gap + 16px half-icon = ~52px) */}
+      <div className="absolute left-[3.25rem] top-4 bottom-4 w-px bg-gray-200" />
 
-      <div className="flex flex-col gap-0">
+      <div className="flex flex-col">
         {events.map((ev, idx) => {
           const isExpanded = expandedId === ev.id
           const isDecision = ev.type === 'decision'
+          const isSystem = ev.type === 'system'
           const hasDetail = ev.detail && (
             ev.detail.rows?.length ||
             ev.detail.factors?.length ||
@@ -147,90 +178,84 @@ export default function DecisionLogTimeline({ events }) {
           )
 
           return (
-            <div key={ev.id} className={`relative ${idx < events.length - 1 ? 'pb-5' : ''}`}>
-              {/* Dot */}
-              <div className={`absolute left-0 top-[10px] w-3.5 h-3.5 rounded-full z-10 ${dotColor[ev.type] || 'bg-gray-300'} ${isDecision ? 'ring-2 ring-blue-200' : ''}`} />
+            <div key={ev.id} className={`flex gap-4 ${idx < events.length - 1 ? 'pb-6' : ''}`}>
 
-              {/* Content */}
-              <div className={`ml-7 ${isDecision ? 'bg-blue-50 border border-blue-100 rounded-xl px-4 py-3' : ''}`}>
-                {/* Top row */}
-                <div className="flex items-start gap-2 flex-wrap">
+              {/* ── Left: time column ── */}
+              <div className="w-12 text-right flex-shrink-0 pt-1.5">
+                <span className="text-xs tabular-nums text-gray-400">{ev.time}</span>
+              </div>
+
+              {/* ── Centre: icon ── */}
+              <div className="flex-shrink-0 z-10">
+                <EventIcon type={ev.type} />
+              </div>
+
+              {/* ── Right: content ── */}
+              <div className="flex-1 min-w-0">
+                {/* Summary row */}
+                <div className={`flex items-center gap-2 flex-wrap ${isDecision ? 'border-l-2 border-blue-500 pl-3 -ml-1' : ''}`}>
                   <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-                    <ActorLabel actor={ev.actor} />
-                    <span className={`text-sm ${isDecision ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'} leading-snug`}>
+                    {ev.actor && <ActorBadge actor={ev.actor} />}
+                    <span className={`text-sm leading-snug ${isDecision ? 'font-semibold text-gray-900' : isSystem ? 'text-gray-500' : 'font-medium text-gray-700'}`}>
                       {ev.label}
                     </span>
                     {ev.chips.map((chip, ci) => (
                       <Chip key={ci} label={chip.label} style={chip.style} />
                     ))}
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                    <span className="text-xs text-gray-400 whitespace-nowrap">{ev.time}</span>
-                    {hasDetail && (
-                      <button
-                        onClick={() => toggle(ev.id)}
-                        className="flex items-center gap-0.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label={isExpanded ? 'Dölj detaljer' : 'Visa detaljer'}
-                      >
-                        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      </button>
-                    )}
-                  </div>
+                  {hasDetail && (
+                    <ExpandButton isExpanded={isExpanded} onClick={() => toggle(ev.id)} />
+                  )}
                 </div>
 
-                {/* Expanded detail */}
+                {/* Expanded detail panel */}
                 {isExpanded && hasDetail && (
-                  <div className={`mt-3 flex flex-col gap-4 ${isDecision ? '' : 'pl-0'}`}>
-                    {/* Intro text */}
-                    {ev.detail.intro && (
-                      <p className="text-xs text-gray-500">{ev.detail.intro}</p>
-                    )}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="bg-gray-50 rounded-lg px-4 py-3 flex flex-col gap-4">
+                      {ev.detail.intro && (
+                        <p className="text-xs text-gray-500">{ev.detail.intro}</p>
+                      )}
 
-                    {/* Confidence change visual */}
-                    {ev.detail.confidenceChange && (
-                      <ConfidenceChange change={ev.detail.confidenceChange} />
-                    )}
+                      {ev.detail.confidenceChange && (
+                        <ConfidenceChange change={ev.detail.confidenceChange} />
+                      )}
 
-                    {/* Confidence reason */}
-                    {ev.detail.confidenceReason && (
-                      <div className="flex items-start gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
-                        <div className="w-1 h-1 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
-                        <p className="text-xs text-orange-700">{ev.detail.confidenceReason}</p>
-                      </div>
-                    )}
-
-                    {/* Factors table */}
-                    {ev.detail.factors?.length > 0 && (
-                      <FactorsTable factors={ev.detail.factors} />
-                    )}
-
-                    {/* Sources table */}
-                    {ev.detail.sources?.length > 0 && (
-                      <SourcesTable sources={ev.detail.sources} />
-                    )}
-
-                    {/* Decision detail */}
-                    {ev.detail.decision && (
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">Kategori</span>
-                          <span className="text-xs font-medium text-gray-700">{ev.detail.motivationCategory}</span>
+                      {ev.detail.confidenceReason && (
+                        <div className="flex items-start gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
+                          <div className="w-1 h-1 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
+                          <p className="text-xs text-orange-700">{ev.detail.confidenceReason}</p>
                         </div>
-                        {ev.detail.motivationText && (
-                          <div>
-                            <span className="text-xs text-gray-400 block mb-1">Motivering</span>
-                            <p className="text-xs text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 leading-relaxed">
-                              {ev.detail.motivationText}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      )}
 
-                    {/* Generic detail rows */}
-                    {ev.detail.rows?.length > 0 && (
-                      <DetailRows rows={ev.detail.rows} />
-                    )}
+                      {ev.detail.factors?.length > 0 && (
+                        <FactorsTable factors={ev.detail.factors} />
+                      )}
+
+                      {ev.detail.sources?.length > 0 && (
+                        <SourcesTable sources={ev.detail.sources} />
+                      )}
+
+                      {ev.detail.decision && (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400">Kategori</span>
+                            <span className="text-xs font-medium text-gray-700">{ev.detail.motivationCategory}</span>
+                          </div>
+                          {ev.detail.motivationText && (
+                            <div>
+                              <span className="text-xs text-gray-400 block mb-1">Motivering</span>
+                              <p className="text-xs text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 leading-relaxed">
+                                {ev.detail.motivationText}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {ev.detail.rows?.length > 0 && (
+                        <DetailRows rows={ev.detail.rows} />
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

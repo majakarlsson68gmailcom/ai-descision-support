@@ -11,7 +11,7 @@ function AIBadge() {
     )
 }
 
-export default function KeyMetricSourceDrawer({ isOpen, onClose, onSimulate, onUpload, metric, caseData }) {
+export default function KeyMetricSourceDrawer({ isOpen, onClose, onSimulate, onUpload, metric, caseData, onOpenSource }) {
     const [selectedAction, setSelectedAction] = useState(null) // 'upload', 'simulate', 'approve'
     const [evaluation, setEvaluation] = useState(null) // 'approved', 'questioned', 'insufficient'
     const [drawerWidth, setDrawerWidth] = useState(600)
@@ -45,8 +45,9 @@ export default function KeyMetricSourceDrawer({ isOpen, onClose, onSimulate, onU
 
     if (!isOpen || !metric || !caseData) return null
 
-    const cleanValue = metric.value.replace(/↑|↓/g, '').trim()
+    const cleanValue = metric.value ? metric.value.replace(/↑|↓/g, '').trim() : 'Okänt'
     const isStale = metric.stale
+    const isUnavailable = metric.status === 'unavailable'
 
     return (
         <>
@@ -106,14 +107,14 @@ export default function KeyMetricSourceDrawer({ isOpen, onClose, onSimulate, onU
                     </div>
 
                     {/* Warning Banner */}
-                    {isStale && (
+                    {(isStale || isUnavailable) && (
                         <div className="bg-[#FFF4E5] text-amber-800 text-sm font-medium py-3 px-6 flex items-center justify-center gap-2 m-6 mt-8 rounded-md">
                             <AlertTriangle size={16} className="text-amber-600" />
-                            Denna analys behöver manuell granskning (föråldrad data)
+                            {isUnavailable ? 'Källa saknas eller är otillgänglig för detta nyckeltal' : `Denna analys behöver manuell granskning (${metric.factor === 'Omsättningsdata' ? 'källan är oreviderad' : 'föråldrad data'})`}
                         </div>
                     )}
 
-                    <div className={`px-8 pb-8 flex flex-col gap-10 ${!isStale ? 'mt-8' : ''}`}>
+                    <div className={`px-8 pb-8 flex flex-col gap-10 ${!(isStale || isUnavailable) ? 'mt-8' : ''}`}>
 
                         {/* Header Section */}
                         <div>
@@ -135,7 +136,7 @@ export default function KeyMetricSourceDrawer({ isOpen, onClose, onSimulate, onU
 
                             <div>
                                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Aktuellt värde</h2>
-                                <div className={`text-4xl font-bold ${metric.direction === 'positiv' ? 'text-gray-900' : 'text-[#D03027]'}`}>
+                                <div className="text-4xl font-bold text-gray-900">
                                     {cleanValue}
                                 </div>
                             </div>
@@ -159,11 +160,11 @@ export default function KeyMetricSourceDrawer({ isOpen, onClose, onSimulate, onU
                             <p className="text-base text-gray-700 leading-relaxed mb-4">
                                 {metric.description}
                             </p>
-                            {isStale && (
+                            {(isStale || isUnavailable) && (
                                 <>
                                     <h3 className="text-lg font-semibold text-gray-900 mb-2 mt-6">Varför är konfidensen inte högre?</h3>
                                     <p className="text-base text-gray-700 leading-relaxed">
-                                        Eftersom datan är över 12 månader gammal kan en plötslig förändring inte uteslutas. Osäkerheten kring den aktuella finansiella statusen sänker därför den totala konfidensen.
+                                        {isUnavailable ? 'Osäkerheten kring denna faktor försämrar den sammantagna konfidensgraden, då aktuell branschdata ej kunde inhämtas.' : 'Eftersom datan är över 12 månader gammal kan en plötslig förändring inte uteslutas. Osäkerheten kring den aktuella finansiella statusen sänker därför den totala konfidensen.'}
                                     </p>
                                 </>
                             )}
@@ -190,34 +191,40 @@ export default function KeyMetricSourceDrawer({ isOpen, onClose, onSimulate, onU
                         </div>
 
                         {/* Använd källa */}
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Använd källa</h2>
+                        {!isUnavailable && (
+                            <>
+                                <div>
+                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Använd källa</h2>
 
-                            <div className="flex items-center gap-3 mb-4 text-sm">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-md text-gray-800 shadow-sm font-medium">
-                                    <FileText size={16} className="text-gray-400" />
-                                    {metric.source}
+                                    <div className="flex items-center gap-3 mb-4 text-sm">
+                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-md text-gray-800 shadow-sm font-medium">
+                                            <FileText size={16} className="text-gray-400" />
+                                            {metric.source}
+                                        </div>
+                                    </div>
+
+                                    {isStale && (
+                                        <div className="flex items-center gap-2 text-amber-700 text-sm font-medium mb-5">
+                                            <AlertTriangle size={16} />
+                                            {metric.staleReason || (metric.factor === 'Omsättningsdata' ? 'Källan är oreviderad – siffrorna är ej externt granskade' : 'Överstiger policygräns (max 12 månader)')}
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="text-sm text-gray-700">
+                                            Källa använd för detta nyckeltal
+                                        </div>
+                                        <button
+                                            onClick={() => { onOpenSource?.({ metric }); onClose() }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-700 border border-indigo-200 hover:bg-indigo-50 bg-white rounded transition-colors">
+                                            Öppna källa <ArrowUpRight size={16} />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            {isStale && (
-                                <div className="flex items-center gap-2 text-amber-700 text-sm font-medium mb-5">
-                                    <AlertTriangle size={16} />
-                                    Överstiger policygräns (max 12 månader)
-                                </div>
-                            )}
-
-                            <div className="flex items-center justify-between mt-4">
-                                <div className="text-sm text-gray-700">
-                                    Källa använd för detta nyckeltal
-                                </div>
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-700 border border-indigo-200 hover:bg-indigo-50 bg-white rounded transition-colors">
-                                    Öppna källa <ArrowUpRight size={16} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-gray-200"></div>
+                                <div className="pt-2 border-t border-gray-200"></div>
+                            </>
+                        )}
 
                         <h2 className="text-xl font-semibold text-gray-900 -mb-2">
                             Vad vill du göra med underlaget?
