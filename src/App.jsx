@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CASE, DISABLED_APPROVE_REASON, DISABLED_SUPPLEMENT_REASON, REJECT_WARNING, BOKSLUT_DOCUMENT } from './constants'
 import SourceDrawer from './components/SourceDrawer'
 import SimulationView from './components/SimulationView'
@@ -9,8 +9,8 @@ import SourceDocumentView from './components/SourceDocumentView'
 import {
   FileText, ClipboardList, LayoutGrid, Bell, Sparkles, Lightbulb,
   BookOpen, Settings, HelpCircle, AlertTriangle, CircleAlert, Lock, ChevronRight, ChevronDown, User,
-  Download, Send, CheckCircle, X, RotateCcw, ArrowRight, ArrowUpRight, ArrowUp, ArrowDown, Info, Loader2,
-  Shield, PanelLeftClose,
+  Download, Send, CheckCircle, X, RotateCcw, ArrowRight, ArrowUpRight, ArrowDown, Info, Loader2,
+  Shield, PanelLeftClose, CircleMinus, Search,
 } from 'lucide-react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -152,168 +152,478 @@ function CaseInfoCard({ d }) {
   const amountStr = typeof d.amount === 'number'
     ? `${d.amount.toLocaleString('sv-SE')} kr`
     : d.amount
-  const fields = [
-    { label: 'Företag', value: d.company },
-    { label: 'Org.nr', value: d.orgNr, mono: true },
-    { label: 'Belopp', value: amountStr, mono: true },
-    { label: 'Ändamål', value: d.purpose },
-    ...(d.contact ? [{ label: 'Kontakt', value: d.contact }] : []),
-    { label: 'Handläggare', value: d.officer },
-    { label: 'Ärendenummer', value: d.id, mono: true },
+  return (
+    <section className="bg-white border border-[#c4c4c4] rounded-2xl p-6 flex flex-col gap-3 text-left">
+      {/* Rad 1: Ärende-rubrik + Företag (vänster) | Org.nr (höger) */}
+      <div className="flex items-end justify-between">
+        <div className="flex flex-col gap-2">
+          <p className="text-base font-medium text-black leading-6">Ärende</p>
+          <div className="flex flex-col gap-0.5 leading-5">
+            <p className="text-xs text-[#525252]">Företag</p>
+            <p className="text-sm text-[#242424]">{d.company}</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-0.5 leading-5 w-[173px]">
+          <p className="text-xs text-[#525252]">Org.nr</p>
+          <p className="text-xs text-[#242424]">{d.orgNr}</p>
+        </div>
+      </div>
+      {/* Rad 2: Belopp (vänster) | Ändamål (höger) */}
+      <div className="flex items-center justify-between leading-5">
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs text-[#525252]">Belopp</p>
+          <p className="text-sm text-[#242424] w-[308px]">{amountStr}</p>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs text-[#525252]">Ändamål</p>
+          <p className="text-sm text-[#242424] w-[171px]">{d.purpose}</p>
+        </div>
+      </div>
+      {/* Rad 3: Handläggare (vänster) | Ärendenummer (höger) */}
+      <div className="flex items-center justify-between leading-5">
+        <div className="flex flex-col gap-0.5 w-[112px]">
+          <p className="text-xs text-[#525252]">Handläggare</p>
+          <p className="text-xs text-[#242424]">{d.officer}</p>
+        </div>
+        <div className="flex flex-col gap-0.5 w-[172px]">
+          <p className="text-xs text-[#525252]">Ärendenummer</p>
+          <p className="text-xs text-[#242424]">{d.id}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── TabBar ────────────────────────────────────────────────────────────────────
+
+function TabBar({ activeTab, onTabChange }) {
+  const tabs = [
+    { id: 'overblick', label: 'Överblick' },
+    { id: 'underlag', label: 'Underlag' },
+    { id: 'sparlogg', label: 'Spårlogg' },
   ]
   return (
-    <section className="bg-white border text-left border-grey-200 rounded-xl p-6 shadow-sm">
-      <SectionLabel>Ärende</SectionLabel>
-      <dl className="grid grid-cols-2 gap-x-12 gap-y-5 mt-4">
-        {fields.map(f => (
-          <div key={f.label}>
-            <dt className="text-xs text-grey-500">{f.label}</dt>
-            <dd className={`text-sm font-medium text-grey-900 mt-1 ${f.mono ? 'font-mono tracking-tight' : ''}`}>
-              {f.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  )
-}
-
-// ── AI Recommendation ─────────────────────────────────────────────────────────
-
-function AIRecommendationSection({ d, confidence, factors }) {
-  const confBadge = getConfidenceBadge(d.confidence ?? confidence)
-
-  const renderValue = (f) => {
-    if (f.status === 'unavailable' || f.value == null) {
-      return <span className="text-xs font-medium text-gray-400">–</span>
-    }
-    const hasUp = f.value.includes('↑')
-    const hasDown = f.value.includes('↓')
-    const clean = f.value.replace(/↑|↓/g, '').trim()
-    const isPositive = f.direction === 'positiv'
-    return (
-      <div className={`flex items-center gap-0.5 text-xs font-medium whitespace-nowrap ${isPositive ? 'text-green-600' : 'text-[#dc2626]'}`}>
-        {hasDown && <ArrowDown size={12} />}
-        {hasUp && <ArrowUp size={12} />}
-        <span>{clean}</span>
-      </div>
-    )
-  }
-
-  const renderDots = (weight) => {
-    const count = weight === 'hög' ? 3 : weight === 'medel' ? 2 : 1
-    return (
-      <div className="flex gap-1 items-center">
-        {[1, 2, 3].map(i => (
-          <div key={i} className={`w-2 h-2 rounded-full ${i <= count ? 'bg-[#245bd1]' : 'bg-gray-200'}`} />
-        ))}
-      </div>
-    )
-  }
-
-  const activeFactors = factors ?? d.topFactors
-
-  return (
-    <section className="bg-white border border-gray-300 rounded-2xl shadow-sm mt-2 text-left">
-
-      {/* Header: AI badge + AVSLAG + konfidensgrad */}
-      <div className="px-3 py-4 border-b border-gray-200 flex flex-col gap-3">
-        <div className="flex items-center gap-1 self-start px-2 py-0.5 rounded-xl bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium">
-          <Sparkles size={14} />
-          AI-recommendation
-        </div>
-
-        {/* AI Scope Banner */}
-        <div className="flex items-stretch gap-2 bg-[#e9effb] border border-[#c2d2f5] rounded-lg px-3 py-2 text-[#112b64] text-xs">
-          <span className="text-sm leading-none shrink-0 mt-0.5">ⓘ</span>
-          <span className="flex-1 min-w-0 leading-relaxed"><span className="font-medium">Analyserar:</span> Strukturerad data från kopplade källor · Nyckeltal mot bankpolicy · Datakvalitet</span>
-          <span className="w-px bg-[#c2d2f5] shrink-0 mx-1" />
-          <span className="flex-1 min-w-0 leading-relaxed"><span className="font-medium">Bedömer inte:</span> Oreviderade siffrors tillförlitlighet · Framtida marknadsutveckling · Affärsbedömning</span>
-        </div>
-
-        <div className="flex items-end justify-between">
-          <p className="text-2xl font-semibold leading-8 text-gray-900">{d.aiRecommendation}</p>
-          <div className="flex flex-col items-end gap-1">
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              Konfidensgrad <Info size={12} />
-            </span>
-            <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-xl border ${confBadge.cls}`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
-              {confBadge.label}
-            </div>
-            <p className="text-xs text-gray-500 mt-0.5">{d.aiSummaryShort}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Faktorer header + kolumnrubriker */}
-      <div className="px-3 py-4 border-b border-gray-200 flex flex-col gap-4">
-        <p className="text-sm text-gray-500">Faktorer som påverkat rekommendationen</p>
-        <div className="flex items-center">
-          <p className="text-xs font-medium text-gray-900 flex-1">Faktor</p>
-          <div className="flex items-center gap-9 justify-end w-[340px]">
-            <p className="text-xs font-medium text-gray-900 w-10 text-center">Värde</p>
-            <PaverkanLabel align="right" direction="down" />
-            <p className="text-xs font-medium text-gray-900 w-40 text-center">Källa</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Faktorrader */}
-      {activeFactors.map((f, i) => {
-        const isUnavailable = f.status === 'unavailable'
+    <div className="border-b-2 border-[#969696] flex items-center w-full">
+      {tabs.map(tab => {
+        const isActive = activeTab === tab.id
         return (
-          <div key={i} className={`p-3 flex items-center gap-12 ${i < activeFactors.length - 1 ? 'border-b border-gray-200' : ''} ${isUnavailable ? 'opacity-60' : ''}`}>
-            <div className="flex-1 flex flex-col gap-2.5 min-w-0">
-              <p className="text-sm text-gray-900">{f.factor}</p>
-              <p className={`text-xs font-medium leading-relaxed ${isUnavailable ? 'text-gray-400 italic' : 'text-gray-500'}`}>{f.description}</p>
-            </div>
-            <div className="flex items-center gap-9 justify-end shrink-0 w-[340px]">
-              <div className="w-24 flex justify-center">{renderValue(f)}</div>
-              <div className="flex justify-center">{renderDots(f.weight)}</div>
-              {isUnavailable ? (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium w-40 justify-center bg-gray-100 border-gray-300 text-gray-400">
-                  <AlertTriangle size={14} className="shrink-0" />
-                  <span className="truncate">Källa otillgänglig</span>
-                </div>
-              ) : (
-                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium w-40 justify-center
-                  ${f.stale ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-[#f2f2f2] border-[#dbdbdb] text-[#525252]'}`}>
-                  <span className="truncate">{f.source}</span>
-                  {f.stale
-                    ? <AlertTriangle size={14} className="shrink-0" />
-                    : <FileText size={14} className="text-gray-500 shrink-0" />}
-                </div>
-              )}
-            </div>
-          </div>
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`flex items-center justify-center px-5 py-3 text-base font-medium border-b-2 -mb-[2px] transition-colors whitespace-nowrap
+              ${isActive
+                ? 'text-[#245bd1] border-[#245bd1]'
+                : 'text-[#525252] border-[#969696] hover:text-[#242424]'
+              }`}
+          >
+            {tab.label}
+          </button>
         )
       })}
+    </div>
+  )
+}
+
+// ── AIBanner ──────────────────────────────────────────────────────────────────
+
+function AIBanner({ onClose }) {
+  return (
+    <div className="bg-[#e9effb] border border-[#c2d2f5] rounded-md p-4 w-full">
+      <div className="flex items-start justify-between w-full">
+        {/* Left: icon + content */}
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <div className="flex items-center py-1 shrink-0">
+            <CircleAlert size={20} className="text-[#112b64]" />
+          </div>
+          <div className="flex flex-col gap-3 flex-1 min-w-0">
+            {/* Header row: "AI" title + AI badge */}
+            <div className="flex items-center gap-2">
+              <p className="text-[20px] font-bold leading-7 text-[#112b64]">AI</p>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium leading-5">
+                <Sparkles size={12} />
+                AI
+              </span>
+            </div>
+            {/* Body text */}
+            <div className="text-[14px] leading-5 text-[#112b64]">
+              <p><span className="font-bold">Analyserar:</span>{' '}Strukturerad data från kopplade källor · Nyckeltal mot bankpolicy · Datakvalitet. </p>
+              <p><span className="font-bold">Bedömer inte:</span>{' '}Oreviderade siffrors tillförlitlighet · Framtida marknadsutveckling · Affärsbedömning</p>
+            </div>
+            {/* Läs mer link */}
+            <div className="flex justify-end">
+              <button className="text-[12px] font-medium leading-5 text-[#245bd1] hover:underline">
+                Läs mer
+              </button>
+            </div>
+          </div>
+        </div>
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="w-5 h-5 flex items-center justify-center bg-[#f2f2f2] border border-[#dbdbdb] rounded overflow-hidden shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)] shrink-0 ml-4"
+          aria-label="Stäng"
+        >
+          <X size={12} className="text-[#525252]" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── RecommendationCard ────────────────────────────────────────────────────────
+
+function RecommendationCard({ d, confidence }) {
+  const confBadge = getConfidenceBadge(d.confidence ?? confidence)
+  const level = typeof (d.confidence ?? confidence) === 'string'
+    ? (d.confidence ?? confidence)
+    : (d.confidence ?? confidence) >= 80 ? 'high' : (d.confidence ?? confidence) >= 60 ? 'medium' : 'low'
+
+  const innerCls = level === 'high'
+    ? 'bg-[#f9fff9] border-[#bbf0bb]'
+    : level === 'medium'
+    ? 'bg-[#fffaf5] border-[#fddeb9]'
+    : 'bg-[#fffcfc] border-[#f5c2c2]'
+
+  const shortLabel = confBadge.label.split(' ')[0] // "Låg" / "Medel" / "Hög"
+
+  return (
+    <section className="bg-white border border-[#c4c4c4] rounded-2xl p-3 flex flex-col gap-4 text-left">
+      {/* AI-rekommendation badge */}
+      <div className="flex items-center gap-1 self-start px-3 py-1 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-sm font-medium">
+        <Sparkles size={14} />
+        AI-rekommendation
+      </div>
+      {/* Inner confidence box */}
+      <div className={`border rounded-lg p-2 flex flex-col gap-4 w-full ${innerCls}`}>
+        {/* Rekommendation + Konfidensgrad */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <p className="text-lg font-bold text-[#525252] leading-7">Rekommendation:</p>
+            <p className="text-lg font-bold text-[#242424] leading-7">{d.aiRecommendation}</p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-1">
+              <p className="text-xs text-[#525252]">Konfidensgrad</p>
+              <Info size={12} className="text-[#525252]" />
+            </div>
+            <div className={`flex items-center gap-2 px-4 py-0.5 rounded-xl border ${confBadge.cls}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
+              <p className="text-base font-medium">{shortLabel}</p>
+            </div>
+          </div>
+        </div>
+        {/* Konfidensorsak */}
+        <div className="flex justify-end">
+          <p className="text-sm font-medium text-[#dc2626]">{d.aiSummaryShort}</p>
+        </div>
+        {/* Divider + beskrivning */}
+        <div className="border-t border-[#c4c4c4] pt-3">
+          <p className="text-base text-[#242424] leading-6">{d.aiSummary}</p>
+        </div>
+      </div>
     </section>
   )
 }
 
-// ── Påverkan tooltip ──────────────────────────────────────────────────────────
-function PaverkanLabel({ align = 'left', direction = 'up' }) {
-  const isDown = direction === 'down'
+// ── WhyDecisionCard ───────────────────────────────────────────────────────────
+
+function WhyDecisionCard({ factors, d }) {
+  const cleanValue = (f) => {
+    if (f.status === 'unavailable' || f.value == null) return 'Okänt'
+    return f.value.replace(/↑|↓/g, '').trim()
+  }
+
+  // Påverkan-riktning chip: neutral bg, arrow + label, optional warning icon
+  const renderDirectionChip = (f) => {
+    if (f.status === 'unavailable') {
+      return (
+        <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-[#f2f2f2] border border-[#dbdbdb]">
+          <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Ej bedömt</p>
+        </div>
+      )
+    }
+    const isPositive = f.direction === 'positiv'
+    return (
+      <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-[#f2f2f2] border border-[#dbdbdb]">
+        <ArrowRight size={12} className="text-[#525252]" />
+        <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">{isPositive ? 'Godkänn' : 'Avslå'}</p>
+        {!isPositive && f.stale && <AlertTriangle size={12} className="text-[#525252]" />}
+      </div>
+    )
+  }
+
+  // Impact dots (3 dots) + weight label + info icon
+  const renderDots = (f) => {
+    if (f.status === 'unavailable') {
+      return <span className="text-[12px] font-medium text-[#525252]">–</span>
+    }
+    const count = f.weight === 'hög' ? 3 : f.weight === 'medel' ? 2 : 1
+    const label = f.weight === 'hög' ? 'Hög' : f.weight === 'medel' ? 'Medel' : 'Låg'
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1">
+          {[1, 2, 3].map(i => (
+            <div key={i} className={`w-2 h-2 rounded-full ${i <= count ? 'bg-[#245bd1]' : 'bg-[#dbdbdb]'}`} />
+          ))}
+        </div>
+        <div className="flex items-center gap-0.5">
+          <span className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">{label}</span>
+          <Info size={12} className="text-[#525252]" />
+        </div>
+      </div>
+    )
+  }
+
+  // Underlagsstatus: "Ej flaggad" (grey dot), "Oreviderad" (orange triangle), "Otillgänglig" (grey ban)
+  const renderStatus = (f) => {
+    if (f.status === 'unavailable') {
+      return (
+        <div className="flex items-center gap-1 px-2 py-0.5">
+          <CircleMinus size={12} className="text-[#525252] shrink-0" />
+          <span className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Otillgänglig</span>
+        </div>
+      )
+    }
+    if (f.stale) {
+      return (
+        <div className="flex items-center gap-1 px-2 py-0.5">
+          <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
+          <span className="text-[12px] font-medium text-[#d97706] whitespace-nowrap leading-5">Oreviderad</span>
+        </div>
+      )
+    }
+    return (
+      <div className="flex items-center gap-1 px-2 py-0.5">
+        <div className="w-[5px] h-[5px] rounded-full bg-[#adadad] shrink-0" />
+        <span className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Ej flaggad</span>
+      </div>
+    )
+  }
+
   return (
-    <div className="relative group inline-flex items-center gap-0.5 cursor-default">
-      <span className="text-xs font-medium text-gray-900 whitespace-nowrap">Påverkan</span>
-      <Info size={11} className="text-gray-500" />
-      <div className={`absolute hidden group-hover:block z-[9999] w-64 bg-gray-900 text-white rounded-xl px-4 py-3 shadow-xl pointer-events-none
-        ${isDown ? 'top-full mt-2' : 'bottom-full mb-2'}
-        ${align === 'right' ? 'right-0' : 'left-0'}`}>
-        <p className="text-sm font-bold leading-snug mb-1.5">Visar hur mycket faktorn påverkat rekommendationen</p>
-        <p className="text-xs text-gray-300 leading-relaxed">
-          Prickarna visar AI:ns viktning av faktorn:<br />
-          <span className="text-white font-medium">●●●&nbsp;Hög</span> – faktorn vägde tungt och hade stor inverkan på rekommendationen.<br />
-          <span className="text-white font-medium">●●○&nbsp;Medel</span> – faktorn bidrog men var inte avgörande.<br />
-          <span className="text-white font-medium">●○○&nbsp;Låg</span> – faktorn ingick men hade liten inverkan.
-        </p>
-        {isDown
-          ? <div className={`absolute bottom-full border-4 border-transparent border-b-gray-900 ${align === 'right' ? 'right-4' : 'left-4'}`} />
-          : <div className={`absolute top-full border-4 border-transparent border-t-gray-900 ${align === 'right' ? 'right-4' : 'left-4'}`} />
-        }
+    <section className="bg-white border border-[#c4c4c4] rounded-2xl px-6 py-5 text-left">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-[20px] font-bold text-[#242424] leading-7">Varför detta beslut?</h2>
+          <Info size={20} className="text-[#525252]" />
+        </div>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium leading-5">
+          <Sparkles size={12} />
+          AI
+        </span>
+      </div>
+      {/* Tabellhuvud */}
+      <div className="flex items-center justify-between border-b border-[#c4c4c4] pb-3 pt-1 text-[14px] text-[#242424] leading-5">
+        <span>Faktor</span>
+        <div className="flex items-center gap-5">
+          <span className="w-[117px]">Nyckelvärde</span>
+          <span className="w-[170px]">Bidrag (riktning)</span>
+          <span className="w-[95px]">Underlagsstatus</span>
+        </div>
+      </div>
+      {/* Rader */}
+      {factors.map((f, i) => (
+        <div key={i} className="flex items-center justify-between py-3 border-b border-[#c4c4c4]">
+          <span className="text-[14px] text-[#242424] leading-5">{f.factor}</span>
+          <div className="flex items-center gap-5">
+            <span className="text-[14px] font-medium text-[#242424] leading-5 w-[117px]">{cleanValue(f)}</span>
+            <div className="w-[170px] flex items-center gap-2.5">
+              {renderDirectionChip(f)}
+              {renderDots(f)}
+            </div>
+            <div className="w-[95px] flex items-end flex-col justify-center">
+              {renderStatus(f)}
+            </div>
+          </div>
+        </div>
+      ))}
+      {/* Sammanfattningstext */}
+      <p className="text-[12px] font-medium text-[#696969] mt-5 max-w-[500px] leading-5">
+        {d.aiSummary}
+      </p>
+    </section>
+  )
+}
+
+// ── ConfidenceImpactCard ──────────────────────────────────────────────────────
+
+function ConfidenceImpactCard({ factors }) {
+  const impactFactors = factors.filter(f => f.stale || f.status === 'unavailable')
+  if (impactFactors.length === 0) return null
+
+  // Source pill: grey (stale) or dark-grey/unavailable
+  const getSourceChip = (f) => {
+    if (f.status === 'unavailable') {
+      return (
+        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#c4c4c4] border border-[#adadad]">
+          <p className="text-[12px] font-medium text-[#3b3b3b] whitespace-nowrap leading-5">{f.source}</p>
+          <CircleMinus size={12} className="text-[#3b3b3b] shrink-0" />
+        </div>
+      )
+    }
+    // stale
+    return (
+      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f2f2f2] border border-[#dbdbdb]">
+        <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">{f.source}</p>
+        <FileText size={12} className="text-[#525252] shrink-0" />
+      </div>
+    )
+  }
+
+  // Status badge
+  const getStatusBadge = (f) => {
+    if (f.status === 'unavailable') {
+      return (
+        <div className="flex items-center gap-1 px-2 py-0.5">
+          <CircleMinus size={12} className="text-[#525252] shrink-0" />
+          <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Otillgänglig</p>
+        </div>
+      )
+    }
+    return (
+      <div className="flex items-center gap-1 px-2 py-0.5">
+        <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
+        <p className="text-[12px] font-medium text-[#d97706] whitespace-nowrap leading-5">Oreviderad</p>
+      </div>
+    )
+  }
+
+  // Konfidenspåverkan chip (red, ArrowDown)
+  const getImpactChip = (f) => {
+    const text = f.status === 'unavailable' ? 'Konfidens (täckning)' : 'Konfidens (data kvalitet)'
+    return (
+      <div className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-[#fbe9e9] border border-[#f5c2c2]">
+        <ArrowDown size={12} className="text-[#8c1717] shrink-0" />
+        <p className="text-[12px] font-medium text-[#8c1717] whitespace-nowrap leading-5">{text}</p>
+      </div>
+    )
+  }
+
+  return (
+    <section className="bg-white border border-[#c4c4c4] rounded-2xl px-6 py-5 text-left">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-[20px] font-bold text-[#242424] leading-7">Vad påverkar konfidensen?</h2>
+          <Info size={20} className="text-[#525252]" />
+        </div>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium leading-5">
+          <Sparkles size={12} />
+          AI
+        </span>
+      </div>
+      {/* Tabellhuvud */}
+      <div className="flex items-center justify-between border-b border-[#c4c4c4] pb-3 pt-1 text-[14px] text-[#242424] leading-5">
+        <span>Faktor</span>
+        <div className="flex items-center gap-5">
+          <span className="w-[165px]">Källa</span>
+          <span className="w-[90px]">Status</span>
+          <span className="w-[151px]">Konfidenspåverkan</span>
+        </div>
+      </div>
+      {/* Rader */}
+      {impactFactors.map((f, i) => (
+        <div key={i} className="flex items-center justify-between py-4">
+          <span className="text-[14px] text-[#242424] leading-5">{f.factor}</span>
+          <div className="flex items-center gap-5">
+            <div className="w-[165px] flex items-start">
+              {getSourceChip(f)}
+            </div>
+            <div className="w-[90px] flex items-start">
+              {getStatusBadge(f)}
+            </div>
+            <div className="w-[151px] flex items-end justify-end">
+              {getImpactChip(f)}
+            </div>
+          </div>
+        </div>
+      ))}
+    </section>
+  )
+}
+
+// ── Underlag overview card ────────────────────────────────────────────────────
+
+function UnderlandOverviewCard({ sources }) {
+  const ejFlaggade = sources.filter(s => s.status === 'current').length
+  const oreviderade = sources.filter(s => s.status === 'stale').length
+  const saknas = sources.filter(s => s.status === 'unavailable').length
+
+  const getStatusBadge = (s) => {
+    if (s.status === 'stale') {
+      return (
+        <div className="flex items-center gap-1">
+          <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
+          <span className="text-xs font-medium text-[#d97706] whitespace-nowrap">
+            {s.statusLabel ?? 'Oreviderad'}
+          </span>
+        </div>
+      )
+    }
+    if (s.status === 'unavailable') {
+      return (
+        <div className="flex items-center gap-1">
+          <CircleMinus size={12} className="text-[#525252] shrink-0" />
+          <span className="text-xs font-medium text-[#525252] whitespace-nowrap">Otillgänglig</span>
+        </div>
+      )
+    }
+    return (
+      <div className="flex items-center gap-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-[#525252] shrink-0" />
+        <span className="text-xs font-medium text-[#525252] whitespace-nowrap">Ej flaggad</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white border border-[#c4c4c4] rounded-2xl p-3">
+      <div className="flex flex-col gap-4">
+        <p className="text-base font-medium text-[#525252]">Underlag</p>
+        <div className="flex gap-14">
+          {/* Källa */}
+          <div className="flex flex-col gap-3 flex-1 min-w-0">
+            <p className="text-sm text-[#525252]">Källa</p>
+            <div className="flex flex-col gap-2">
+              {sources.map((s, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f2f2f2] border border-[#dbdbdb] self-start ${s.status === 'unavailable' ? 'opacity-40' : ''}`}
+                >
+                  <span className="text-xs font-medium text-[#525252] whitespace-nowrap">{s.name}</span>
+                  <FileText size={14} className="text-[#525252] shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Datum */}
+          <div className="flex flex-col gap-3 flex-1 min-w-0">
+            <p className="text-sm text-[#525252]">Datum</p>
+            <div className="flex flex-col gap-3">
+              {sources.map((s, i) => (
+                <p key={i} className="text-xs font-medium text-[#242424] leading-5">
+                  {s.status === 'unavailable' ? '–' : s.period}
+                </p>
+              ))}
+            </div>
+          </div>
+          {/* Status */}
+          <div className="flex flex-col gap-3 flex-1 min-w-0 items-end">
+            <p className="text-sm text-[#525252] text-right w-full">Status</p>
+            <div className="flex flex-col gap-2 items-end">
+              {sources.map((s, i) => (
+                <div key={i}>{getStatusBadge(s)}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Summary */}
+        <div className="flex justify-end">
+          <p className="text-xs font-medium text-[#696969] whitespace-nowrap">
+            Underlag: {ejFlaggade} ej flaggade{oreviderade > 0 ? ` · ${oreviderade} oreviderad` : ''}{saknas > 0 ? ` · ${saknas} saknas` : ''}
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -322,115 +632,124 @@ function PaverkanLabel({ align = 'left', direction = 'up' }) {
 // ── Nyckeldata cards ──────────────────────────────────────────────────────────
 
 function MetricCard({ factor, onGranska }) {
-  const isOver = factor.diffDirection === 'över'
   const isStale = factor.stale
   const isPositive = factor.direction === 'positiv'
-  const isUnknown = !factor.value || factor.value === 'Okänt'
   const isUnavailable = factor.status === 'unavailable'
   const paverkanLevel = factor.weight === 'hög' ? 3 : factor.weight === 'medel' ? 2 : 1
+  const showDiff = factor.diff && factor.diff !== '–' && factor.diff !== '—'
+  const displayValue = isUnavailable
+    ? '—'
+    : factor.value ? factor.value.replace(/↑|↓/g, '').trim() : '—'
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col ${isUnavailable ? 'opacity-70' : ''}`}>
+    <div className="bg-white border border-[#e5e7eb] rounded-2xl shadow-sm flex flex-col">
 
-      {/* Header: värde + badges + titel */}
-      <div className="px-6 pt-6 pb-0 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
+      {/* Header: värde + status badge + AI badge */}
+      <div className="px-6 pt-5 pb-0 flex flex-col gap-4">
+        <div className="flex items-center justify-between h-8">
           <div className="flex items-center gap-4">
-            <span className={`text-[32px] font-bold leading-10 ${isUnavailable ? 'text-gray-400' : 'text-gray-900'}`}>
-              {isUnavailable ? '–' : (isUnknown ? 'Okänt' : factor.value.replace(/↑|↓/g, '').trim())}
-            </span>
+            <span className="text-2xl font-semibold text-[#242424]">{displayValue}</span>
             {isUnavailable ? (
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl text-xs font-medium bg-gray-100 border border-gray-300 text-gray-400">
-                <AlertTriangle size={14} className="shrink-0" />
-                Källa otillgänglig
-              </div>
-            ) : isUnknown ? (
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl text-xs font-medium bg-gray-100 border border-gray-300 text-gray-500">
-                Kan ej bedömas
-              </div>
+              <span className="text-xs font-medium text-[#525252] px-2 py-0.5">Kan ej bedömas</span>
+            ) : isPositive ? (
+              <span className="text-xs font-medium text-[#38852d] px-2 py-0.5">Uppfyller krav</span>
             ) : (
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-xl text-xs font-medium ${isPositive ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-[#fbe9e9] border border-[#f5c2c2] text-[#8c1717]'}`}>
-                {!isPositive && (isOver ? <ArrowUp size={16} /> : <ArrowDown size={16} />)}
-                {isPositive ? 'Uppfyller krav' : (isOver ? 'Överstiger gräns' : 'Under gräns')}
-              </div>
+              <span className="text-xs font-medium text-[#8c1717] px-2 py-0.5">Uppfyller ej krav</span>
             )}
           </div>
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium">
-            <Sparkles size={14} />
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
+            <Sparkles size={12} />
             AI
           </div>
         </div>
-        <p className="text-base font-medium text-gray-900">{factor.factor}</p>
-      </div>
 
-      {/* Krav/gräns + diff */}
-      {!isUnavailable && (
-        <div className="px-6 pt-5 pb-0">
-          <div className="flex items-center gap-5">
-            <p className="text-lg font-semibold text-gray-500">
-              {factor.limitLabel ?? (isOver ? 'Gräns' : 'Krav')}:{' '}
-              <span className="text-gray-900">{factor.limit}</span>
+        {/* Faktornamn */}
+        <p className="text-base font-semibold text-[#242424]">{factor.factor}</p>
+
+        {/* Krav/gräns + diff, eller beskrivning */}
+        {isUnavailable ? (
+          <p className="text-base text-[#696969] leading-6">{factor.description}</p>
+        ) : (
+          <div className="flex items-center gap-3">
+            <p className="text-lg font-bold text-[#525252]">
+              {factor.limitLabel ?? 'Krav'}:{' '}
+              <span className="text-[#242424]">{factor.limit}</span>
             </p>
-            {!isUnknown && (
+            {showDiff && (
               <>
-                <div className="w-0.5 h-14 bg-gray-300" />
-                <p className="text-lg font-semibold text-gray-900">
-                  {factor.diff} {factor.diffDirection}
+                <div className="w-px h-14 bg-[#c4c4c4]" />
+                <p className="text-lg font-bold text-[#242424]">
+                  {factor.diff}{factor.diffDirection ? ` ${factor.diffDirection}` : ''}
                 </p>
               </>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Tidsperiod */}
-      {!isUnavailable && (
-        <div className="px-6 pt-4 pb-0">
-          <p className="text-sm text-gray-500">Tidsperiod: {factor.period.replace('–', '-')}</p>
-        </div>
-      )}
-
-      {/* Unavailable description */}
-      {isUnavailable && (
-        <div className="px-6 pt-4 pb-0">
-          <p className="text-xs text-gray-400 leading-relaxed italic">Branschdata-API:t svarade inte vid analystillfället. Värdet kunde inte hämtas.</p>
-        </div>
-      )}
-
-      {/* Stale-varning */}
-      {isStale && (
-        <div className="px-6 pt-3">
-          <p className="text-xs text-amber-700 leading-relaxed">
-            {factor.staleReason ?? 'Källan är föråldrad.'}
-          </p>
-        </div>
-      )}
+        {/* Tidsperiod */}
+        {!isUnavailable && (
+          <p className="text-base text-[#696969]">Tidsperiod: {factor.period.replace('–', '-')}</p>
+        )}
+      </div>
 
       {/* Footer */}
-      <div className="mt-5 border-t border-gray-200 px-3 py-4 flex items-center justify-between">
+      <div className="mt-6 border-t border-[#c4c4c4] px-3 pt-3 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="relative group flex items-center gap-2 cursor-default">
-            <div className="flex gap-1">
-              {[1, 2, 3].map(i => (
-                <div key={i} className={`w-2 h-2 rounded-full ${i <= paverkanLevel ? 'bg-[#245bd1]' : 'bg-gray-200'}`} />
-              ))}
+          {/* Påverkan-chip + impact dots */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-[#f2f2f2] border border-[#dbdbdb]">
+              {!isUnavailable && <ArrowRight size={12} className="text-[#525252]" />}
+              <span className="text-xs font-medium text-[#525252] whitespace-nowrap">
+                {isUnavailable ? 'Ej bedömt' : isPositive ? 'Godkänn' : 'Avslå'}
+              </span>
+              {isStale && <AlertTriangle size={12} className="text-[#525252] ml-0.5 shrink-0" />}
             </div>
-            <PaverkanLabel />
+            {!isUnavailable ? (
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${i <= paverkanLevel ? 'bg-[#245bd1]' : 'bg-[#dbdbdb]'}`} />
+                  ))}
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <span className="text-xs font-medium text-[#525252] whitespace-nowrap">
+                    {factor.weight === 'hög' ? 'Hög' : factor.weight === 'medel' ? 'Medel' : 'Låg'}
+                  </span>
+                  <Info size={12} className="text-[#525252]" />
+                </div>
+              </div>
+            ) : (
+              <span className="text-xs text-[#525252]">–</span>
+            )}
           </div>
-          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-xl border text-xs font-medium whitespace-nowrap
-            ${isUnavailable ? 'bg-gray-100 text-gray-400 border-gray-300' :
-              isStale ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>
-            {isUnavailable
-              ? <AlertTriangle size={14} className="text-gray-400 shrink-0" />
-              : isStale
-                ? <AlertTriangle size={14} className="text-orange-700" />
-                : <FileText size={14} className="text-gray-500" />}
-            {isUnavailable ? 'Källa otillgänglig' : factor.source}
+          {/* Source chip + status badge */}
+          <div className="flex items-center">
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium whitespace-nowrap
+              ${isUnavailable
+                ? 'bg-[#c4c4c4] border-[#adadad] text-[#3b3b3b]'
+                : 'bg-[#f2f2f2] border-[#dbdbdb] text-[#525252]'}`}>
+              {factor.source}
+              {isUnavailable
+                ? <CircleMinus size={12} className="ml-1 text-[#3b3b3b] shrink-0" />
+                : <FileText size={12} className="ml-1 text-[#525252] shrink-0" />}
+            </div>
+            {isStale && (
+              <div className="flex items-center gap-1 px-2 py-0.5">
+                <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
+                <span className="text-xs font-medium text-[#d97706] whitespace-nowrap">Oreviderat</span>
+              </div>
+            )}
+            {isUnavailable && (
+              <div className="flex items-center gap-1 px-2 py-0.5">
+                <CircleMinus size={12} className="text-[#525252] shrink-0" />
+                <span className="text-xs font-medium text-[#525252] whitespace-nowrap">Otillgänglig</span>
+              </div>
+            )}
           </div>
         </div>
         <button
           onClick={onGranska}
-          className="flex items-center gap-2 px-3 py-1 text-sm font-semibold text-[#245bd1] border border-[#245bd1] hover:bg-blue-50 transition-colors rounded"
+          className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-[#245bd1] border border-[#245bd1] hover:bg-blue-50 transition-colors rounded"
         >
           Granska underlag <ArrowUpRight size={16} />
         </button>
@@ -452,15 +771,22 @@ const CF_ANALYSIS_STEPS = [
 function AIAnalysisProgress({ onComplete }) {
   const [visibleSteps, setVisibleSteps] = useState([])
   const [done, setDone] = useState(false)
+  const completedRef = useRef(false)
 
   useEffect(() => {
+    completedRef.current = false
     const timers = CF_ANALYSIS_STEPS.map((step, i) =>
       setTimeout(() => {
         setVisibleSteps(prev => [...prev, step])
         if (i === CF_ANALYSIS_STEPS.length - 1) {
           setTimeout(() => {
             setDone(true)
-            setTimeout(() => onComplete(), 1800)
+            setTimeout(() => {
+              if (!completedRef.current) {
+                completedRef.current = true
+                onComplete()
+              }
+            }, 1800)
           }, 800)
         }
       }, i * 700)
@@ -527,7 +853,7 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
       {/* Header */}
       <div className="flex items-center gap-3">
         <h2 className="text-3xl font-bold text-gray-900">Sammanfattning</h2>
-        <div className="flex items-center gap-1 text-xs font-medium text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+        <div className="flex items-center gap-1 text-xs font-medium text-[#451b88] bg-[#f0eafb] px-2 py-0.5 rounded-full border border-[#d6c3f3]">
           <Sparkles size={12} /> AI
         </div>
       </div>
@@ -633,125 +959,136 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
   )
 }
 
-function DecisionPanel({ d, aiReviewed, onUnlocked, analysisComplete, onOverride, onApprove, onGranskaKallor }) {
-  const unlocked = analysisComplete || aiReviewed
-  const uncertaintyReasons = d?.uncertaintyReasons ?? []
-  const problematicSourceCount = d?.dataSources?.filter(s => s.status === 'stale' || s.status === 'unavailable').length ?? 0
+function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGranskaKallor }) {
+  const criticalFactors = (d?.topFactors ?? []).filter(f => f.stale || f.status === 'unavailable')
+  const criticalCount = criticalFactors.length
+  const criticalNames = criticalFactors.map(f =>
+    f.status === 'unavailable' ? `${f.source} (otillgängligt)` : `${f.source} (oreviderat)`
+  )
 
   return (
-    <aside className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-fit w-[360px]">
+    <div className="flex flex-col gap-2.5 px-2.5">
 
-      {/* Top banner – Datakvalitet kräver uppmärksamhet */}
-      {!unlocked && (
-        <div className="bg-[#fef3e6] border-b border-[#fddeb9] px-3 py-2 flex flex-col gap-[5px]">
+      {/* Kort 1: Beslutspanel */}
+      <div className="bg-white rounded-lg overflow-hidden w-full flex flex-col gap-5 pb-5">
+
+        {/* Orange banner */}
+        <div className="bg-[#fef3e6] border border-[#fddeb9] px-3 py-2 flex flex-col gap-0.5">
           <div className="py-1">
-            <CircleAlert size={16} className="text-[#9f5704]" />
+            <CircleAlert size={20} className="text-[#9f5704]" />
           </div>
           <div className="flex flex-col gap-[5px] text-[#9f5704]">
-            <p className="text-base leading-6">Datakvalitet kräver uppmärksamhet</p>
+            <p className="text-base font-medium leading-6">Datakvalitet kräver uppmärksamhet</p>
             <div className="text-xs leading-5">
-              {uncertaintyReasons.map((reason, i) => (
-                <p key={i}>{reason}.</p>
+              {(d?.uncertaintyReasons ?? []).map((reason, i) => (
+                <p key={i}>{reason}</p>
               ))}
             </div>
           </div>
         </div>
-      )}
 
-      {/* Nästa steg – primär CTA för att granska källorna */}
-      {!unlocked && (
-        <div className="px-3 pb-3 pt-0 border-b border-gray-200 flex flex-col gap-1">
-          <p className="text-base font-semibold text-gray-900 pt-3">Nästa steg:</p>
+        {/* Nästa steg */}
+        <div className="px-3 pb-3 border-b border-[#c4c4c4] flex flex-col gap-2">
+          <p className="text-base font-medium text-[#242424]">Nästa steg:</p>
           <button
             onClick={onGranskaKallor}
-            className="w-full flex items-center justify-center gap-2.5 px-4 py-2 bg-[#245bd1] border border-[#245bd1] text-white rounded text-base font-medium hover:bg-blue-700 transition-colors"
+            className="w-full flex items-center justify-center gap-2.5 px-6 py-3 bg-[#245bd1] border border-[#245bd1] text-[#f9f9f9] rounded text-base font-medium hover:bg-blue-700 transition-colors"
           >
-            Granska källor ({problematicSourceCount})
-            <ArrowUpRight size={16} />
+            Granska kritiska källor ({criticalCount})
+            <ArrowUpRight size={20} />
           </button>
+          <ul className="list-disc pl-[18px] text-xs font-medium text-[#525252] leading-5">
+            {criticalNames.map((name, i) => <li key={i}>{name}</li>)}
+          </ul>
         </div>
-      )}
 
-      <div className="px-3 pt-5 pb-5 flex flex-col gap-5">
-
-        {/* Beslut Section */}
-        <div className="flex flex-col gap-1">
-          <p className="text-base font-semibold text-gray-900">Beslut</p>
+        {/* Beslut */}
+        <div className="px-3 flex flex-col gap-1">
+          <p className="text-base font-medium text-[#242424]">Beslut</p>
           <div className="flex flex-col gap-5">
 
             {/* Godkänn */}
             <div className="flex flex-col gap-1">
               <button
-                disabled={!unlocked}
-                onClick={unlocked ? onApprove : undefined}
+                disabled={!aiReviewed}
+                onClick={aiReviewed ? onApprove : undefined}
                 className={`w-full flex items-center justify-center gap-2.5 px-4 py-2 rounded text-base font-medium transition-colors
-                  ${unlocked
+                  ${aiReviewed
                     ? 'bg-[#245bd1] border border-[#245bd1] text-white hover:bg-blue-700'
-                    : 'bg-[#adadad] border border-[#adadad] text-[#3b3b3b] cursor-not-allowed'}`}
+                    : 'bg-[#dbdbdb] border border-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
               >
                 Godkänn
-                {!unlocked && <Lock size={16} />}
+                {!aiReviewed && <Lock size={20} />}
               </button>
-              {!unlocked && (
-                <div className="flex gap-1 items-center">
-                  <p className="text-xs italic text-gray-500">Låst tills AI-underlaget har granskats.</p>
+              {!aiReviewed && (
+                <div className="flex items-center gap-1">
+                  <p className="text-[12px] text-[#242424]">Låst tills AI-underlaget har granskats.</p>
                   <Info size={14} className="text-gray-400 shrink-0" />
                 </div>
-              )}
-              {unlocked && (
-                <p className="text-xs text-gray-400">Följer AI-rekommendation – loggas automatiskt</p>
               )}
             </div>
 
             {/* Avslå */}
             <div className="flex flex-col gap-1">
               <button
-                disabled={!unlocked}
-                onClick={unlocked ? onOverride : undefined}
+                disabled={!aiReviewed}
+                onClick={aiReviewed ? onOverride : undefined}
                 className={`w-full flex items-center justify-center gap-2.5 px-4 py-2 rounded text-base font-medium transition-colors
-                  ${unlocked
+                  ${aiReviewed
                     ? 'bg-white border border-[#245bd1] text-[#245bd1] hover:bg-blue-50'
-                    : 'bg-[#adadad] border border-[#adadad] text-[#3b3b3b] cursor-not-allowed'}`}
+                    : 'bg-[#dbdbdb] border border-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
               >
                 Avslå
-                {!unlocked && <Lock size={16} />}
+                {!aiReviewed && <Lock size={20} />}
               </button>
-              {!unlocked && (
-                <div className="flex gap-1 items-center">
-                  <p className="text-xs italic text-gray-500">Låst tills AI-underlaget har granskats.</p>
+              {!aiReviewed && (
+                <div className="flex items-center gap-1">
+                  <p className="text-[12px] text-[#242424]">Låst tills AI-underlaget har granskats.</p>
                   <Info size={14} className="text-gray-400 shrink-0" />
                 </div>
-              )}
-              {unlocked && (
-                <p className="text-xs text-gray-400">Avviker från AI – kräver motivering</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Hantera ärende Section */}
-        <div className="flex flex-col gap-1">
-          <p className="text-base font-semibold text-gray-900">Hantera ärende</p>
+        {/* Hantera ärende */}
+        <div className="px-3 flex flex-col gap-1">
+          <p className="text-base font-medium text-[#242424]">Hantera ärende</p>
           <div className="flex flex-col gap-1">
-            <button
-              className="w-full flex items-center justify-center gap-2.5 px-4 py-2 border border-[#245bd1] rounded text-base font-medium text-[#245bd1] hover:bg-blue-50 transition-colors"
-            >
+            <button className="w-full flex items-center justify-center gap-2.5 px-4 py-2 border border-[#245bd1] rounded text-base font-medium text-[#245bd1] hover:bg-blue-50 transition-colors">
               Begär komplettering
             </button>
-            {!unlocked && (
-              <div className="flex gap-1 items-center">
-                <p className="text-xs italic text-gray-500">Låst tills AI-underlaget har granskats.</p>
+            {!aiReviewed && (
+              <div className="flex items-center gap-1">
+                <p className="text-[12px] text-[#6b7280]">Låst tills AI-underlaget har granskats.</p>
                 <Info size={14} className="text-gray-400 shrink-0" />
               </div>
-            )}
-            {unlocked && (
-              <p className="text-xs text-gray-400">Pausar ärendet och begär underlag</p>
             )}
           </div>
         </div>
 
       </div>
-    </aside>
+
+      {/* Kort 2: Checkbox */}
+      <div className="bg-white border-t border-[#c4c4c4] rounded-2xl p-6 flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="ai-reviewed"
+            checked={aiReviewed}
+            onChange={e => onUnlocked(e.target.checked)}
+            className="w-4 h-4 rounded-sm border border-[#969696] accent-blue-600 cursor-pointer"
+          />
+          <label htmlFor="ai-reviewed" className="text-base font-medium text-black cursor-pointer">
+            Jag har tagit del av AI-underlaget
+          </label>
+        </div>
+        <p className="text-xs font-medium text-[#525252] leading-5">
+          Genom att kryssa i rutan bekräftar du att du tagit del av och värderat AI-rekommendationen. Detta val loggas med din tidsstämpel och identitet
+        </p>
+      </div>
+
+    </div>
   )
 }
 
@@ -769,82 +1106,136 @@ function OverrideModal({ d, onConfirm, onCancel }) {
   const [selected, setSelected] = useState(null)
   const [freetext, setFreetext] = useState('')
   const now = new Date().toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' })
+  const cb = getConfidenceBadge(d.confidence)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-[560px] flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl px-9 py-6 w-[606px] flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 
-        {/* Header */}
-        <div>
-          <h2 className="text-base font-semibold text-gray-900">Du avviker från AI:ns rekommendation</h2>
-          <p className="text-sm text-gray-500 mt-1">Välj en kategori som beskriver din bedömning. Avvikelsen loggas.</p>
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-              <CheckCircle size={14} className="text-green-600" />
-              <span className="text-sm font-medium text-green-800">AI rekommenderade: GODKÄNN</span>
-            </div>
-            <span className="text-gray-400">→</span>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 border border-gray-200 rounded-lg">
-              <X size={14} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Ditt beslut: AVSLAG</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="flex flex-col gap-2">
-          {OVERRIDE_CATEGORIES.map(cat => (
+        {/* 1. Header */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-[#242424]">Avslå ansökan — {d.id}</h2>
             <button
-              key={cat}
-              onClick={() => setSelected(cat)}
-              className={`text-left px-4 py-3 rounded-lg border text-sm font-medium transition-colors
-                ${selected === cat
-                  ? 'bg-blue-50 border-blue-400 text-blue-800'
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+              onClick={onCancel}
+              className="w-8 h-8 flex items-center justify-center bg-[#f2f2f2] border border-[#dbdbdb] rounded shrink-0"
             >
-              {selected === cat && <span className="mr-2 text-blue-600">✓</span>}
-              {cat}
+              <X size={20} className="text-[#525252]" />
             </button>
-          ))}
+          </div>
+          <p className="text-base text-[#525252]">
+            {d.company} beviljas inte kreditlimitökning från 500 000 kr till 900 000 kr.
+          </p>
         </div>
 
-        {/* Freetext */}
-        <textarea
-          value={freetext}
-          onChange={e => setFreetext(e.target.value)}
-          placeholder="Lägg till kommentar... (valfritt)"
-          rows={2}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300"
-        />
+        {/* 2. Beslutsbanner */}
+        <div className="bg-[#f2f2f2] border-l-2 border-[#969696] px-2 py-3 rounded-r-md">
+          <p className="text-2xl font-semibold text-[#242424]">Slutgiltigt beslut: AVSLÅ</p>
+        </div>
 
-        {/* Preview section */}
-        {selected && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col gap-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Följande loggas</p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-700">
-              <span className="text-gray-400">Ärende</span><span className="font-medium">{d.id}</span>
-              <span className="text-gray-400">Handläggare</span><span className="font-medium">{d.officer}</span>
-              <span className="text-gray-400">Tidsstämpel</span><span className="font-medium">{now}</span>
-              <span className="text-gray-400">Kategori</span><span className="font-medium">{selected}</span>
-              <span className="text-gray-400">Avvikelse</span><span className="font-medium text-orange-700">AI: GODKÄNN → Beslut: AVSLAG</span>
+        {/* 3. AI-rekommendationsrad */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-medium text-[#525252]">Rekommendation: GODKÄNN</span>
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
+                <Sparkles size={12} />AI
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[#525252]">Konfidensgrad:</span>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${cb.cls}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${cb.dot}`} />
+                {cb.label.replace(' konfidens', '')}
+              </span>
             </div>
           </div>
-        )}
+          <p className="text-xs text-[#696969]">
+            AI:ns rekommendation var GODKÄNN med låg konfidens. Din motivering sparas i spårloggen.
+          </p>
+        </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-1">
-          <button onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+        {/* 4. Kategorisektionen */}
+        <div className="flex flex-col gap-5">
+          <p className="text-xl font-bold text-[#242424]">Välj orsak till ditt beslut</p>
+          <div className="flex flex-col gap-5">
+            {OVERRIDE_CATEGORIES.map(cat => (
+              <div
+                key={cat}
+                onClick={() => setSelected(cat)}
+                className="flex items-center gap-3 cursor-pointer"
+              >
+                <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0
+                  ${selected === cat ? 'bg-[#245bd1] border-[#245bd1]' : 'border-[#969696]'}`}
+                >
+                  {selected === cat && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-base text-[#242424]">{cat}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 5. Textfält */}
+        <div className="flex flex-col gap-2">
+          <label className="text-base font-medium text-[#242424]">Motivering (fri text)</label>
+          <textarea
+            value={freetext}
+            onChange={e => setFreetext(e.target.value.slice(0, 300))}
+            placeholder="Beskriv din bedömning. Var specifik — motiveringen kan granskas vid revision."
+            className="w-full border border-[#969696] rounded p-2 text-base text-[#242424] resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 h-[182px]"
+          />
+          <div className="flex items-start justify-between gap-4 text-sm text-[#808080]">
+            <p>Beslutet och din motivering loggas automatiskt med tidsstämpel och kopplas till ärende {d.id}.</p>
+            <p className="shrink-0">{freetext.length}/300 tecken</p>
+          </div>
+        </div>
+
+        {/* 6. Loggsektion – alltid synlig */}
+        <div className="flex flex-col gap-1">
+          <p className="text-base font-semibold text-[#242424]">Följande loggas</p>
+          <div className="bg-[#f2f2f2] rounded-xl p-3 flex flex-col gap-2">
+            {[
+              { label: 'Ärende', value: d.id },
+              { label: 'Handläggare', value: d.officer },
+              { label: 'Tidstämpel', value: now },
+              { label: 'Kategori', value: selected ?? '' },
+            ].map(row => (
+              <div key={row.label} className="flex gap-9 items-center text-xs">
+                <span className="w-[70px] shrink-0 text-[#696969]">{row.label}</span>
+                <span className="font-medium text-black">{row.value}</span>
+              </div>
+            ))}
+            <div className="flex gap-9 items-center text-xs">
+              <span className="w-[70px] shrink-0 text-[#696969]">Beslut</span>
+              <span className="font-medium text-black">Avslå</span>
+              <span className="italic text-[#696969]">Avviker från AI-rekommendation</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 7. Knappar */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onCancel}
+            className="border border-[#245bd1] text-[#245bd1] px-4 py-2 rounded text-base font-medium hover:bg-blue-50 transition-colors"
+          >
             Avbryt
           </button>
           <button
             onClick={() => onConfirm({ category: selected, text: freetext.trim() })}
             disabled={!selected}
-            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors
-              ${selected ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+            className={`px-4 py-2 rounded text-base font-medium transition-colors
+              ${selected ? 'bg-[#245bd1] text-white hover:bg-blue-700' : 'bg-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
           >
-            Bekräfta avslag
+            Bekräfta
           </button>
         </div>
+
       </div>
     </div>
   )
@@ -984,7 +1375,7 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                       {confBadge.label}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium shrink-0">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
                     <Sparkles size={14} />
                     AI
                   </div>
@@ -1037,10 +1428,10 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                       {/* Icon + connector line */}
                       <div className="flex flex-col items-center w-6 flex-shrink-0">
                         <div className={`mt-3 w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 ${
-                          ev.type === 'ai' ? 'bg-[#e9effb] border-[#c2d2f5]' : 'bg-gray-100 border-gray-300'
+                          ev.type === 'ai' ? 'bg-[#f0eafb] border-[#d6c3f3]' : 'bg-gray-100 border-gray-300'
                         }`}>
                           {ev.type === 'ai'
-                            ? <Sparkles size={12} className="text-[#112b64]" />
+                            ? <Sparkles size={12} className="text-[#451b88]" />
                             : ev.type === 'system'
                             ? <ClipboardList size={12} className="text-gray-500" />
                             : <User size={12} className="text-gray-500" />
@@ -1325,10 +1716,221 @@ function ApprovedCaseView({ d, confidence, onClose }) {
   )
 }
 
+// ── SpårloggTab ───────────────────────────────────────────────────────────────
+
+function SpårloggTag({ type = 'system' }) {
+  const map = {
+    system:      { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'System' },
+    ai:          { bg: '#f0eafb', border: '#d6c3f3', color: '#451b88', label: 'AI' },
+    handlaggare: { bg: '#e9effb', border: '#c2d2f5', color: '#112b64', label: 'Handläggare' },
+    granskning:  { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'Granskning' },
+  }
+  const { bg, border, color, label } = map[type]
+  return (
+    <span
+      className="inline-flex items-center justify-center px-2 py-0.5 rounded-full border text-[12px] leading-[20px] font-semibold shrink-0"
+      style={{ fontFamily: "'IBM Plex Mono', monospace", backgroundColor: bg, borderColor: border, color }}
+    >
+      {label}
+    </span>
+  )
+}
+
+function SpårloggIcon({ type }) {
+  const grey = 'w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#dbdbdb] border-[#c4c4c4]'
+  if (type === 'ai') return (
+    <div className="w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#f0eafb] border-[#d6c3f3]">
+      <Sparkles size={12} className="text-[#451b88]" />
+    </div>
+  )
+  if (type === 'empty') return <div className="w-6 h-6 rounded-xl border border-[#c4c4c4] bg-white shrink-0" />
+  const icons = {
+    'clipboard':   <ClipboardList size={12} className="text-[#696969]" />,
+    'file-search': <FileText size={12} className="text-[#696969]" />,
+    'user':        <User size={12} className="text-[#696969]" />,
+    'search':      <Search size={12} className="text-[#696969]" />,
+  }
+  return <div className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-[#696969]" />}</div>
+}
+
+function SpårloggTab({ d }) {
+  const cb = getConfidenceBadge(d.confidence)
+  const confShortLabel = cb.label.split(' ')[0]
+
+  const sourceDisplayName = (name) =>
+    name === 'Branschdata (SNI 41.20)' ? 'Branschdata API (SNI 41.20)' : name
+
+  const sourceStatusUI = (src) => {
+    if (src.status === 'current') return (
+      <span className="flex items-center gap-1 text-[12px] font-medium text-[#525252]">
+        <span className="w-[5px] h-[5px] rounded-full bg-[#969696] inline-block shrink-0" />
+        Ej flaggad
+      </span>
+    )
+    if (src.status === 'stale') return (
+      <span className="flex items-center gap-1 text-[12px] font-medium text-[#d97706]">
+        <AlertTriangle size={12} className="shrink-0" /> Oreviderad
+      </span>
+    )
+    return (
+      <span className="flex items-center gap-1 text-[12px] font-medium text-[#525252]">
+        <CircleMinus size={12} className="shrink-0" /> Otillgänglig
+      </span>
+    )
+  }
+
+  const events = [
+    { id: 1, type: 'system',      icon: 'clipboard',    time: '27 feb 2026 · 10:46', title: 'Ärende öppnat' },
+    { id: 2, type: 'system',      icon: 'file-search',  time: '27 feb 2026 · 10:46', title: 'Datahämtning' },
+    { id: 3, type: 'ai',          icon: 'ai',           time: '27 feb 2026 · 10:46', title: 'AI-analys genomförd' },
+    { id: 4, type: 'handlaggare', icon: 'user',         time: '27 feb 2026 · 11:05', title: 'Granskning påbörjad' },
+    { id: 5, type: 'granskning',  icon: 'search',       time: '27 feb 2026 · 11:12', title: 'Kritisk källa granskad' },
+  ]
+
+  return (
+    <div className="bg-white border border-[#c4c4c4] rounded-xlg p-6 flex flex-col gap-6">
+
+      {/* Header med divider */}
+      <div className="border-b border-[#c4c4c4] pb-[13px] flex items-center justify-between">
+        <p className="text-xlg font-semibold text-[#242424]">Spårlogg</p>
+        <div className="flex items-center gap-1 bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium px-2 py-0.5 rounded-full">
+          <Sparkles size={12} />
+          <span>AI-modell: Kreditrisk v2.3 - Tränad nov 2024</span>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="flex flex-col gap-3">
+        {events.map((ev, i) => (
+          <div key={ev.id} className="flex gap-4 items-start">
+
+            {/* Ikonkolumn */}
+            <div className="flex flex-col items-center w-6 shrink-0 pt-1">
+              <SpårloggIcon type={ev.icon} />
+              {i < events.length - 1 && (
+                <div className="w-px flex-1 bg-[#e5e7eb] mt-2 min-h-6" />
+              )}
+            </div>
+
+            {/* Innehåll */}
+            <div className={`flex-1 min-w-0 flex flex-col gap-2 ${i < events.length - 1 ? 'pb-3' : ''}`}>
+
+              {/* Tag + titel + tidsstämpel */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <SpårloggTag type={ev.type} />
+                  <p className="text-sm font-semibold text-[#242424]">{ev.title}</p>
+                </div>
+                <p className="text-[12px] text-[#525252] shrink-0">{ev.time}</p>
+              </div>
+
+              {/* Event 1 – Ärende öppnat */}
+              {ev.id === 1 && (
+                <p className="text-sm text-[#525252]">
+                  Kreditlimitökning {d.id} skapades och tilldelades{' '}
+                  <strong className="font-semibold text-[#242424]">{d.officer}</strong>.
+                </p>
+              )}
+
+              {/* Event 2 – Datahämtning */}
+              {ev.id === 2 && (
+                <>
+                  <p className="text-sm text-[#525252]">3 av 4 datakällor hämtades. 1 källa otillgänglig.</p>
+                  <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-md overflow-hidden">
+                    {d.dataSources.map((src, si) => (
+                      <div
+                        key={src.name}
+                        className={`flex items-center justify-between px-4 h-[37px] text-sm ${si < d.dataSources.length - 1 ? 'border-b border-[#f3f4f6]' : ''}`}
+                      >
+                        <span className="text-[#242424]">{sourceDisplayName(src.name)}</span>
+                        {sourceStatusUI(src)}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Event 3 – AI-analys */}
+              {ev.id === 3 && (
+                <>
+                  <div className="flex items-center gap-3 flex-wrap text-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[#525252]">Rekommendation:</span>
+                      <span className="font-semibold text-[#242424] ml-1">
+                        {d.aiRecommendation.charAt(0) + d.aiRecommendation.slice(1).toLowerCase()}
+                      </span>
+                    </div>
+                    <span className="text-[#969696]">·</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[#525252]">Konfidensgrad:</span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[12px] font-medium ${cb.cls}`}>
+                        <span className={`w-1 h-1 rounded-full ${cb.dot}`} />
+                        {confShortLabel}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-md p-[13px] flex flex-col gap-1.5">
+                    {[
+                      { label: 'Modell',               value: 'Kreditrisk v2.3' },
+                      { label: 'Faktorer analyserade', value: '4 (2 aktiva, 1 oreviderad, 1 saknad)' },
+                      { label: 'Konfidensnedsättning', value: 'Oreviderat bokslut + saknad branschdata' },
+                    ].map(row => (
+                      <div key={row.label} className="flex items-center gap-4 text-[12px]">
+                        <span className="text-[#525252] w-40 shrink-0">{row.label}</span>
+                        <span className="text-[#242424] font-medium">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Event 4 – Granskning påbörjad */}
+              {ev.id === 4 && (
+                <p className="text-sm text-[#525252]">
+                  {d.officer} öppnade ärendet och påbörjade granskning av AI-underlag.
+                </p>
+              )}
+
+              {/* Event 5 – Kritisk källa granskad */}
+              {ev.id === 5 && (
+                <>
+                  <p className="text-sm text-[#525252]">
+                    {d.officer} granskade Bokslut (oreviderat) · Jan–Dec 2022.
+                  </p>
+                  <div className="inline-flex items-center">
+                    <span className="inline-flex items-center gap-1 bg-[#f2f2f2] border border-[#dbdbdb] text-[#525252] text-[12px] font-medium px-2 py-0.5 rounded-full">
+                      Bokslut <FileText size={12} />
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[#d97706] text-[12px] font-medium px-2 py-0.5">
+                      <AlertTriangle size={12} /> Oreviderad
+                    </span>
+                  </div>
+                </>
+              )}
+
+            </div>
+          </div>
+        ))}
+
+        {/* Väntar på beslut */}
+        <div className="flex gap-4 items-center">
+          <div className="w-6 flex justify-center shrink-0 pt-1">
+            <SpårloggIcon type="empty" />
+          </div>
+          <p className="text-sm text-[#525252] italic">Väntar på beslut från {d.officer}</p>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [aiReviewed, setAiReviewed] = useState(false)
+  const [activeTab, setActiveTab] = useState('overblick')
+  const [showAIBanner, setShowAIBanner] = useState(true)
 
   // Track which metric's drawer or simulation is currently open
   const [activeDrawerMetric, setActiveDrawerMetric] = useState(null)
@@ -1378,14 +1980,6 @@ export default function App() {
     />
   )
 
-  // Nyckeldata – koppla "Granska underlag" till respektive drawer/sim
-  const granskaHandlers = [
-    () => setActiveDrawerMetric(liveFactors[2]), // Omsättningsdata
-    () => setActiveDrawerMetric(liveFactors[0]), // Betalningshistorik
-    () => setActiveDrawerMetric(liveFactors[1]), // Utnyttjandegrad
-    () => setActiveDrawerMetric(liveFactors[3]), // Branschrisk
-  ]
-
   return (
     <div className="flex h-screen overflow-hidden bg-[#F6F6F6] font-sans">
       <Sidebar />
@@ -1408,27 +2002,42 @@ export default function App() {
           <div className="flex gap-6 items-start max-w-[1400px]">
 
             {/* ── Vänster kolumn ─────────────────────────────────────── */}
-            <div className="flex-1 min-w-0 flex flex-col gap-6">
-              <CaseInfoCard d={CASE} />
-              <AIRecommendationSection d={CASE} confidence={liveConfidence} factors={liveFactors} />
+            <div className="flex-1 min-w-0 flex flex-col gap-4">
+              <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-              {/* Nyckeldata */}
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 tracking-tight">Nyckeldata</h2>
-                <div className="flex flex-col gap-4">
-                  {[liveFactors[2], liveFactors[0], liveFactors[1], liveFactors[3]].map((f, i) => (
-                    <MetricCard key={f.factor} factor={f} onGranska={granskaHandlers[i]} />
-                  ))}
-                </div>
-              </div>
+              {activeTab === 'overblick' && (
+                <>
+                  <CaseInfoCard d={CASE} />
+                  {showAIBanner && <AIBanner onClose={() => setShowAIBanner(false)} />}
+                  <RecommendationCard d={CASE} confidence={liveConfidence} />
+                  <WhyDecisionCard factors={liveFactors} d={CASE} />
+                  <ConfidenceImpactCard factors={liveFactors} />
+                </>
+              )}
 
-              <AISummaryCard
-                d={CASE}
-                confidence={liveConfidence}
-                sources={liveSources}
-                aiReviewed={aiReviewed}
-                onUnlocked={setAiReviewed}
-              />
+              {activeTab === 'underlag' && (
+                <>
+                  <UnderlandOverviewCard sources={liveSources} />
+                  <h2 className="text-[20px] font-bold text-[#242424] leading-7">Nyckeldata</h2>
+                  <div className="flex flex-col gap-4">
+                    {[
+                      ...liveFactors.filter(f => f.direction === 'negativ' && f.status !== 'unavailable'),
+                      ...liveFactors.filter(f => f.direction === 'positiv'),
+                      ...liveFactors.filter(f => f.status === 'unavailable'),
+                    ].map((factor, i) => (
+                      <MetricCard
+                        key={i}
+                        factor={factor}
+                        onGranska={() => setActiveDrawerMetric(factor)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'sparlogg' && (
+                <SpårloggTab d={CASE} />
+              )}
             </div>
 
             {/* ── Höger kolumn ───────────────────────────────────────── */}
@@ -1437,7 +2046,6 @@ export default function App() {
                 d={CASE}
                 aiReviewed={aiReviewed}
                 onUnlocked={setAiReviewed}
-                analysisComplete={cfUploadState === 'complete'}
                 onOverride={() => setOverrideState('confirming')}
                 onApprove={() => setApprovedState('completed')}
                 onGranskaKallor={() => setActiveDrawerMetric(liveFactors[2])}

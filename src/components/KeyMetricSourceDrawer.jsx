@@ -4,7 +4,7 @@ import { X, Upload, FileText, ArrowUpRight, HelpCircle, ArrowRight, Trash2, Copy
 // Helper component for AI Badge
 function AIBadge() {
     return (
-        <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium">
+        <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium">
             <Sparkles size={14} />
             AI
         </div>
