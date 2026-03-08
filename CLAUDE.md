@@ -35,11 +35,16 @@ npm run preview   # förhandsgranska bygge
 ## Arkitektur
 
 - Alla komponenter är isolerade React-funktionskomponenter
+- 17 komponenter i `src/components/` + logik/vyer inline i `src/App.jsx`
 - Props-driven med mockdata från `constants.js`
 - Design tokens (färger, typografi, spacing) i `tokens.js`
 - Tailwind utility classes – inga custom CSS-filer
 - Desktop-first, min-width 1280px
 - Tillgänglighet: färg är aldrig enda signal (alltid ikon + text vid status)
+
+**Beroenden att känna till:** `lucide-react` (ikoner), `recharts` (grafer/sparklines)
+
+**Confidence är alltid string:** `"low"`, `"medium"` eller `"high"` – aldrig number.
 
 ---
 
@@ -73,20 +78,22 @@ npm run preview   # förhandsgranska bygge
 
 ---
 
-## Scenarios – Sara (aktuell prototyp: State 2)
+## Scenarios – Sara (aktuell prototyp: State 3)
 
 | State | Beskrivning | Nyckelkomponenter |
 |-------|-------------|-------------------|
 | 1 – Normalfallet | AI avslag, konfidens hög, alla källor aktuella | Grundflödet |
-| **2 – Osäkerhetsfallet** | **AI avslag, konfidens medium, en källa >6 mån gammal** | **T2, U1, U3, U4, H1 (Godkänn disabled)** |
-| 3 – Override-fallet | Sara godkänner trots AI-avslag | H3, H2, S1 |
+| 2 – Osäkerhetsfallet | AI avslag, konfidens medium, en källa >6 mån gammal | T2, U1, U3, U4, H1 (Godkänn disabled) |
+| **3 – Override-fallet** | **Sara avslår trots AI-godkänn. OverrideModal + ClosedCaseView/ApprovedCaseView** | **H3, H2, S1** |
 | 4 – Audit-fallet | Compliance-vy, skrivskyddad | S1, S2, S3, S4 |
 
 ---
 
-## Mockdata – Sara State 2
+## Mockdata
 
-Mockdata finns i `src/constants.js` (exporteras som `CASE`). Redigera där – inte här.
+Finns i `src/constants.js`. Redigera där – inte i CLAUDE.md.
+- `CASE` – State 2 (osäkerhetsfall, konfidens medium)
+- `CASE_STATE3` – State 3 (override-fallet, konfidens low)
 
 ---
 
