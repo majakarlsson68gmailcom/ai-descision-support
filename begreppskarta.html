@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Begreppskarta – AI-gränssnitt + Designsystem (INL2)</title>
+  <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; overflow: hidden; }
+    #network { width: 100vw; height: 100vh; }
+    #error { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      background:white; padding:24px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15);
+      text-align:center; max-width:400px; }
+    #error h2 { color:#dc2626; margin-bottom:8px; }
+    #error p { color:#6b7280; font-size:14px; }
+
+    #legend {
+      position:fixed; top:16px; right:16px; background:white; border-radius:10px;
+      padding:14px 18px; box-shadow:0 2px 12px rgba(0,0,0,0.13);
+      font-size:12px; z-index:100; min-width:210px;
+    }
+    #legend h3 { font-size:13px; font-weight:700; margin-bottom:10px; color:#111; }
+    .li { display:flex; align-items:center; gap:9px; margin:5px 0; color:#333; }
+    .lc { width:13px; height:13px; border-radius:3px; flex-shrink:0; }
+    .ld { border-top:1px solid #e5e7eb; margin:9px 0; }
+    .ln { display:flex; align-items:center; gap:9px; color:#6d28d9; font-weight:600; margin-top:4px; }
+    .lb { width:13px; height:13px; border-radius:3px; border:2px dashed #7c3aed; background:#f5f3ff; flex-shrink:0; }
+
+    #controls { position:fixed; top:16px; left:16px; display:flex; gap:8px; z-index:100; }
+    #controls button {
+      padding:7px 14px; border-radius:7px; border:1px solid #d1d5db; background:white;
+      font-size:12px; cursor:pointer; font-family:inherit; color:#374151;
+      box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:all 0.15s;
+    }
+    #controls button:hover { background:#f3f4f6; }
+    #controls button.on { background:#ede9fe; border-color:#7c3aed; color:#5b21b6; }
+
+    #hint {
+      position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+      background:rgba(17,24,39,0.65); color:white; padding:6px 18px;
+      border-radius:20px; font-size:11px; z-index:100; pointer-events:none;
+    }
+    #tip {
+      position:fixed; display:none; background:white; border:1px solid #e5e7eb;
+      border-radius:8px; padding:10px 14px; font-size:12px; max-width:260px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:200; line-height:1.5; pointer-events:none;
+    }
+    #tip strong { display:block; margin-bottom:3px; color:#111; font-size:13px; }
+    #tip .ref { color:#6d28d9; font-style:italic; font-size:11px; }
+    #tip .def { color:#4b5563; margin-top:4px; font-size:11px; }
+    #tip .ntag { display:inline-block; background:#ede9fe; color:#5b21b6; font-size:10px;
+      font-weight:700; padding:1px 6px; border-radius:10px; margin-bottom:3px; }
+    #loading { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      font-size:14px; color:#6b7280; }
+  </style>
+</head>
+<body>
+<div id="network"></div>
+<div id="loading">Laddar begreppskarta…</div>
+<div id="error"><h2>Kunde inte ladda</h2><p>vis-network-biblioteket laddades inte. Kontrollera internetanslutningen och ladda om sidan.</p></div>
+
+<div id="controls">
+  <button onclick="resetView()">↺ Återställ vy</button>
+  <button id="pb" onclick="togglePhysics()">▶ Starta fysik</button>
+</div>
+
+<div id="legend">
+  <h3>Kategorier</h3>
+  <div class="li"><div class="lc" style="background:#1f2937"></div>Huvudbegrepp</div>
+  <div class="li"><div class="lc" style="background:#7c3aed"></div>Människa &amp; AI-interaktion</div>
+  <div class="li"><div class="lc" style="background:#dc2626"></div>Teori &amp; Ramverk</div>
+  <div class="li"><div class="lc" style="background:#1e40af"></div>Regulatoriskt ramverk</div>
+  <div class="li"><div class="lc" style="background:#2563eb"></div>Designsystem &amp; Komponenter</div>
+  <div class="li"><div class="lc" style="background:#059669"></div>Metod &amp; Analys</div>
+  <div class="li"><div class="lc" style="background:#d97706"></div>Designprinciper</div>
+  <div class="ld"></div>
+  <div class="ln"><div class="lb"></div>Nytt begrepp (INL2)</div>
+</div>
+
+<div id="hint">Scrolla för att zooma · Dra noder · Hovra för info</div>
+<div id="tip"></div>
+
+<script>
+window.addEventListener('load', function() {
+  if (typeof vis === 'undefined') {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    return;
+  }
+  document.getElementById('loading').style.display = 'none';
+  initMap();
+});
+
+function initMap() {
+
+// ── METADATA ─────────────────────────────────────────────────────────────────
+const M = {
+  main:                 { def:'Interaktivt gränssnitt för AI-beslutsstöd i kritiska domäner (kredit, vård).' },
+  automation_bias:      { ref:'Parasuraman & Manzey, 2010', def:'Tendens att följa AI-rekommendationer utan kritisk granskning.' },
+  algorithm_aversion:   { ref:'Dietvorst et al., 2015',     def:'Tendens att avvisa AI-rekommendationer trots att AI presterar bättre.', n:1 },
+  human_loop:           { ref:'Amershi et al., 2019',       def:'Människa behåller kontroll och fattar slutbeslut i AI-systemet.' },
+  agency:               {                                    def:'Användarens upplevelse av att ha kontroll och handlingsutrymme.' },
+  kalibrerad_tillit:    { ref:'Lee & See, 2004',            def:'Tillit som matchar systemets faktiska tillförlitlighet – varken för hög eller låg.', n:1 },
+  appropriate_reliance: { ref:'Parasuraman & Manzey, 2010', def:'Målläge: förlita sig på AI i rätt grad, varken för mycket eller för lite.', n:1 },
+  xai:                  { ref:'Gunning & Aha, 2019',        def:'Explainable AI – forskningsfält för att göra AI-beslut begripliga för människor.', n:1 },
+  explainability:       { ref:'Gunning & Aha, 2019',        def:'Förmågan att förklara varför ett AI-system fattade ett specifikt beslut.' },
+  lokal_exp:            { ref:'Gunning & Aha, 2019',        def:'Förklaring för ett enskilt beslut (t.ex. varför just detta lån avslogs).' },
+  global_exp:           { ref:'Gunning & Aha, 2019',        def:'Förklaring av hur modellen generellt fungerar och viktar faktorer.' },
+  transparens:          { ref:'EU AI Act, Art. 13',         def:'Synliggör datakällor och antaganden bakom AI-rekommendationen.' },
+  sparbarhet:           { ref:'EU AI Act, Art. 12',         def:'Automatisk loggning av händelser som möjliggör revision och uppföljning.' },
+  osaker_komm:          {                                    def:'Design som gör AI:ns osäkerhet och begränsningar tydliga för användaren.' },
+  felhantering:         {                                    def:'Hur systemet kommunicerar fel, varningar och ofullständig data.' },
+  designad_friktion:    { ref:'Thaler & Sunstein, 2008',    def:'Avsiktliga hinder som tvingar användaren till aktiv granskning före beslut.', n:1 },
+  dst:                  {                                    def:'Teorier om hur designsystem struktureras, underhålls och skalas.' },
+  hcd:                  {                                    def:'Human-Centred Design – användaren i centrum för hela designprocessen.' },
+  hci:                  {                                    def:'Human-Computer Interaction – forskning om människa–datorinteraktion.' },
+  exp_design:           {                                    def:'Designa för helhetsupplevelsen snarare än enskilda interaktioner.' },
+  embodied:             {                                    def:'Kognition är förkroppsligad – kropp och miljö påverkar tänkande.' },
+  activity:             { ref:'Engeström, 1987',            def:'Aktivitetsteori – analyserar mänsklig aktivitet i sociala och kulturella kontexter.' },
+  dist_kognition:       { ref:'Hutchins, 1995',             def:'Kognitiv börda delas mellan människa, artefakter och sociala system.' },
+  mentala_modeller:     { ref:'Norman, 1988',               def:'Användarens interna föreställning om hur ett system fungerar.' },
+  kognitiv_belastning:  { ref:'Sweller, 1988',              def:'Mängden kognitiv aktivitet som krävs för att bearbeta information.', n:1 },
+  situationsmedv:       { ref:'Endsley, 1995',              def:'Att uppfatta, förstå och kunna förutse situationen i realtid.', n:1 },
+  nudge:                { ref:'Thaler & Sunstein, 2008',    def:'Choice architecture – hur val presenteras påverkar vilket val som görs.', n:1 },
+  eu_ai_act:            { ref:'EU, 2024',                   def:'EU-förordning med krav på transparens, spårbarhet och mänsklig tillsyn för högrisk-AI.', n:1 },
+  gdpr:                 { ref:'EU, 2018',                   def:'Dataskyddsförordning med krav på rätt till förklaring vid automatiserade beslut.' },
+  komponenter:          {                                    def:'Återanvändbara UI-byggblock i ett designsystem.' },
+  designtokens:         {                                    def:'Namngivna designbeslut (färger, typsnitt, spacing) lagrade som variabler.' },
+  granssnitt:           {                                    def:'Det visuella och interaktiva lagret som användaren möter.' },
+  pattern_lib:          {                                    def:'Bibliotek av beprövade UI-mönster och interaktionslösningar.' },
+  skalbarhet:           {                                    def:'Systemets förmåga att växa utan att konsistens försämras.' },
+  regler:               {                                    def:'Designregler som styr hur komponenter får kombineras och användas.' },
+  guidance:             {                                    def:'Riktlinjer som hjälper designers fatta konsekventa beslut.' },
+  constraints:          {                                    def:'Begränsningar inbyggda i systemet som minskar risken för felaktiga val.' },
+  litteraturstudie:     {                                    def:'Systematisk genomgång av befintlig forskning inom ett ämnesområde.' },
+  user_flows:           {                                    def:'Diagram som visar användarens väg genom ett system.' },
+  personas:             {                                    def:'Fiktiva men forskningsbaserade representanter för användargrupper.' },
+  scenarios:            {                                    def:'Berättelser om hur en persona interagerar med systemet i ett specifikt sammanhang.' },
+  kontext:              {                                    def:'Fysiska, sociala och tekniska faktorer som påverkar användningen.' },
+  prototyping:          {                                    def:'Tidig realisering av designidéer för testning och utvärdering.' },
+  user_stories:         {                                    def:'Korta beskrivningar av önskad funktionalitet ur ett användarperspektiv.' },
+  pact:                 {                                    def:'Analysramverk: People, Activities, Contexts, Technologies.' },
+  task_sequence:        {                                    def:'Steg-för-steg-analys av hur en uppgift utförs.' },
+  tillganglighet:       {                                    def:'Design som fungerar för alla användare oavsett förmåga (WCAG).' },
+  prog_disclosure:      {                                    def:'Progressiv avslöjning – visa bara det användaren behöver just nu.' },
+  sakerhet:             {                                    def:'Designbeslut som skyddar mot felaktiga eller farliga handlingar.' },
+  feedback:             {                                    def:'Systemets återkoppling till användaren om resultatet av en handling.' },
+  affordances:          { ref:'Norman, 1988',               def:'Egenskaper hos ett objekt som signalerar hur det ska användas.', n:1 },
+  visibility:           { ref:'Nielsen, 1994',              def:'Systemet ska alltid informera användaren om vad som händer (heuristik 1).', n:1 },
+};
+
+// ── FÄRGER ───────────────────────────────────────────────────────────────────
+const GS = {
+  main:    { bg:'#1f2937', bd:'#1f2937', tx:'#ffffff' },
+  ai:      { bg:'#ede9fe', bd:'#7c3aed', tx:'#4c1d95' },
+  teori:   { bg:'#fee2e2', bd:'#dc2626', tx:'#7f1d1d' },
+  reg:     { bg:'#dbeafe', bd:'#1e40af', tx:'#1e3a5f' },
+  design:  { bg:'#eff6ff', bd:'#3b82f6', tx:'#1e3a8a' },
+  metod:   { bg:'#d1fae5', bd:'#059669', tx:'#064e3b' },
+  princip: { bg:'#fef3c7', bd:'#d97706', tx:'#78350f' },
+};
+
+function n(id, lbl, grp, x, y) {
+  const m = M[id]||{}, gs = GS[grp];
+  const refLine = m.ref ? '\n'+m.ref : '';
+  return {
+    id, x, y,
+    label: lbl + refLine,
+    color: {
+      background: gs.bg,
+      border: m.n ? '#7c3aed' : gs.bd,
+      highlight:{ background:gs.bg, border:gs.bd },
+      hover:{ background:gs.bg, border:'#374151' },
+    },
+    font:{ color:gs.tx, size: grp==='main'?14:11, multi:false },
+    borderWidth: m.n ? 2.5 : 1.5,
+    borderDashes: m.n ? [6,3] : false,
+    shape:'box',
+    margin:{ top:7, bottom:7, left:9, right:9 },
+    widthConstraint:{ maximum:160 },
+  };
+}
+
+// ── NODER ────────────────────────────────────────────────────────────────────
+const nodesArr = [
+  n('main',             'AI-gränssnitt +\nDesignsystem',   'main',      0,    0),
+  // Människa & AI
+  n('xai',              'XAI',                              'ai',     -650, -180),
+  n('explainability',   'Explainability',                   'ai',     -500, -320),
+  n('lokal_exp',        'Lokal förklarbarhet',              'ai',     -680, -420),
+  n('global_exp',       'Global förklarbarhet',             'ai',     -440, -440),
+  n('transparens',      'Transparens',                      'ai',     -240, -280),
+  n('sparbarhet',       'Spårbarhet',                       'ai',     -240, -150),
+  n('osaker_komm',      'Osäkerhetskommunikation',          'ai',     -240,  -20),
+  n('felhantering',     'Felhantering',                     'ai',     -240,  100),
+  n('kalibrerad_tillit','Kalibrerad tillit',                'ai',     -480,  120),
+  n('appropriate_reliance','Appropriate reliance',          'ai',     -360,  240),
+  n('automation_bias',  'Automation bias',                  'ai',     -640,   60),
+  n('algorithm_aversion','Algorithm aversion',              'ai',     -640,  180),
+  n('human_loop',       'Human-in-the-loop',                'ai',     -460,  -60),
+  n('agency',           'Agency',                           'ai',     -460, -180),
+  n('designad_friktion','Designad friktion',                'ai',     -460,  300),
+  // Teori
+  n('dst',              'Design Systems Theory',            'teori',    20,  340),
+  n('hcd',              'HCD',                              'teori',  -160,  420),
+  n('hci',              'HCI',                              'teori',  -300,  520),
+  n('exp_design',       'Experience design',                'teori',  -100,  540),
+  n('embodied',         'Embodied Cognition',               'teori',    80,  520),
+  n('activity',         'Activity Theory',                  'teori',   200,  420),
+  n('dist_kognition',   'Distribuerad kognition',           'teori',   280,  540),
+  n('mentala_modeller', 'Mentala modeller',                 'teori',    80,  340),
+  n('kognitiv_belastning','Kognitiv belastning',            'teori',  -180,  620),
+  n('situationsmedv',   'Situationsmedvetenhet',            'teori',  -440,  440),
+  n('nudge',            'Nudge-teori',                      'teori',  -620,  400),
+  // Regulatoriskt
+  n('eu_ai_act',        'EU AI Act',                        'reg',     520, -320),
+  n('gdpr',             'GDPR',                             'reg',     520, -180),
+  // Designsystem
+  n('komponenter',      'Komponenter',                      'design',  320,  -60),
+  n('designtokens',     'Designtokens',                     'design',  480,   40),
+  n('granssnitt',       'Gränssnitt',                       'design',  320,   80),
+  n('pattern_lib',      'Pattern library',                  'design',  480,  -60),
+  n('skalbarhet',       'Skalbarhet',                       'design',  320, -180),
+  n('regler',           'Regler',                           'design',  480, -180),
+  n('guidance',         'Guidance',                         'design',  620, -100),
+  n('constraints',      'Constraints',                      'design',  620,    0),
+  // Metod
+  n('litteraturstudie', 'Litteraturstudie',                 'metod',   180,  200),
+  n('user_flows',       'User flows',                       'metod',   340,  200),
+  n('personas',         'Personas',                         'metod',   460,  190),
+  n('scenarios',        'Scenarios',                        'metod',   460,  300),
+  n('kontext',          'Kontext',                          'metod',   340,  360),
+  n('prototyping',      'Prototyping',                      'metod',   180,  360),
+  n('user_stories',     'User stories',                     'metod',   560,  120),
+  n('pact',             'PACT',                             'metod',   560,  300),
+  n('task_sequence',    'Task sequence',                    'metod',   560,  400),
+  // Designprinciper
+  n('tillganglighet',   'Tillgänglighet',                   'princip', -200, -500),
+  n('prog_disclosure',  'Progressive disclosure',           'princip', -420, -560),
+  n('sakerhet',         'Säkerhet',                         'princip', -580, -460),
+  n('feedback',         'Feedback',                         'princip', -580, -340),
+  n('affordances',      'Affordances',                      'princip', -200, -400),
+  n('visibility',       'Visibility of system status',      'princip', -420, -420),
+];
+
+// ── KANTER ───────────────────────────────────────────────────────────────────
+const edgesArr = [
+  // Från huvud
+  {f:'main', t:'automation_bias',    l:'kräver hantering av'},
+  {f:'main', t:'human_loop',         l:'kräver'},
+  {f:'main', t:'xai',               l:'grundas i'},
+  {f:'main', t:'dst',               l:'grundas i'},
+  {f:'main', t:'hcd',               l:'skapas genom'},
+  {f:'main', t:'eu_ai_act',         l:'regleras av'},
+  {f:'main', t:'komponenter',       l:'består av'},
+  {f:'main', t:'litteraturstudie',  l:'skapas genom'},
+  // Människa & AI
+  {f:'automation_bias',    t:'kalibrerad_tillit',    l:'motverkas av'},
+  {f:'algorithm_aversion', t:'kalibrerad_tillit',    l:'motverkas av'},
+  {f:'kalibrerad_tillit',  t:'appropriate_reliance', l:'syftar till'},
+  {f:'human_loop',         t:'appropriate_reliance', l:'möjliggör'},
+  {f:'human_loop',         t:'designad_friktion',    l:'implementeras genom'},
+  {f:'designad_friktion',  t:'automation_bias',      l:'motverkar'},
+  {f:'xai',                t:'explainability',       l:'innefattar'},
+  {f:'xai',                t:'transparens',          l:'innefattar'},
+  {f:'explainability',     t:'lokal_exp',            l:'indelas i'},
+  {f:'explainability',     t:'global_exp',           l:'indelas i'},
+  {f:'explainability',     t:'kalibrerad_tillit',    l:'bidrar till'},
+  {f:'transparens',        t:'kalibrerad_tillit',    l:'bidrar till'},
+  {f:'osaker_komm',        t:'kalibrerad_tillit',    l:'bidrar till'},
+  {f:'sparbarhet',         t:'human_loop',           l:'stödjer'},
+  {f:'agency',             t:'human_loop',           l:'förutsätter'},
+  // Teori → AI
+  {f:'nudge',              t:'designad_friktion',    l:'stödjer'},
+  {f:'situationsmedv',     t:'human_loop',           l:'förutsätter'},
+  {f:'kognitiv_belastning',t:'osaker_komm',          l:'påverkar'},
+  {f:'mentala_modeller',   t:'granssnitt',           l:'påverkar'},
+  // Teori interna
+  {f:'hci',      t:'hcd',            l:'hänger ihop med'},
+  {f:'hcd',      t:'exp_design',     l:'innefattar'},
+  {f:'activity', t:'dist_kognition', l:'förklarar'},
+  {f:'embodied', t:'dist_kognition', l:'bidrar till'},
+  // Regulatoriskt
+  {f:'eu_ai_act', t:'sparbarhet',    l:'kräver'},
+  {f:'eu_ai_act', t:'human_loop',    l:'kräver'},
+  {f:'eu_ai_act', t:'transparens',   l:'kräver'},
+  {f:'gdpr',      t:'sparbarhet',    l:'reglerar'},
+  // Designsystem
+  {f:'dst',         t:'komponenter',  l:'stödjer'},
+  {f:'komponenter', t:'designtokens', l:'består av'},
+  {f:'komponenter', t:'pattern_lib',  l:'bildar'},
+  {f:'komponenter', t:'granssnitt',   l:'bygger upp'},
+  {f:'regler',      t:'guidance',     l:'skapar'},
+  {f:'regler',      t:'constraints',  l:'definierar'},
+  // Metod
+  {f:'pact',         t:'kontext',     l:'analyserar'},
+  {f:'personas',     t:'scenarios',   l:'används i'},
+  {f:'user_stories', t:'user_flows',  l:'genererar'},
+  {f:'prototyping',  t:'granssnitt',  l:'testar'},
+  // Principer
+  {f:'affordances',     t:'constraints',         l:'påverkar'},
+  {f:'visibility',      t:'transparens',         l:'bidrar till'},
+  {f:'feedback',        t:'felhantering',        l:'möjliggör'},
+  {f:'prog_disclosure', t:'kognitiv_belastning', l:'minskar'},
+  {f:'tillganglighet',  t:'granssnitt',          l:'kräver'},
+];
+
+// ── SKAPA NÄTVERK ─────────────────────────────────────────────────────────────
+const nodes = new vis.DataSet(nodesArr);
+const edges = new vis.DataSet(edgesArr.map((e,i)=>({
+  id:i, from:e.f, to:e.t, label:e.l,
+  font:{ size:10, color:'#6b7280', background:'rgba(255,255,255,0.92)', align:'middle' },
+  arrows:{ to:{ enabled:true, scaleFactor:0.65 } },
+  color:{ color:'#c4b5fd', highlight:'#7c3aed', hover:'#7c3aed' },
+  smooth:{ type:'curvedCW', roundness:0.12 },
+  width:1.3,
+})));
+
+const net = new vis.Network(
+  document.getElementById('network'),
+  { nodes, edges },
+  {
+    physics:{ enabled:false },
+    interaction:{ hover:true, zoomView:true, dragView:true, dragNodes:true },
+    layout:{ improvedLayout:false },
+  }
+);
+
+// Centrera vyn direkt
+net.fit({ animation:{ duration:600, easingFunction:'easeInOutQuad' } });
+
+// ── TOOLTIP ───────────────────────────────────────────────────────────────────
+const tip = document.getElementById('tip');
+net.on('hoverNode', p => {
+  const m = M[p.node]||{};
+  const nd = nodesArr.find(x=>x.id===p.node);
+  if (!nd) return;
+  const lbl = nd.label.split('\n')[0];
+  tip.innerHTML =
+    (m.n ? '<span class="ntag">★ Nytt INL2</span>' : '') +
+    '<strong>'+lbl+'</strong>' +
+    (m.ref ? '<div class="ref">Källa: '+m.ref+'</div>' : '') +
+    (m.def ? '<div class="def">'+m.def+'</div>' : '');
+  tip.style.display = 'block';
+});
+net.on('blurNode', ()=>{ tip.style.display='none'; });
+document.addEventListener('mousemove', e=>{
+  if (tip.style.display==='block') {
+    tip.style.left=(e.clientX+16)+'px';
+    tip.style.top=(e.clientY+10)+'px';
+  }
+});
+
+// ── KONTROLLER ────────────────────────────────────────────────────────────────
+let phys = false;
+window.resetView   = ()=> net.fit({ animation:{ duration:700, easingFunction:'easeInOutQuad' } });
+window.togglePhysics = ()=>{
+  phys = !phys;
+  net.setOptions({ physics:{ enabled:phys, solver:'forceAtlas2Based',
+    forceAtlas2Based:{ gravitationalConstant:-90, centralGravity:0.005,
+      springLength:180, springConstant:0.04, damping:0.6, avoidOverlap:1 } } });
+  if (!phys) net.stopSimulation();
+  document.getElementById('pb').textContent = phys ? '⏸ Pausa fysik' : '▶ Starta fysik';
+  document.getElementById('pb').classList.toggle('on', phys);
+};
+
+} // end initMap
+</script>
+</body>
+</html>

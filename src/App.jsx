@@ -64,10 +64,10 @@ function Sidebar() {
         </div>
         <div className="flex flex-col gap-2">
           {[
-            { label: 'Översikt',      Icon: LayoutGrid   },
-            { label: 'Kunder',        Icon: User         },
-            { label: 'Mina ärenden',  Icon: ClipboardList, active: true },
-            { label: 'Alla ärenden',  Icon: ClipboardList },
+            { label: 'Översikt', Icon: LayoutGrid },
+            { label: 'Kunder', Icon: User },
+            { label: 'Mina ärenden', Icon: ClipboardList, active: true },
+            { label: 'Alla ärenden', Icon: ClipboardList },
           ].map(({ label, Icon, active }) => (
             <button key={label} className={`w-full flex items-center gap-2 px-4 py-2 rounded-[4px] text-[16px] font-medium text-black text-left transition-colors ${active ? 'bg-[rgba(71,71,71,0.15)]' : 'hover:bg-[rgba(71,71,71,0.08)]'}`}>
               <Icon size={16} className="flex-shrink-0" />
@@ -84,9 +84,9 @@ function Sidebar() {
         </div>
         <div className="flex flex-col gap-2">
           {[
-            { label: 'Aviseringar',       Icon: Bell      },
-            { label: 'Rekommendationer',  Icon: Lightbulb },
-            { label: 'Beslutslogg',       Icon: BookOpen  },
+            { label: 'Aviseringar', Icon: Bell },
+            { label: 'Rekommendationer', Icon: Lightbulb },
+            { label: 'Beslutslogg', Icon: BookOpen },
           ].map(({ label, Icon }) => (
             <button key={label} className="w-full flex items-center gap-2 px-4 py-2 rounded-[4px] text-[16px] font-medium text-black text-left transition-colors hover:bg-[rgba(71,71,71,0.08)]">
               <Icon size={16} className="flex-shrink-0" />
@@ -103,9 +103,9 @@ function Sidebar() {
         </div>
         <div className="flex flex-col gap-2">
           {[
-            { label: 'Inställningar', Icon: Settings   },
-            { label: 'Hjälp',         Icon: HelpCircle },
-            { label: 'Säkerhet',      Icon: Shield     },
+            { label: 'Inställningar', Icon: Settings },
+            { label: 'Hjälp', Icon: HelpCircle },
+            { label: 'Säkerhet', Icon: Shield },
           ].map(({ label, Icon }) => (
             <button key={label} className="w-full flex items-center gap-2 px-4 py-2 rounded-[4px] text-[16px] font-medium text-black text-left transition-colors hover:bg-[rgba(71,71,71,0.08)]">
               <Icon size={16} className="flex-shrink-0" />
@@ -281,8 +281,8 @@ function RecommendationCard({ d, confidence }) {
   const innerCls = level === 'high'
     ? 'bg-[#f9fff9] border-[#bbf0bb]'
     : level === 'medium'
-    ? 'bg-[#fffaf5] border-[#fddeb9]'
-    : 'bg-[#fffcfc] border-[#f5c2c2]'
+      ? 'bg-[#fffaf5] border-[#fddeb9]'
+      : 'bg-[#fffcfc] border-[#f5c2c2]'
 
   const shortLabel = confBadge.label.split(' ')[0] // "Låg" / "Medel" / "Hög"
 
@@ -333,21 +333,29 @@ function WhyDecisionCard({ factors, d }) {
     return f.value.replace(/↑|↓/g, '').trim()
   }
 
-  // Påverkan-riktning chip: neutral bg, arrow + label, optional warning icon
   const renderDirectionChip = (f) => {
     if (f.status === 'unavailable') {
       return (
-        <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-[#f2f2f2] border border-[#dbdbdb]">
-          <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Ej bedömt</p>
+        <div className="flex items-center gap-0.5 px-2 py-0.5 rounded-sm bg-[#e5e5e5] border border-[#a3a3a3]">
+          <p className="text-[12px] font-medium text-[#404040] whitespace-nowrap leading-5">Ej bedömt</p>
         </div>
       )
     }
     const isPositive = f.direction === 'positiv'
+    if (isPositive) {
+      return (
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-[#f0fdf4] border border-[#bbf7d0]">
+          <ArrowRight size={12} className="text-[#166534]" />
+          <p className="text-[12px] font-medium text-[#166534] whitespace-nowrap leading-5">Godkänn</p>
+        </div>
+      )
+    }
+
     return (
-      <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-[#f2f2f2] border border-[#dbdbdb]">
-        <ArrowRight size={12} className="text-[#525252]" />
-        <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">{isPositive ? 'Godkänn' : 'Avslå'}</p>
-        {!isPositive && f.stale && <AlertTriangle size={12} className="text-[#525252]" />}
+      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-[#fef2f2] border border-[#fecaca]">
+        <ArrowRight size={12} className="text-[#991b1b]" />
+        <p className="text-[12px] font-medium text-[#991b1b] whitespace-nowrap leading-5">Avslå</p>
+        {f.stale && <AlertTriangle size={12} className="text-[#991b1b]" />}
       </div>
     )
   }
@@ -920,9 +928,9 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
                   <td className="pr-8 align-middle text-xs font-medium text-gray-900 whitespace-nowrap">{s.period}</td>
                   <td className="align-middle">
                     <div className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'unavailable' ? 'text-gray-400' :
-                        s.status === 'ok' || s.status === 'current' ? 'text-green-700' : 'text-amber-700'}`}>
+                      s.status === 'ok' || s.status === 'current' ? 'text-green-700' : 'text-amber-700'}`}>
                       <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'unavailable' ? 'bg-gray-300' :
-                          s.status === 'ok' || s.status === 'current' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                        s.status === 'ok' || s.status === 'current' ? 'bg-green-500' : 'bg-amber-500'}`} />
                       {s.status === 'unavailable' ? 'Otillgänglig' : (s.statusLabel ?? statusLabel[s.status] ?? s.status)}
                     </div>
                   </td>
@@ -1014,11 +1022,10 @@ function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGra
                 onClick={aiReviewed ? onApprove : undefined}
                 className={`w-full flex items-center justify-center gap-2.5 px-4 py-2 rounded text-base font-medium transition-colors
                   ${aiReviewed
-                    ? 'bg-[#245bd1] border border-[#245bd1] text-white hover:bg-blue-700'
+                    ? 'bg-white border border-[#245bd1] text-[#245bd1] hover:bg-blue-50'
                     : 'bg-[#dbdbdb] border border-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
               >
                 Godkänn
-                {!aiReviewed && <Lock size={20} />}
               </button>
               {!aiReviewed && (
                 <div className="flex items-center gap-1">
@@ -1039,7 +1046,6 @@ function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGra
                     : 'bg-[#dbdbdb] border border-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
               >
                 Avslå
-                {!aiReviewed && <Lock size={20} />}
               </button>
               {!aiReviewed && (
                 <div className="flex items-center gap-1">
@@ -1402,240 +1408,233 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
             </div>
 
             <div className="max-w-[760px] flex flex-col gap-5 w-full">
-            {/* Spårlogg */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-6">
-              {/* Header */}
-              <div className="flex items-end justify-between pb-3 border-b border-gray-200">
-                <p className="text-3xl font-bold text-gray-900">Spårlogg</p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>AI-modell:</span>
-                  <span className="text-gray-900">Kreditrisk v2.3 · Tränad nov 2024</span>
+              {/* Spårlogg */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-6">
+                {/* Header */}
+                <div className="flex items-end justify-between pb-3 border-b border-gray-200">
+                  <p className="text-3xl font-bold text-gray-900">Spårlogg</p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>AI-modell:</span>
+                    <span className="text-gray-900">Kreditrisk v2.3 · Tränad nov 2024</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Timeline */}
-              <div className="flex flex-col">
-                {auditEvents.map((ev, i) => {
-                  const isOpen = openEvents.has(ev.id)
-                  const toggleOpen = () => setOpenEvents(prev => {
-                    const next = new Set(prev)
-                    if (next.has(ev.id)) next.delete(ev.id)
-                    else next.add(ev.id)
-                    return next
-                  })
-                  return (
-                    <div key={ev.id} className="flex gap-4">
-                      {/* Icon + connector line */}
-                      <div className="flex flex-col items-center w-6 flex-shrink-0">
-                        <div className={`mt-3 w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 ${
-                          ev.type === 'ai' ? 'bg-[#f0eafb] border-[#d6c3f3]' : 'bg-gray-100 border-gray-300'
-                        }`}>
-                          {ev.type === 'ai'
-                            ? <Sparkles size={12} className="text-[#451b88]" />
-                            : ev.type === 'system'
-                            ? <ClipboardList size={12} className="text-gray-500" />
-                            : <User size={12} className="text-gray-500" />
-                          }
-                        </div>
-                        {i < auditEvents.length - 1 && (
-                          <div className="w-px flex-1 bg-gray-200 mt-3 min-h-4" />
-                        )}
-                      </div>
-
-                      {/* Event card */}
-                      <div className="flex-1 min-w-0 pb-2">
-                        <div className="overflow-hidden">
-                          {/* Row header */}
-                          <div className="flex items-center justify-between p-3">
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-sm font-medium text-gray-700">{ev.label}</p>
-                                {ev.type === 'ai' && ev.chips?.map(chip => (
-                                  <div key={chip.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium ${
-                                    chip.style === 'low' ? 'bg-red-50 border-red-200 text-red-800'
-                                    : chip.style === 'medium' ? 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]'
-                                    : 'bg-green-50 border-green-200 text-green-700'
-                                  }`}>
-                                    <div className={`w-1 h-1 rounded-full ${
-                                      chip.style === 'low' ? 'bg-red-500'
-                                      : chip.style === 'medium' ? 'bg-[#f97316]'
-                                      : 'bg-green-500'
-                                    }`} />
-                                    {chip.label}
-                                  </div>
-                                ))}
-                              </div>
-                              <p className="text-xs text-gray-500">{ev.time}</p>
-                            </div>
-                            <button
-                              onClick={toggleOpen}
-                              className="flex items-center gap-2 text-xs font-medium text-gray-900 shrink-0"
-                            >
-                              Visa detaljer
-                              <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 border border-gray-200 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)]">
-                                <ChevronDown size={12} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                              </div>
-                            </button>
+                {/* Timeline */}
+                <div className="flex flex-col">
+                  {auditEvents.map((ev, i) => {
+                    const isOpen = openEvents.has(ev.id)
+                    const toggleOpen = () => setOpenEvents(prev => {
+                      const next = new Set(prev)
+                      if (next.has(ev.id)) next.delete(ev.id)
+                      else next.add(ev.id)
+                      return next
+                    })
+                    return (
+                      <div key={ev.id} className="flex gap-4">
+                        {/* Icon + connector line */}
+                        <div className="flex flex-col items-center w-6 flex-shrink-0">
+                          <div className={`mt-3 w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 ${ev.type === 'ai' ? 'bg-[#f0eafb] border-[#d6c3f3]' : 'bg-gray-100 border-gray-300'
+                            }`}>
+                            {ev.type === 'ai'
+                              ? <Sparkles size={12} className="text-[#451b88]" />
+                              : ev.type === 'system'
+                                ? <ClipboardList size={12} className="text-gray-500" />
+                                : <User size={12} className="text-gray-500" />
+                            }
                           </div>
-
-                          {/* Detail section */}
-                          {isOpen && ev.detail && (
-                            <div className="px-5 py-4 bg-gray-50 flex flex-col gap-2 text-xs border-t border-gray-100">
-                              {/* Decision type: override badge first */}
-                              {ev.type === 'decision' && (
-                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border bg-[#e9effb] border-[#c2d2f5] text-[#112b64] text-xs font-medium w-fit mb-1">
-                                  Avvek från AI-rekommendation: {d.aiRecommendation}
-                                  <CircleAlert size={12} />
-                                </div>
-                              )}
-
-                              {/* Rows (all types) */}
-                              {ev.detail.rows?.map(row => (
-                                <div key={row.label} className="flex items-start gap-6">
-                                  <span className="text-gray-400 w-28 shrink-0">{row.label}</span>
-                                  <span className="text-gray-700">{row.value}</span>
-                                </div>
-                              ))}
-
-                              {/* Decision: category + motivation */}
-                              {ev.type === 'decision' && ev.detail.motivationCategory && (
-                                <div className="flex items-center gap-6">
-                                  <span className="text-gray-400 w-28 shrink-0">Kategori:</span>
-                                  <span className="text-gray-700">{ev.detail.motivationCategory}</span>
-                                </div>
-                              )}
-                              {ev.type === 'decision' && ev.detail.motivationText && (
-                                <div className="flex items-start gap-6">
-                                  <span className="text-gray-400 w-28 shrink-0">Motivering:</span>
-                                  <span className="text-gray-600 flex-1">{ev.detail.motivationText}</span>
-                                </div>
-                              )}
-
-                              {/* AI type: intro + factors + sources */}
-                              {ev.type === 'ai' && ev.detail.intro && (
-                                <p className="text-gray-500 mb-1">{ev.detail.intro}</p>
-                              )}
-                              {ev.type === 'ai' && ev.detail.factors?.length > 0 && (
-                                <div className="flex flex-col gap-1.5">
-                                  <p className="text-sm font-medium text-gray-700">Nyckelfaktorer</p>
-                                  {ev.detail.factors.map(f => (
-                                    <div key={f.name} className="flex items-center justify-between">
-                                      <div className="flex items-center gap-6">
-                                        <span className="text-gray-400 w-[125px] shrink-0">{f.name}</span>
-                                        <span className="text-gray-900">{f.value}</span>
-                                      </div>
-                                      <span className="text-gray-400">Krav: {f.limit}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              {ev.type === 'ai' && ev.detail.sources?.length > 0 && (
-                                <div className="flex flex-col gap-1.5 mt-1">
-                                  <p className="text-sm font-medium text-gray-700">Datakällor</p>
-                                  {ev.detail.sources.map(s => (
-                                    <div key={s.name} className="flex items-center justify-between">
-                                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium ${
-                                        s.status === 'stale' ? 'bg-orange-50 border-orange-200 text-orange-700'
-                                        : 'bg-gray-100 border-gray-300 text-gray-600'
-                                      }`}>
-                                        {s.name}
-                                        {s.status === 'stale'
-                                          ? <AlertTriangle size={12} className="shrink-0" />
-                                          : <FileText size={12} className="shrink-0" />}
-                                      </div>
-                                      <div className="flex items-center gap-3">
-                                        <span className={`inline-flex items-center gap-1 text-xs font-medium ${
-                                          s.status === 'stale' ? 'text-orange-700' : 'text-gray-600'
-                                        }`}>
-                                          <div className={`w-1 h-1 rounded-full ${
-                                            s.status === 'stale' ? 'bg-orange-500' : 'bg-gray-400'
-                                          }`} />
-                                          {s.status === 'stale' ? 'Inaktuell' : 'Aktuell'}
-                                        </span>
-                                        <span className="text-gray-400">{s.date}</span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                          {i < auditEvents.length - 1 && (
+                            <div className="w-px flex-1 bg-gray-200 mt-3 min-h-4" />
                           )}
                         </div>
+
+                        {/* Event card */}
+                        <div className="flex-1 min-w-0 pb-2">
+                          <div className="overflow-hidden">
+                            {/* Row header */}
+                            <div className="flex items-center justify-between p-3">
+                              <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-sm font-medium text-gray-700">{ev.label}</p>
+                                  {ev.type === 'ai' && ev.chips?.map(chip => (
+                                    <div key={chip.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium ${chip.style === 'low' ? 'bg-red-50 border-red-200 text-red-800'
+                                      : chip.style === 'medium' ? 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]'
+                                        : 'bg-green-50 border-green-200 text-green-700'
+                                      }`}>
+                                      <div className={`w-1 h-1 rounded-full ${chip.style === 'low' ? 'bg-red-500'
+                                        : chip.style === 'medium' ? 'bg-[#f97316]'
+                                          : 'bg-green-500'
+                                        }`} />
+                                      {chip.label}
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-gray-500">{ev.time}</p>
+                              </div>
+                              <button
+                                onClick={toggleOpen}
+                                className="flex items-center gap-2 text-xs font-medium text-gray-900 shrink-0"
+                              >
+                                Visa detaljer
+                                <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 border border-gray-200 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)]">
+                                  <ChevronDown size={12} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                </div>
+                              </button>
+                            </div>
+
+                            {/* Detail section */}
+                            {isOpen && ev.detail && (
+                              <div className="px-5 py-4 bg-gray-50 flex flex-col gap-2 text-xs border-t border-gray-100">
+                                {/* Decision type: override badge first */}
+                                {ev.type === 'decision' && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border bg-[#e9effb] border-[#c2d2f5] text-[#112b64] text-xs font-medium w-fit mb-1">
+                                    Avvek från AI-rekommendation: {d.aiRecommendation}
+                                    <CircleAlert size={12} />
+                                  </div>
+                                )}
+
+                                {/* Rows (all types) */}
+                                {ev.detail.rows?.map(row => (
+                                  <div key={row.label} className="flex items-start gap-6">
+                                    <span className="text-gray-400 w-28 shrink-0">{row.label}</span>
+                                    <span className="text-gray-700">{row.value}</span>
+                                  </div>
+                                ))}
+
+                                {/* Decision: category + motivation */}
+                                {ev.type === 'decision' && ev.detail.motivationCategory && (
+                                  <div className="flex items-center gap-6">
+                                    <span className="text-gray-400 w-28 shrink-0">Kategori:</span>
+                                    <span className="text-gray-700">{ev.detail.motivationCategory}</span>
+                                  </div>
+                                )}
+                                {ev.type === 'decision' && ev.detail.motivationText && (
+                                  <div className="flex items-start gap-6">
+                                    <span className="text-gray-400 w-28 shrink-0">Motivering:</span>
+                                    <span className="text-gray-600 flex-1">{ev.detail.motivationText}</span>
+                                  </div>
+                                )}
+
+                                {/* AI type: intro + factors + sources */}
+                                {ev.type === 'ai' && ev.detail.intro && (
+                                  <p className="text-gray-500 mb-1">{ev.detail.intro}</p>
+                                )}
+                                {ev.type === 'ai' && ev.detail.factors?.length > 0 && (
+                                  <div className="flex flex-col gap-1.5">
+                                    <p className="text-sm font-medium text-gray-700">Nyckelfaktorer</p>
+                                    {ev.detail.factors.map(f => (
+                                      <div key={f.name} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-6">
+                                          <span className="text-gray-400 w-[125px] shrink-0">{f.name}</span>
+                                          <span className="text-gray-900">{f.value}</span>
+                                        </div>
+                                        <span className="text-gray-400">Krav: {f.limit}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {ev.type === 'ai' && ev.detail.sources?.length > 0 && (
+                                  <div className="flex flex-col gap-1.5 mt-1">
+                                    <p className="text-sm font-medium text-gray-700">Datakällor</p>
+                                    {ev.detail.sources.map(s => (
+                                      <div key={s.name} className="flex items-center justify-between">
+                                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium ${s.status === 'stale' ? 'bg-orange-50 border-orange-200 text-orange-700'
+                                          : 'bg-gray-100 border-gray-300 text-gray-600'
+                                          }`}>
+                                          {s.name}
+                                          {s.status === 'stale'
+                                            ? <AlertTriangle size={12} className="shrink-0" />
+                                            : <FileText size={12} className="shrink-0" />}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'stale' ? 'text-orange-700' : 'text-gray-600'
+                                            }`}>
+                                            <div className={`w-1 h-1 rounded-full ${s.status === 'stale' ? 'bg-orange-500' : 'bg-gray-400'
+                                              }`} />
+                                            {s.status === 'stale' ? 'Inaktuell' : 'Aktuell'}
+                                          </span>
+                                          <span className="text-gray-400">{s.date}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Feedback widget */}
-            {feedbackSent ? (
-              <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex items-center gap-2 text-sm text-gray-600">
-                <CheckCircle size={16} className="text-green-500 shrink-0" />
-                Tack – din feedback har loggats
-              </div>
-            ) : (
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4">
-                {/* Header */}
-                <div className="flex flex-col gap-2">
-                  <p className="text-xl font-bold text-gray-900">Var AI:ns rekommendation korrekt?</p>
-                  <p className="text-sm text-gray-500">Din feedback används för att förbättra AI-modellen. Loggat med tidsstämpel och handläggare-ID.</p>
+                    )
+                  })}
                 </div>
+              </div>
 
-                {/* Segmented control */}
-                <div className="bg-[#f2f2f2] flex gap-0.5 items-center p-0.5 rounded-md w-full">
-                  {[
-                    { id: 'rätt', label: 'Rätt' },
-                    { id: 'fel', label: 'Fel' },
-                    { id: 'vet_inte', label: 'Vet inte' },
-                  ].map(({ id, label }) => (
-                    <button
-                      key={id}
-                      onClick={() => setFeedbackChoice(id)}
-                      className={`flex flex-1 items-center justify-center px-3 py-2 rounded text-base font-medium transition-all border ${
-                        feedbackChoice === id
+              {/* Feedback widget */}
+              {feedbackSent ? (
+                <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex items-center gap-2 text-sm text-gray-600">
+                  <CheckCircle size={16} className="text-green-500 shrink-0" />
+                  Tack – din feedback har loggats
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4">
+                  {/* Header */}
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xl font-bold text-gray-900">Var AI:ns rekommendation korrekt?</p>
+                    <p className="text-sm text-gray-500">Din feedback används för att förbättra AI-modellen. Loggat med tidsstämpel och handläggare-ID.</p>
+                  </div>
+
+                  {/* Segmented control */}
+                  <div className="bg-[#f2f2f2] flex gap-0.5 items-center p-0.5 rounded-md w-full">
+                    {[
+                      { id: 'rätt', label: 'Rätt' },
+                      { id: 'fel', label: 'Fel' },
+                      { id: 'vet_inte', label: 'Vet inte' },
+                    ].map(({ id, label }) => (
+                      <button
+                        key={id}
+                        onClick={() => setFeedbackChoice(id)}
+                        className={`flex flex-1 items-center justify-center px-3 py-2 rounded text-base font-medium transition-all border ${feedbackChoice === id
                           ? 'bg-white border-gray-300 text-gray-900 shadow-sm'
                           : 'bg-[#f2f2f2] border-transparent text-gray-700 hover:bg-gray-100'
-                      }`}
+                          }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Textarea */}
+                  <div className="flex flex-col gap-2">
+                    <p className="text-base font-medium text-gray-900">Ge din feedback</p>
+                    <textarea
+                      value={feedbackComment}
+                      onChange={e => setFeedbackComment(e.target.value.slice(0, 500))}
+                      placeholder="Valfri kommentar - vad tyckte du om AI:ns rekommendation?"
+                      className="w-full h-[182px] text-base text-gray-700 placeholder-gray-400 border border-gray-400 rounded px-2 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+                    />
+                    <div className="text-right text-sm text-gray-400">{feedbackComment.length}/500 tecken</div>
+                  </div>
+
+                  {/* Submit */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setFeedbackSent(true)}
+                      className="bg-[#245bd1] text-white px-4 py-2 rounded text-base font-medium hover:bg-[#1d4db8] transition-colors"
                     >
-                      {label}
+                      Skicka feedback
                     </button>
-                  ))}
+                  </div>
                 </div>
+              )}
 
-                {/* Textarea */}
-                <div className="flex flex-col gap-2">
-                  <p className="text-base font-medium text-gray-900">Ge din feedback</p>
-                  <textarea
-                    value={feedbackComment}
-                    onChange={e => setFeedbackComment(e.target.value.slice(0, 500))}
-                    placeholder="Valfri kommentar - vad tyckte du om AI:ns rekommendation?"
-                    className="w-full h-[182px] text-base text-gray-700 placeholder-gray-400 border border-gray-400 rounded px-2 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
-                  />
-                  <div className="text-right text-sm text-gray-400">{feedbackComment.length}/500 tecken</div>
-                </div>
-
-                {/* Submit */}
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setFeedbackSent(true)}
-                    className="bg-[#245bd1] text-white px-4 py-2 rounded text-base font-medium hover:bg-[#1d4db8] transition-colors"
-                  >
-                    Skicka feedback
-                  </button>
-                </div>
+              {/* Footer */}
+              <div className="flex items-center justify-between pb-6">
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Download size={14} /> Exportera logg
+                </button>
+                <button onClick={onClose} className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                  ← Tillbaka till ärendelistan
+                </button>
               </div>
-            )}
-
-            {/* Footer */}
-            <div className="flex items-center justify-between pb-6">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <Download size={14} /> Exportera logg
-              </button>
-              <button onClick={onClose} className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                ← Tillbaka till ärendelistan
-              </button>
-            </div>
 
             </div>{/* /max-w-[760px] */}
           </div>
@@ -1720,10 +1719,10 @@ function ApprovedCaseView({ d, confidence, onClose }) {
 
 function SpårloggTag({ type = 'system' }) {
   const map = {
-    system:      { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'System' },
-    ai:          { bg: '#f0eafb', border: '#d6c3f3', color: '#451b88', label: 'AI' },
+    system: { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'System' },
+    ai: { bg: '#f0eafb', border: '#d6c3f3', color: '#451b88', label: 'AI' },
     handlaggare: { bg: '#e9effb', border: '#c2d2f5', color: '#112b64', label: 'Handläggare' },
-    granskning:  { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'Granskning' },
+    granskning: { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'Granskning' },
   }
   const { bg, border, color, label } = map[type]
   return (
@@ -1745,10 +1744,10 @@ function SpårloggIcon({ type }) {
   )
   if (type === 'empty') return <div className="w-6 h-6 rounded-xl border border-[#c4c4c4] bg-white shrink-0" />
   const icons = {
-    'clipboard':   <ClipboardList size={12} className="text-[#696969]" />,
+    'clipboard': <ClipboardList size={12} className="text-[#696969]" />,
     'file-search': <FileText size={12} className="text-[#696969]" />,
-    'user':        <User size={12} className="text-[#696969]" />,
-    'search':      <Search size={12} className="text-[#696969]" />,
+    'user': <User size={12} className="text-[#696969]" />,
+    'search': <Search size={12} className="text-[#696969]" />,
   }
   return <div className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-[#696969]" />}</div>
 }
@@ -1780,11 +1779,11 @@ function SpårloggTab({ d }) {
   }
 
   const events = [
-    { id: 1, type: 'system',      icon: 'clipboard',    time: '27 feb 2026 · 10:46', title: 'Ärende öppnat' },
-    { id: 2, type: 'system',      icon: 'file-search',  time: '27 feb 2026 · 10:46', title: 'Datahämtning' },
-    { id: 3, type: 'ai',          icon: 'ai',           time: '27 feb 2026 · 10:46', title: 'AI-analys genomförd' },
-    { id: 4, type: 'handlaggare', icon: 'user',         time: '27 feb 2026 · 11:05', title: 'Granskning påbörjad' },
-    { id: 5, type: 'granskning',  icon: 'search',       time: '27 feb 2026 · 11:12', title: 'Kritisk källa granskad' },
+    { id: 1, type: 'system', icon: 'clipboard', time: '27 feb 2026 · 10:46', title: 'Ärende öppnat' },
+    { id: 2, type: 'system', icon: 'file-search', time: '27 feb 2026 · 10:46', title: 'Datahämtning' },
+    { id: 3, type: 'ai', icon: 'ai', time: '27 feb 2026 · 10:46', title: 'AI-analys genomförd' },
+    { id: 4, type: 'handlaggare', icon: 'user', time: '27 feb 2026 · 11:05', title: 'Granskning påbörjad' },
+    { id: 5, type: 'granskning', icon: 'search', time: '27 feb 2026 · 11:12', title: 'Kritisk källa granskad' },
   ]
 
   return (
@@ -1871,7 +1870,7 @@ function SpårloggTab({ d }) {
                   </div>
                   <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-md p-[13px] flex flex-col gap-1.5">
                     {[
-                      { label: 'Modell',               value: 'Kreditrisk v2.3' },
+                      { label: 'Modell', value: 'Kreditrisk v2.3' },
                       { label: 'Faktorer analyserade', value: '4 (2 aktiva, 1 oreviderad, 1 saknad)' },
                       { label: 'Konfidensnedsättning', value: 'Oreviderat bokslut + saknad branschdata' },
                     ].map(row => (
@@ -1995,66 +1994,66 @@ export default function App() {
           caseData={CASE}
         />
       ) : (
-      <div className="flex flex-col flex-1 min-w-0 h-full">
-        <PageHeader d={CASE} />
+        <div className="flex flex-col flex-1 min-w-0 h-full">
+          <PageHeader d={CASE} />
 
-        <main className="flex-1 overflow-y-auto p-6 pt-2">
-          <div className="flex gap-6 items-start max-w-[1400px]">
+          <main className="flex-1 overflow-y-auto p-6 pt-2">
+            <div className="flex gap-6 items-start max-w-[1400px]">
 
-            {/* ── Vänster kolumn ─────────────────────────────────────── */}
-            <div className="flex-1 min-w-0 flex flex-col gap-4">
-              <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+              {/* ── Vänster kolumn ─────────────────────────────────────── */}
+              <div className="flex-1 min-w-0 flex flex-col gap-4">
+                <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-              {activeTab === 'overblick' && (
-                <>
-                  <CaseInfoCard d={CASE} />
-                  {showAIBanner && <AIBanner onClose={() => setShowAIBanner(false)} />}
-                  <RecommendationCard d={CASE} confidence={liveConfidence} />
-                  <WhyDecisionCard factors={liveFactors} d={CASE} />
-                  <ConfidenceImpactCard factors={liveFactors} />
-                </>
-              )}
+                {activeTab === 'overblick' && (
+                  <>
+                    <CaseInfoCard d={CASE} />
+                    {showAIBanner && <AIBanner onClose={() => setShowAIBanner(false)} />}
+                    <RecommendationCard d={CASE} confidence={liveConfidence} />
+                    <WhyDecisionCard factors={liveFactors} d={CASE} />
+                    <ConfidenceImpactCard factors={liveFactors} />
+                  </>
+                )}
 
-              {activeTab === 'underlag' && (
-                <>
-                  <UnderlandOverviewCard sources={liveSources} />
-                  <h2 className="text-[20px] font-bold text-[#242424] leading-7">Nyckeldata</h2>
-                  <div className="flex flex-col gap-4">
-                    {[
-                      ...liveFactors.filter(f => f.direction === 'negativ' && f.status !== 'unavailable'),
-                      ...liveFactors.filter(f => f.direction === 'positiv'),
-                      ...liveFactors.filter(f => f.status === 'unavailable'),
-                    ].map((factor, i) => (
-                      <MetricCard
-                        key={i}
-                        factor={factor}
-                        onGranska={() => setActiveDrawerMetric(factor)}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
+                {activeTab === 'underlag' && (
+                  <>
+                    <UnderlandOverviewCard sources={liveSources} />
+                    <h2 className="text-[20px] font-bold text-[#242424] leading-7">Nyckeldata</h2>
+                    <div className="flex flex-col gap-4">
+                      {[
+                        ...liveFactors.filter(f => f.direction === 'negativ' && f.status !== 'unavailable'),
+                        ...liveFactors.filter(f => f.direction === 'positiv'),
+                        ...liveFactors.filter(f => f.status === 'unavailable'),
+                      ].map((factor, i) => (
+                        <MetricCard
+                          key={i}
+                          factor={factor}
+                          onGranska={() => setActiveDrawerMetric(factor)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
 
-              {activeTab === 'sparlogg' && (
-                <SpårloggTab d={CASE} />
-              )}
+                {activeTab === 'sparlogg' && (
+                  <SpårloggTab d={CASE} />
+                )}
+              </div>
+
+              {/* ── Höger kolumn ───────────────────────────────────────── */}
+              <div className="w-[360px] flex-shrink-0 sticky top-6">
+                <DecisionPanel
+                  d={CASE}
+                  aiReviewed={aiReviewed}
+                  onUnlocked={setAiReviewed}
+                  onOverride={() => setOverrideState('confirming')}
+                  onApprove={() => setApprovedState('completed')}
+                  onGranskaKallor={() => setActiveDrawerMetric(liveFactors[2])}
+                />
+              </div>
+
             </div>
-
-            {/* ── Höger kolumn ───────────────────────────────────────── */}
-            <div className="w-[360px] flex-shrink-0 sticky top-6">
-              <DecisionPanel
-                d={CASE}
-                aiReviewed={aiReviewed}
-                onUnlocked={setAiReviewed}
-                onOverride={() => setOverrideState('confirming')}
-                onApprove={() => setApprovedState('completed')}
-                onGranskaKallor={() => setActiveDrawerMetric(liveFactors[2])}
-              />
-            </div>
-
-          </div>
-        </main>
-      </div>
+          </main>
+        </div>
       )}
 
       <KeyMetricSourceDrawer
