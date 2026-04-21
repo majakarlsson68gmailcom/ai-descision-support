@@ -10,7 +10,7 @@ import {
   FileText, ClipboardList, LayoutGrid, Bell, Sparkles, Lightbulb,
   BookOpen, Settings, HelpCircle, AlertTriangle, CircleAlert, Lock, ChevronRight, ChevronDown, User,
   Download, Send, CheckCircle, X, RotateCcw, ArrowRight, ArrowUpRight, ArrowDown, Info, Loader2,
-  Shield, PanelLeftClose, CircleMinus, Search,
+  Shield, PanelLeftClose, CircleMinus, Search, FileSearch,
 } from 'lucide-react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1736,20 +1736,20 @@ function SpårloggTag({ type = 'system' }) {
 }
 
 function SpårloggIcon({ type }) {
-  const grey = 'w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#dbdbdb] border-[#c4c4c4]'
+  const grey = 'w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#c4c4c4] border-[#c4c4c4]'
   if (type === 'ai') return (
     <div className="w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#f0eafb] border-[#d6c3f3]">
-      <Sparkles size={12} className="text-[#451b88]" />
+      <Sparkles size={16} className="text-[#451b88]" />
     </div>
   )
   if (type === 'empty') return <div className="w-6 h-6 rounded-xl border border-[#c4c4c4] bg-white shrink-0" />
   const icons = {
-    'clipboard': <ClipboardList size={12} className="text-[#696969]" />,
-    'file-search': <FileText size={12} className="text-[#696969]" />,
-    'user': <User size={12} className="text-[#696969]" />,
-    'search': <Search size={12} className="text-[#696969]" />,
+    'clipboard': <ClipboardList size={16} className="text-[#525252]" />,
+    'file-search': <FileSearch size={16} className="text-[#525252]" />,
+    'user': <User size={16} className="text-[#525252]" />,
+    'search': <Search size={16} className="text-[#525252]" />,
   }
-  return <div className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-[#696969]" />}</div>
+  return <div className={grey}>{icons[type] ?? <ClipboardList size={16} className="text-[#525252]" />}</div>
 }
 
 function SpårloggTab({ d }) {
@@ -1772,7 +1772,7 @@ function SpårloggTab({ d }) {
       </span>
     )
     return (
-      <span className="flex items-center gap-1 text-[12px] font-medium text-[#525252]">
+      <span className="flex items-center gap-1 text-[12px] font-semibold text-[#B41D1D]">
         <CircleMinus size={12} className="shrink-0" /> Otillgänglig
       </span>
     )
@@ -1790,10 +1790,10 @@ function SpårloggTab({ d }) {
     <div className="bg-white border border-[#c4c4c4] rounded-xlg p-6 flex flex-col gap-6">
 
       {/* Header med divider */}
-      <div className="border-b border-[#c4c4c4] pb-[13px] flex items-center justify-between">
+      <div className="border-b border-[#c4c4c4] pb-3 flex items-center justify-between">
         <p className="text-xlg font-semibold text-[#242424]">Spårlogg</p>
-        <div className="flex items-center gap-1 bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium px-2 py-0.5 rounded-full">
-          <Sparkles size={12} />
+        <div className="flex items-center gap-1 bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-sm font-medium px-4 py-2 rounded-full">
+          <Sparkles size={16} />
           <span>AI-modell: Kreditrisk v2.3 - Tränad nov 2024</span>
         </div>
       </div>
@@ -1897,7 +1897,7 @@ function SpårloggTab({ d }) {
                     {d.officer} granskade Bokslut (oreviderat) · Jan–Dec 2022.
                   </p>
                   <div className="inline-flex items-center">
-                    <span className="inline-flex items-center gap-1 bg-[#f2f2f2] border border-[#dbdbdb] text-[#525252] text-[12px] font-medium px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 bg-[#f2f2f2] border border-[#dbdbdb] text-[#525252] text-[12px] font-semibold px-2 py-0.5 rounded-full">
                       Bokslut <FileText size={12} />
                     </span>
                     <span className="inline-flex items-center gap-1 text-[#d97706] text-[12px] font-medium px-2 py-0.5">
