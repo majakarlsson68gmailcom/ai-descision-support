@@ -978,10 +978,10 @@ function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGra
     <div className="flex flex-col gap-2.5 px-2.5">
 
       {/* Kort 1: Beslutspanel */}
-      <div className="bg-white rounded-lg overflow-hidden w-full flex flex-col gap-5 pb-5">
+      <div className="bg-white rounded-2xl border border-[#c4c4c4] overflow-hidden w-full flex flex-col gap-5 pb-5">
 
         {/* Orange banner */}
-        <div className="bg-[#fef3e6] border border-[#fddeb9] px-3 py-2 flex flex-col gap-0.5">
+        <div className="bg-[#fef3e6] border-b border-[#fddeb9] px-3 py-2 flex flex-col gap-0.5">
           <div className="py-1">
             <CircleAlert size={20} className="text-[#9f5704]" />
           </div>
@@ -1076,7 +1076,7 @@ function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGra
       </div>
 
       {/* Kort 2: Checkbox */}
-      <div className="bg-white border-t border-[#c4c4c4] rounded-2xl p-6 flex flex-col gap-2">
+      <div className="bg-white border border-[#c4c4c4] rounded-2xl p-6 flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
