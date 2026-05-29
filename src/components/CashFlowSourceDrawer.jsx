@@ -4,7 +4,7 @@ import { X, Upload, FileText, ArrowUpRight, HelpCircle, ArrowRight, Trash2, Copy
 // Helper component for AI Badge
 function AIBadge() {
     return (
-        <div className="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium">
+        <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-[#e9effb] border border-[#c2d2f5] text-[#112b64] text-xs font-medium">
             <Sparkles size={14} />
             AI
         </div>
@@ -138,7 +138,7 @@ export default function CashFlowSourceDrawer({ isOpen, onClose, onSimulate, onUp
                                     <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1.5">
                                         Konfidensgrad <Info size={12} />
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm font-medium text-[#B95000] bg-[#FFF4E5] px-3 py-1 rounded-full border border-[#FED7AA]">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-[#B95000] bg-[#FFF4E5] px-3 py-1 rounded-sm border border-[#FED7AA]">
                                         <div className="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></div>
                                         Medel konfidens
                                     </div>

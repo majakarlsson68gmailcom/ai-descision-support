@@ -164,7 +164,7 @@ function StampPanel({ stamps, hoveredStamp, onStampHover }) {
       {/* Panel header */}
       <div className="px-5 py-4 border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-1.5 mb-1">
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium">
             <Sparkles size={12} />
             AI-extraherade värden
           </div>

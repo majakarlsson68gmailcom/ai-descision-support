@@ -2,47 +2,165 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Design tokens ─────────────────────────────────────────────────────────── */
-:root {
-  /* Typografi – Figma Foundations */
-  --f-sans:    'Satoshi Variable', ui-sans-serif, sans-serif;
-  --f-mono:    'DM Mono', monospace;
-  --f-display: 'Satoshi Variable', sans-serif;
+/* ── Tema-variabler ──────────────────────────────────────────────────────────
+   Allt färgvärde definieras som HSL-kanaler en gång per tema.
+   Lager A = shadcn-chrome (zinc-gråskala). Lager B = domän-status (mjuka tinter).
+   Regel: röd hue finns ENDAST i conf-low och dq-conflict.
+   ──────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Typografi */
+    --f-sans:    'Satoshi Variable', ui-sans-serif, sans-serif;
+    --f-mono:    'DM Mono', monospace;
+    --f-display: 'Satoshi Variable', sans-serif;
 
-  /* Ytor – Figma Semantic */
-  --c-bg:            #F2F2F2; /* grey/50  – background/primary  */
-  --c-sidebar:       #F9F9F9; /* grey/25  */
-  --c-white:         #FFFFFF;
-  --c-border:        #C4C4C4; /* grey/200 – border/default      */
-  --c-border-strong: #969696; /* grey/400 – border/strong       */
+    /* Lager A – chrome (ljust) */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 6% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 240 10% 10%;
+    --radius: 0.5rem;
 
-  /* Text – Figma Semantic */
-  --c-ink:           #242424; /* grey/900 – text/primary   */
-  --c-ink-2:         #525252; /* grey/700 – text/secondary */
-  --c-ink-3:         #696969; /* grey/600 – text/subtle    */
-  --c-ink-4:         #ADADAD; /* grey/300 – text/disabled  */
+    /* Återhållen blå accent (ljust) */
+    --accent-subtle: 222 100% 97%;
+    --accent-strong: 222 65% 42%;
+    --accent-border: 222 90% 90%;
+    --accent-surface: 222 100% 99.2%;   /* mycket ljus container-tint så chipet sticker ut */
 
-  /* Primärfärg – Figma interactive/primary */
-  --c-indigo:        #245BD1; /* blue/500 */
-  --c-indigo-mid:    #1E4DB3; /* blue/600 */
-  --c-indigo-light:  #E9EFFB; /* blue/50  */
-  --c-indigo-border: #C2D2F5; /* blue/100 */
+    /* Mjuka container-ytor (ljusare än chip-tinterna, nära vitt) */
+    --conf-high-surface: 140 40% 99.2%;
+    --conf-medium-surface: 35 85% 99%;
+    --conf-low-surface: 0 70% 99%;
 
-  /* Orange – varning/medel konfidens */
-  --c-orange:        #F98806; /* orange/500 */
-  --c-orange-light:  #FEF3E6; /* orange/50  */
-  --c-orange-border: #FDDEB9; /* orange/100 */
-  --c-orange-text:   #9F5704; /* orange/700 */
+    /* Lager B – konfidens (ljust) */
+    --conf-high-bg: 140 50% 96%;
+    --conf-high-fg: 142 55% 27%;
+    --conf-high-border: 140 42% 85%;
+    --conf-high-solid: 142 60% 40%;
 
-  /* Rött – låg konfidens / fel */
-  --c-red:           #DC2626; /* red/500 */
-  --c-red-light:     #FBE9E9; /* red/50  */
-  --c-red-border:    #F5C2C2; /* red/100 */
+    --conf-medium-bg: 35 100% 95%;
+    --conf-medium-fg: 28 78% 33%;
+    --conf-medium-border: 35 90% 83%;
+    --conf-medium-solid: 30 95% 50%;
 
-  /* Grönt – hög konfidens / ok */
-  --c-green:         #38852D; /* green/700 */
-  --c-green-light:   #EDF8EC; /* green/50  */
-  --c-green-border:  #CEEDCA; /* green/100 */
+    --conf-low-bg: 0 80% 96%;
+    --conf-low-fg: 0 65% 42%;
+    --conf-low-border: 0 70% 88%;
+    --conf-low-solid: 0 72% 51%;
+
+    /* Lager B – datakvalitet (ljust) */
+    --dq-ok-bg: 240 5% 96%;
+    --dq-ok-fg: 240 4% 40%;
+    --dq-ok-border: 240 6% 88%;
+    --dq-ok-solid: 240 4% 60%;
+
+    --dq-stale-bg: 35 100% 95%;
+    --dq-stale-fg: 28 78% 33%;
+    --dq-stale-border: 35 90% 83%;
+    --dq-stale-solid: 30 95% 50%;
+
+    --dq-missing-bg: 240 5% 97%;
+    --dq-missing-fg: 240 4% 56%;
+    --dq-missing-border: 240 6% 90%;
+    --dq-missing-solid: 240 4% 70%;
+
+    --dq-conflict-bg: 0 80% 96%;
+    --dq-conflict-fg: 0 65% 42%;
+    --dq-conflict-border: 0 70% 88%;
+    --dq-conflict-solid: 0 72% 51%;
+  }
+
+  .dark {
+    /* Lager A – chrome (mörkt) */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 6% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 6% 10%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 41%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 18%;
+    --ring: 240 5% 84%;
+
+    /* Återhållen blå accent (mörkt) */
+    --accent-subtle: 222 47% 16%;
+    --accent-strong: 217 91% 75%;
+    --accent-border: 222 40% 30%;
+    --accent-surface: 222 45% 11%;       /* subtilare container-tint så chipet sticker ut */
+
+    /* Mjuka container-ytor (subtilare/mörkare än chip-tinterna) */
+    --conf-high-surface: 142 30% 9%;
+    --conf-medium-surface: 30 45% 9%;
+    --conf-low-surface: 0 42% 9%;
+
+    /* Lager B – konfidens (mörkt) */
+    --conf-high-bg: 142 32% 12%;
+    --conf-high-fg: 140 55% 70%;
+    --conf-high-border: 142 25% 24%;
+    --conf-high-solid: 142 55% 45%;
+
+    --conf-medium-bg: 30 45% 12%;
+    --conf-medium-fg: 36 90% 70%;
+    --conf-medium-border: 30 40% 26%;
+    --conf-medium-solid: 32 90% 52%;
+
+    --conf-low-bg: 0 45% 13%;
+    --conf-low-fg: 0 80% 76%;
+    --conf-low-border: 0 38% 28%;
+    --conf-low-solid: 0 72% 55%;
+
+    /* Lager B – datakvalitet (mörkt) */
+    --dq-ok-bg: 240 4% 16%;
+    --dq-ok-fg: 240 5% 65%;
+    --dq-ok-border: 240 4% 26%;
+    --dq-ok-solid: 240 5% 55%;
+
+    --dq-stale-bg: 30 45% 12%;
+    --dq-stale-fg: 36 90% 70%;
+    --dq-stale-border: 30 40% 26%;
+    --dq-stale-solid: 32 90% 52%;
+
+    --dq-missing-bg: 240 4% 14%;
+    --dq-missing-fg: 240 5% 50%;
+    --dq-missing-border: 240 4% 22%;
+    --dq-missing-solid: 240 4% 45%;
+
+    --dq-conflict-bg: 0 45% 13%;
+    --dq-conflict-fg: 0 80% 76%;
+    --dq-conflict-border: 0 38% 28%;
+    --dq-conflict-solid: 0 72% 55%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
 }
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
@@ -50,8 +168,8 @@
 
 body {
   font-family: var(--f-sans);
-  background: var(--c-bg);
-  color: var(--c-ink);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -85,20 +203,20 @@ body {
 
 /* Table row hover */
 .data-row { transition: background 0.12s ease; }
-.data-row:hover { background: rgba(67, 56, 202, 0.03); }
+.data-row:hover { background: hsl(var(--muted)); }
 
 /* Sidebar active left-border */
 .nav-active {
-  background: var(--c-indigo-light);
-  color: var(--c-indigo);
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground));
   font-weight: 500;
-  border-left: 2px solid var(--c-indigo);
+  border-left: 2px solid hsl(var(--primary));
 }
 .nav-idle {
-  color: var(--c-ink-2);
+  color: hsl(var(--muted-foreground));
   border-left: 2px solid transparent;
 }
-.nav-idle:hover { background: rgba(0,0,0,0.03); }
+.nav-idle:hover { background: hsl(var(--muted)); }
 
 /* Button transitions */
 button { transition: opacity 0.12s ease, background 0.12s ease, box-shadow 0.12s ease; }

@@ -14,7 +14,7 @@ const chipStyles = {
 
 function Chip({ label, style = 'neutral' }) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${chipStyles[style] || chipStyles.neutral}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${chipStyles[style] || chipStyles.neutral}`}>
       {label}
     </span>
   )
@@ -99,7 +99,7 @@ function SourcesTable({ sources }) {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-xs text-gray-400">{src.date}</span>
-                <span className={`text-xs px-1.5 py-0.5 rounded-full border ${q.bg} ${q.text} ${q.border}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-sm border ${q.bg} ${q.text} ${q.border}`}>
                   {statusLabels[src.status] || src.status}
                 </span>
               </div>
@@ -125,7 +125,7 @@ function FactorsTable({ factors }) {
                 <div className="min-w-0">
                   <span className="text-xs text-gray-700">{f.name}</span>
                   {isStale && (
-                    <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100">Inaktuell källa</span>
+                    <span className="ml-1.5 text-xs px-2 py-0.5 rounded-sm bg-orange-50 text-orange-700 border border-orange-100">Inaktuell källa</span>
                   )}
                 </div>
               </div>
