@@ -789,36 +789,36 @@ function AIAnalysisProgress({ onComplete }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-[520px] flex flex-col gap-4">
+      <div className="bg-card rounded-2xl shadow-xl p-8 w-[520px] flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-blue-600" />
-          <span className="text-base font-semibold text-gray-900">AI analyserar nytt underlag</span>
+          <Sparkles size={16} className="text-accent-strong" />
+          <span className="text-base font-semibold text-foreground">AI analyserar nytt underlag</span>
           {done
-            ? <CheckCircle size={15} className="text-green-500 ml-auto" />
-            : <Loader2 size={15} className="animate-spin text-blue-500 ml-auto" />
+            ? <CheckCircle size={15} className="text-conf-high-solid ml-auto" />
+            : <Loader2 size={15} className="animate-spin text-accent-strong ml-auto" />
           }
         </div>
         <div className="flex flex-col gap-2.5">
           {visibleSteps.map(step => (
             <div key={step.id} className="flex items-start gap-2">
-              {step.type === 'found' && <CheckCircle size={13} className="text-green-500 mt-0.5 shrink-0" />}
+              {step.type === 'found' && <CheckCircle size={13} className="text-conf-high-solid mt-0.5 shrink-0" />}
               {(step.type === 'loading' || step.type === 'verifying') && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse mt-1.5 shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent-strong animate-pulse mt-1.5 shrink-0" />
               )}
-              {step.type === 'searching' && <span className="text-xs text-gray-400 mt-0.5 shrink-0">Söker</span>}
-              {step.type === 'updating' && <span className="text-xs text-orange-500 mt-0.5 shrink-0">↑</span>}
+              {step.type === 'searching' && <span className="text-xs text-muted-foreground/60 mt-0.5 shrink-0">Söker</span>}
+              {step.type === 'updating' && <span className="text-xs text-dq-stale-fg mt-0.5 shrink-0">↑</span>}
               {step.type === 'searching'
                 ? (
                   <div className="flex items-center gap-1 flex-wrap">
                     {step.text.split(' · ').map((q, j) => (
-                      <span key={j} className="inline-flex items-center px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-xs text-gray-700 font-mono">
+                      <span key={j} className="inline-flex items-center px-2 py-0.5 rounded border border-border bg-muted text-xs text-muted-foreground font-mono">
                         {q}
                       </span>
                     ))}
                   </div>
                 )
                 : (
-                  <span className={`text-sm ${step.type === 'found' ? 'text-gray-800' : step.type === 'updating' ? 'text-orange-700 font-semibold' : 'text-gray-600'}`}>
+                  <span className={`text-sm ${step.type === 'found' ? 'text-foreground' : step.type === 'updating' ? 'text-dq-stale-fg font-semibold' : 'text-muted-foreground'}`}>
                     {step.text}
                   </span>
                 )
@@ -827,7 +827,7 @@ function AIAnalysisProgress({ onComplete }) {
           ))}
         </div>
         {done && (
-          <p className="text-xs text-green-700 font-medium border-t border-gray-100 pt-3">
+          <p className="text-xs text-conf-high-fg font-medium border-t border-border pt-3">
             Analys klar – konfidensgrad uppdaterad.
           </p>
         )}
@@ -842,18 +842,18 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
   const hasUnavailableSource = (d.topFactors ?? []).some(f => f.status === 'unavailable')
 
   return (
-    <section className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 mt-2">
+    <section className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4 mt-2">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <h2 className="text-3xl font-bold text-gray-900">Sammanfattning</h2>
-        <div className="flex items-center gap-1 text-xs font-medium text-[#451b88] bg-[#f0eafb] px-2 py-0.5 rounded-sm border border-[#d6c3f3]">
+        <h2 className="text-3xl font-bold text-foreground">Sammanfattning</h2>
+        <div className="flex items-center gap-1 text-xs font-medium text-accent-strong bg-accent-subtle px-2 py-0.5 rounded-sm border border-accent-border">
           <Sparkles size={12} /> AI
         </div>
       </div>
 
       {/* Unavailable source warning */}
       {hasUnavailableSource && (
-        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 text-amber-800">
+        <div className="flex items-start gap-2 bg-dq-stale-bg border border-dq-stale-border rounded-lg px-3 py-2.5 text-dq-stale-fg">
           <AlertTriangle size={14} className="shrink-0 mt-0.5" />
           <p className="text-xs leading-relaxed">En datakälla kunde inte nås. AI-rekommendationen baseras på ofullständigt underlag.</p>
         </div>
@@ -861,8 +861,8 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
 
       {/* Konfidensgrad */}
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs text-gray-500 flex items-center gap-1">
-          Konfidensgrad <Info size={12} className="text-gray-400" />
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          Konfidensgrad <Info size={12} className="text-muted-foreground/60" />
         </span>
         <div className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-sm border w-fit ${confidenceBadge.cls}`}>
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${confidenceBadge.dot}`} />
@@ -871,20 +871,20 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
       </div>
 
       {/* Korttext */}
-      <p className="text-xs text-gray-500 font-medium">{d.aiSummaryShort}</p>
+      <p className="text-xs text-muted-foreground font-medium">{d.aiSummaryShort}</p>
 
       {/* Mittsektion */}
-      <div className="border-t border-b border-gray-200 py-4 flex gap-12 items-start">
+      <div className="border-t border-b border-border py-4 flex gap-12 items-start">
         {/* Vänster */}
         <div className="flex flex-col gap-3 flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-medium text-gray-500">Rekommendation:</span>
-            <span className={`text-2xl font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-gray-900' : 'text-red-600'}`}>{d.aiRecommendation.charAt(0).toUpperCase() + d.aiRecommendation.slice(1).toLowerCase()}</span>
+            <span className="text-2xl font-medium text-muted-foreground">Rekommendation:</span>
+            <span className={`text-2xl font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-foreground' : 'text-conf-low-fg'}`}>{d.aiRecommendation.charAt(0).toUpperCase() + d.aiRecommendation.slice(1).toLowerCase()}</span>
           </div>
-          <p className="text-sm text-gray-500 leading-6">{d.aiSummary}</p>
+          <p className="text-sm text-muted-foreground leading-6">{d.aiSummary}</p>
           <div className="mt-2">
-            <p className="text-base font-bold text-gray-900 mb-1">Nästa steg:</p>
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-0.5 text-left">
+            <p className="text-base font-bold text-foreground mb-1">Nästa steg:</p>
+            <button className="text-sm text-accent-strong hover:text-accent-strong/80 font-medium flex items-center gap-0.5 text-left">
               {d.nextBestActions[0]}
               <ArrowRight size={14} className="shrink-0" />
             </button>
@@ -893,29 +893,29 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
 
         {/* Höger */}
         <div className="w-[420px] shrink-0 flex flex-col gap-3">
-          <p className="text-sm font-medium text-gray-500">Underlag</p>
+          <p className="text-sm font-medium text-muted-foreground">Underlag</p>
           <table className="w-full text-left border-separate border-spacing-y-2">
             <thead>
               <tr>
-                <th className="text-sm font-normal text-gray-500 pb-1 pr-8">Källa</th>
-                <th className="text-sm font-normal text-gray-500 pb-1 pr-8">Datum</th>
-                <th className="text-sm font-normal text-gray-500 pb-1">Status</th>
+                <th className="text-sm font-normal text-muted-foreground pb-1 pr-8">Källa</th>
+                <th className="text-sm font-normal text-muted-foreground pb-1 pr-8">Datum</th>
+                <th className="text-sm font-normal text-muted-foreground pb-1">Status</th>
               </tr>
             </thead>
             <tbody>
               {sources.map((s, i) => (
                 <tr key={i}>
                   <td className="pr-8 align-middle">
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-gray-200 bg-gray-100 text-xs text-gray-700 font-medium whitespace-nowrap">
-                      {s.name} <FileText size={12} className="text-gray-400 shrink-0" />
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-border bg-muted text-xs text-muted-foreground font-medium whitespace-nowrap">
+                      {s.name} <FileText size={12} className="text-muted-foreground/60 shrink-0" />
                     </div>
                   </td>
-                  <td className="pr-8 align-middle text-xs font-medium text-gray-900 whitespace-nowrap">{s.period}</td>
+                  <td className="pr-8 align-middle text-xs font-medium text-foreground whitespace-nowrap">{s.period}</td>
                   <td className="align-middle">
-                    <div className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'unavailable' ? 'text-gray-400' :
-                      s.status === 'ok' || s.status === 'current' ? 'text-green-700' : 'text-amber-700'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'unavailable' ? 'bg-gray-300' :
-                        s.status === 'ok' || s.status === 'current' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                    <div className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'unavailable' ? 'text-muted-foreground/60' :
+                      s.status === 'ok' || s.status === 'current' ? 'text-conf-high-fg' : 'text-dq-stale-fg'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'unavailable' ? 'bg-dq-missing-solid' :
+                        s.status === 'ok' || s.status === 'current' ? 'bg-conf-high-solid' : 'bg-dq-stale-solid'}`} />
                       {s.status === 'unavailable' ? 'Otillgänglig' : (s.statusLabel ?? statusLabel[s.status] ?? s.status)}
                     </div>
                   </td>
@@ -934,16 +934,16 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
             id="ai-reviewed"
             checked={aiReviewed}
             onChange={e => onUnlocked(e.target.checked)}
-            className="w-4 h-4 rounded border border-gray-400 accent-blue-600 cursor-pointer"
+            className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
           />
         </div>
         <div className="flex flex-col gap-0.5">
           <label htmlFor="ai-reviewed" className="flex items-center gap-2 cursor-pointer">
-            <span className="text-base text-gray-900">Jag har tagit del av och granskat AI-underlaget</span>
-            <span className="text-sm text-gray-500">(Valfritt)</span>
-            <Info size={14} className="text-gray-400 shrink-0" />
+            <span className="text-base text-foreground">Jag har tagit del av och granskat AI-underlaget</span>
+            <span className="text-sm text-muted-foreground">(Valfritt)</span>
+            <Info size={14} className="text-muted-foreground/60 shrink-0" />
           </label>
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             Genom att kryssa i rutan bekräftar du att du tagit del av och värderat AI-rekommendationen. Detta val loggas med din tidsstämpel och identitet
           </p>
         </div>
@@ -1091,54 +1091,54 @@ function OverrideModal({ d, onConfirm, onCancel }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl px-9 py-6 w-[606px] flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-2xl shadow-xl px-9 py-6 w-[606px] flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 
         {/* 1. Header */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-[#242424]">Avslå ansökan — {d.id}</h2>
+            <h2 className="text-2xl font-semibold text-foreground">Avslå ansökan — {d.id}</h2>
             <button
               onClick={onCancel}
-              className="w-8 h-8 flex items-center justify-center bg-[#f2f2f2] border border-[#dbdbdb] rounded shrink-0"
+              className="w-8 h-8 flex items-center justify-center bg-muted border border-border rounded shrink-0"
             >
-              <X size={20} className="text-[#525252]" />
+              <X size={20} className="text-muted-foreground" />
             </button>
           </div>
-          <p className="text-base text-[#525252]">
+          <p className="text-base text-muted-foreground">
             {d.company} beviljas inte kreditlimitökning från 500 000 kr till 900 000 kr.
           </p>
         </div>
 
         {/* 2. Beslutsbanner */}
-        <div className="bg-[#f2f2f2] border-l-2 border-[#969696] px-2 py-3 rounded-r-md">
-          <p className="text-2xl font-semibold text-[#242424]">Slutgiltigt beslut: AVSLÅ</p>
+        <div className="bg-muted border-l-2 border-border px-2 py-3 rounded-r-md">
+          <p className="text-2xl font-semibold text-foreground">Slutgiltigt beslut: AVSLÅ</p>
         </div>
 
         {/* 3. AI-rekommendationsrad */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-base font-medium text-[#525252]">Rekommendation: GODKÄNN</span>
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
+              <span className="text-base font-medium text-muted-foreground">Rekommendation: GODKÄNN</span>
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-accent-subtle border border-accent-border text-accent-strong text-xs font-medium shrink-0">
                 <Sparkles size={12} />AI
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-[#525252]">Konfidensgrad:</span>
+              <span className="text-xs text-muted-foreground">Konfidensgrad:</span>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${cb.cls}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${cb.dot}`} />
                 {cb.label.replace(' konfidens', '')}
               </span>
             </div>
           </div>
-          <p className="text-xs text-[#696969]">
+          <p className="text-xs text-muted-foreground">
             AI:ns rekommendation var GODKÄNN med låg konfidens. Din motivering sparas i spårloggen.
           </p>
         </div>
 
         {/* 4. Kategorisektionen */}
         <div className="flex flex-col gap-5">
-          <p className="text-xl font-bold text-[#242424]">Välj orsak till ditt beslut</p>
+          <p className="text-xl font-bold text-foreground">Välj orsak till ditt beslut</p>
           <div className="flex flex-col gap-5">
             {OVERRIDE_CATEGORIES.map(cat => (
               <div
@@ -1147,7 +1147,7 @@ function OverrideModal({ d, onConfirm, onCancel }) {
                 className="flex items-center gap-3 cursor-pointer"
               >
                 <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0
-                  ${selected === cat ? 'bg-[#245bd1] border-[#245bd1]' : 'border-[#969696]'}`}
+                  ${selected === cat ? 'bg-primary border-primary' : 'border-border'}`}
                 >
                   {selected === cat && (
                     <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
@@ -1155,7 +1155,7 @@ function OverrideModal({ d, onConfirm, onCancel }) {
                     </svg>
                   )}
                 </div>
-                <span className="text-base text-[#242424]">{cat}</span>
+                <span className="text-base text-foreground">{cat}</span>
               </div>
             ))}
           </div>
@@ -1163,14 +1163,14 @@ function OverrideModal({ d, onConfirm, onCancel }) {
 
         {/* 5. Textfält */}
         <div className="flex flex-col gap-2">
-          <label className="text-base font-medium text-[#242424]">Motivering (fri text)</label>
+          <label className="text-base font-medium text-foreground">Motivering (fri text)</label>
           <textarea
             value={freetext}
             onChange={e => setFreetext(e.target.value.slice(0, 300))}
             placeholder="Beskriv din bedömning. Var specifik — motiveringen kan granskas vid revision."
-            className="w-full border border-[#969696] rounded p-2 text-base text-[#242424] resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 h-[182px]"
+            className="w-full border border-border rounded p-2 text-base text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring h-[182px]"
           />
-          <div className="flex items-start justify-between gap-4 text-sm text-[#808080]">
+          <div className="flex items-start justify-between gap-4 text-sm text-muted-foreground">
             <p>Beslutet och din motivering loggas automatiskt med tidsstämpel och kopplas till ärende {d.id}.</p>
             <p className="shrink-0">{freetext.length}/300 tecken</p>
           </div>
@@ -1178,8 +1178,8 @@ function OverrideModal({ d, onConfirm, onCancel }) {
 
         {/* 6. Loggsektion – alltid synlig */}
         <div className="flex flex-col gap-1">
-          <p className="text-base font-semibold text-[#242424]">Följande loggas</p>
-          <div className="bg-[#f2f2f2] rounded-xl p-3 flex flex-col gap-2">
+          <p className="text-base font-semibold text-foreground">Följande loggas</p>
+          <div className="bg-muted rounded-xl p-3 flex flex-col gap-2">
             {[
               { label: 'Ärende', value: d.id },
               { label: 'Handläggare', value: d.officer },
@@ -1187,34 +1187,29 @@ function OverrideModal({ d, onConfirm, onCancel }) {
               { label: 'Kategori', value: selected ?? '' },
             ].map(row => (
               <div key={row.label} className="flex gap-9 items-center text-xs">
-                <span className="w-[70px] shrink-0 text-[#696969]">{row.label}</span>
-                <span className="font-medium text-black">{row.value}</span>
+                <span className="w-[70px] shrink-0 text-muted-foreground">{row.label}</span>
+                <span className="font-medium text-foreground">{row.value}</span>
               </div>
             ))}
             <div className="flex gap-9 items-center text-xs">
-              <span className="w-[70px] shrink-0 text-[#696969]">Beslut</span>
-              <span className="font-medium text-black">Avslå</span>
-              <span className="italic text-[#696969]">Avviker från AI-rekommendation</span>
+              <span className="w-[70px] shrink-0 text-muted-foreground">Beslut</span>
+              <span className="font-medium text-foreground">Avslå</span>
+              <span className="italic text-muted-foreground">Avviker från AI-rekommendation</span>
             </div>
           </div>
         </div>
 
         {/* 7. Knappar */}
         <div className="flex items-center justify-between">
-          <button
-            onClick={onCancel}
-            className="border border-[#245bd1] text-[#245bd1] px-4 py-2 rounded text-base font-medium hover:bg-blue-50 transition-colors"
-          >
+          <Button variant="outline" onClick={onCancel}>
             Avbryt
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onConfirm({ category: selected, text: freetext.trim() })}
             disabled={!selected}
-            className={`px-4 py-2 rounded text-base font-medium transition-colors
-              ${selected ? 'bg-[#245bd1] text-white hover:bg-blue-700' : 'bg-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
           >
             Bekräfta
-          </button>
+          </Button>
         </div>
 
       </div>
@@ -1324,59 +1319,59 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
           <div className="flex flex-col gap-5">
 
             {/* Override banner */}
-            <div className="bg-[#e9effb] border border-[#c2d2f5] rounded-xl p-4 flex items-start gap-4">
+            <div className="bg-dq-stale-bg border border-dq-stale-border rounded-xl p-4 flex items-start gap-4">
               <div className="flex items-center py-1 flex-shrink-0">
-                <CircleAlert size={16} className="text-[#112b64]" />
+                <CircleAlert size={16} className="text-dq-stale-fg" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[#112b64] leading-7 text-lg">Avvikelse från AI-rekommendation registrerad</p>
-                <p className="text-sm text-[#112b64] leading-5 mt-0.5">{today} · {timeNow} · {d.officer} · {d.id}</p>
+                <p className="font-semibold text-dq-stale-fg leading-7 text-lg">Avvikelse från AI-rekommendation registrerad</p>
+                <p className="text-sm text-dq-stale-fg leading-5 mt-0.5">{today} · {timeNow} · {d.officer} · {d.id}</p>
               </div>
               <button
-                className="w-5 h-5 flex items-center justify-center rounded bg-[#f2f2f2] border border-[#dbdbdb] flex-shrink-0 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)] hover:bg-[#e8e8e8] transition-colors"
+                className="w-5 h-5 flex items-center justify-center rounded bg-muted border border-border flex-shrink-0 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)] hover:bg-muted/80 transition-colors"
                 aria-label="Stäng"
               >
-                <X size={12} className="text-gray-500" />
+                <X size={12} className="text-muted-foreground" />
               </button>
             </div>
 
             {/* DiffView (S3) */}
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 flex flex-col gap-3">
-              <p className="text-xl font-bold text-gray-900">AI-rekommendation vs Beslut</p>
+            <div className="bg-card border border-border rounded-2xl shadow-sm p-6 flex flex-col gap-3">
+              <p className="text-xl font-bold text-foreground">AI-rekommendation vs Beslut</p>
               <div className="flex items-center gap-12">
                 {/* Vänster: AI-rekommendation */}
                 <div className="flex items-start justify-between w-[343px]">
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-col gap-2">
-                      <p className="text-sm text-gray-500">AI-rekommendation</p>
-                      <p className="text-2xl font-medium text-gray-900">{d.aiRecommendation}</p>
+                      <p className="text-sm text-muted-foreground">AI-rekommendation</p>
+                      <p className="text-2xl font-medium text-foreground">{d.aiRecommendation}</p>
                     </div>
                     <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium w-fit ${confBadge.cls}`}>
                       <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
                       {confBadge.label}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-accent-subtle border border-accent-border text-accent-strong text-xs font-medium shrink-0">
                     <Sparkles size={14} />
                     AI
                   </div>
                 </div>
                 {/* Divider */}
-                <div className="w-px h-[131px] bg-gray-200 shrink-0" />
+                <div className="w-px h-[131px] bg-border shrink-0" />
                 {/* Höger: Slutgiltigt beslut */}
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-2">
-                    <p className="text-sm text-gray-500">Slutgiltigt beslut</p>
-                    <p className="text-2xl font-medium text-gray-900">AVSLAG</p>
+                    <p className="text-sm text-muted-foreground">Slutgiltigt beslut</p>
+                    <p className="text-2xl font-medium text-foreground">AVSLAG</p>
                   </div>
                   {motivation?.category && (
                     <div className="flex items-center gap-1">
-                      <p className="text-sm text-gray-500">Kategori:</p>
-                      <p className="text-base font-medium text-gray-900">{motivation.category}</p>
+                      <p className="text-sm text-muted-foreground">Kategori:</p>
+                      <p className="text-base font-medium text-foreground">{motivation.category}</p>
                     </div>
                   )}
                   {motivation?.text && (
-                    <p className="text-xs text-gray-600">{motivation.text}</p>
+                    <p className="text-xs text-muted-foreground">{motivation.text}</p>
                   )}
                 </div>
               </div>
@@ -1384,13 +1379,13 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
             <div className="max-w-[760px] flex flex-col gap-5 w-full">
               {/* Spårlogg */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-6">
+              <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-6">
                 {/* Header */}
-                <div className="flex items-end justify-between pb-3 border-b border-gray-200">
-                  <p className="text-3xl font-bold text-gray-900">Spårlogg</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex items-end justify-between pb-3 border-b border-border">
+                  <p className="text-3xl font-bold text-foreground">Spårlogg</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>AI-modell:</span>
-                    <span className="text-gray-900">Kreditrisk v2.3 · Tränad nov 2024</span>
+                    <span className="text-foreground">Kreditrisk v2.3 · Tränad nov 2024</span>
                   </div>
                 </div>
 
@@ -1408,17 +1403,17 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                       <div key={ev.id} className="flex gap-4">
                         {/* Icon + connector line */}
                         <div className="flex flex-col items-center w-6 flex-shrink-0">
-                          <div className={`mt-3 w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 ${ev.type === 'ai' ? 'bg-[#f0eafb] border-[#d6c3f3]' : 'bg-gray-100 border-gray-300'
+                          <div className={`mt-3 w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 ${ev.type === 'ai' ? 'bg-accent-subtle border-accent-border' : 'bg-muted border-border'
                             }`}>
                             {ev.type === 'ai'
-                              ? <Sparkles size={12} className="text-[#451b88]" />
+                              ? <Sparkles size={12} className="text-accent-strong" />
                               : ev.type === 'system'
-                                ? <ClipboardList size={12} className="text-gray-500" />
-                                : <User size={12} className="text-gray-500" />
+                                ? <ClipboardList size={12} className="text-muted-foreground" />
+                                : <User size={12} className="text-muted-foreground" />
                             }
                           </div>
                           {i < auditEvents.length - 1 && (
-                            <div className="w-px flex-1 bg-gray-200 mt-3 min-h-4" />
+                            <div className="w-px flex-1 bg-border mt-3 min-h-4" />
                           )}
                         </div>
 
@@ -1429,28 +1424,28 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                             <div className="flex items-center justify-between p-3">
                               <div className="flex flex-col gap-0.5">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-sm font-medium text-gray-700">{ev.label}</p>
+                                  <p className="text-sm font-medium text-muted-foreground">{ev.label}</p>
                                   {ev.type === 'ai' && ev.chips?.map(chip => (
-                                    <div key={chip.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${chip.style === 'low' ? 'bg-red-50 border-red-200 text-red-800'
-                                      : chip.style === 'medium' ? 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]'
-                                        : 'bg-green-50 border-green-200 text-green-700'
+                                    <div key={chip.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${chip.style === 'low' ? 'bg-conf-low-bg border-conf-low-border text-conf-low-fg'
+                                      : chip.style === 'medium' ? 'bg-dq-stale-bg border-dq-stale-border text-dq-stale-fg'
+                                        : 'bg-conf-high-bg border-conf-high-border text-conf-high-fg'
                                       }`}>
-                                      <div className={`w-1 h-1 rounded-full ${chip.style === 'low' ? 'bg-red-500'
-                                        : chip.style === 'medium' ? 'bg-[#f97316]'
-                                          : 'bg-green-500'
+                                      <div className={`w-1 h-1 rounded-full ${chip.style === 'low' ? 'bg-conf-low-solid'
+                                        : chip.style === 'medium' ? 'bg-dq-stale-solid'
+                                          : 'bg-conf-high-solid'
                                         }`} />
                                       {chip.label}
                                     </div>
                                   ))}
                                 </div>
-                                <p className="text-xs text-gray-500">{ev.time}</p>
+                                <p className="text-xs text-muted-foreground">{ev.time}</p>
                               </div>
                               <button
                                 onClick={toggleOpen}
-                                className="flex items-center gap-2 text-xs font-medium text-gray-900 shrink-0"
+                                className="flex items-center gap-2 text-xs font-medium text-foreground shrink-0"
                               >
                                 Visa detaljer
-                                <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 border border-gray-200 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)]">
+                                <div className="w-5 h-5 flex items-center justify-center rounded bg-muted border border-border shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)]">
                                   <ChevronDown size={12} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                                 </div>
                               </button>
@@ -1458,10 +1453,10 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
                             {/* Detail section */}
                             {isOpen && ev.detail && (
-                              <div className="px-5 py-4 bg-gray-50 flex flex-col gap-2 text-xs border-t border-gray-100">
+                              <div className="px-5 py-4 bg-muted flex flex-col gap-2 text-xs border-t border-border">
                                 {/* Decision type: override badge first */}
                                 {ev.type === 'decision' && (
-                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border bg-[#e9effb] border-[#c2d2f5] text-[#112b64] text-xs font-medium w-fit mb-1">
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border bg-dq-stale-bg border-dq-stale-border text-dq-stale-fg text-xs font-medium w-fit mb-1">
                                     Avvek från AI-rekommendation: {d.aiRecommendation}
                                     <CircleAlert size={12} />
                                   </div>
@@ -1470,50 +1465,50 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                                 {/* Rows (all types) */}
                                 {ev.detail.rows?.map(row => (
                                   <div key={row.label} className="flex items-start gap-6">
-                                    <span className="text-gray-400 w-28 shrink-0">{row.label}</span>
-                                    <span className="text-gray-700">{row.value}</span>
+                                    <span className="text-muted-foreground/60 w-28 shrink-0">{row.label}</span>
+                                    <span className="text-muted-foreground">{row.value}</span>
                                   </div>
                                 ))}
 
                                 {/* Decision: category + motivation */}
                                 {ev.type === 'decision' && ev.detail.motivationCategory && (
                                   <div className="flex items-center gap-6">
-                                    <span className="text-gray-400 w-28 shrink-0">Kategori:</span>
-                                    <span className="text-gray-700">{ev.detail.motivationCategory}</span>
+                                    <span className="text-muted-foreground/60 w-28 shrink-0">Kategori:</span>
+                                    <span className="text-muted-foreground">{ev.detail.motivationCategory}</span>
                                   </div>
                                 )}
                                 {ev.type === 'decision' && ev.detail.motivationText && (
                                   <div className="flex items-start gap-6">
-                                    <span className="text-gray-400 w-28 shrink-0">Motivering:</span>
-                                    <span className="text-gray-600 flex-1">{ev.detail.motivationText}</span>
+                                    <span className="text-muted-foreground/60 w-28 shrink-0">Motivering:</span>
+                                    <span className="text-muted-foreground flex-1">{ev.detail.motivationText}</span>
                                   </div>
                                 )}
 
                                 {/* AI type: intro + factors + sources */}
                                 {ev.type === 'ai' && ev.detail.intro && (
-                                  <p className="text-gray-500 mb-1">{ev.detail.intro}</p>
+                                  <p className="text-muted-foreground mb-1">{ev.detail.intro}</p>
                                 )}
                                 {ev.type === 'ai' && ev.detail.factors?.length > 0 && (
                                   <div className="flex flex-col gap-1.5">
-                                    <p className="text-sm font-medium text-gray-700">Nyckelfaktorer</p>
+                                    <p className="text-sm font-medium text-muted-foreground">Nyckelfaktorer</p>
                                     {ev.detail.factors.map(f => (
                                       <div key={f.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-6">
-                                          <span className="text-gray-400 w-[125px] shrink-0">{f.name}</span>
-                                          <span className="text-gray-900">{f.value}</span>
+                                          <span className="text-muted-foreground/60 w-[125px] shrink-0">{f.name}</span>
+                                          <span className="text-foreground">{f.value}</span>
                                         </div>
-                                        <span className="text-gray-400">Krav: {f.limit}</span>
+                                        <span className="text-muted-foreground/60">Krav: {f.limit}</span>
                                       </div>
                                     ))}
                                   </div>
                                 )}
                                 {ev.type === 'ai' && ev.detail.sources?.length > 0 && (
                                   <div className="flex flex-col gap-1.5 mt-1">
-                                    <p className="text-sm font-medium text-gray-700">Datakällor</p>
+                                    <p className="text-sm font-medium text-muted-foreground">Datakällor</p>
                                     {ev.detail.sources.map(s => (
                                       <div key={s.name} className="flex items-center justify-between">
-                                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${s.status === 'stale' ? 'bg-orange-50 border-orange-200 text-orange-700'
-                                          : 'bg-gray-100 border-gray-300 text-gray-600'
+                                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${s.status === 'stale' ? 'bg-dq-stale-bg border-dq-stale-border text-dq-stale-fg'
+                                          : 'bg-muted border-border text-muted-foreground'
                                           }`}>
                                           {s.name}
                                           {s.status === 'stale'
@@ -1521,13 +1516,13 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                                             : <FileText size={12} className="shrink-0" />}
                                         </div>
                                         <div className="flex items-center gap-3">
-                                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'stale' ? 'text-orange-700' : 'text-gray-600'
+                                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'stale' ? 'text-dq-stale-fg' : 'text-muted-foreground'
                                             }`}>
-                                            <div className={`w-1 h-1 rounded-full ${s.status === 'stale' ? 'bg-orange-500' : 'bg-gray-400'
+                                            <div className={`w-1 h-1 rounded-full ${s.status === 'stale' ? 'bg-dq-stale-solid' : 'bg-dq-missing-solid'
                                               }`} />
                                             {s.status === 'stale' ? 'Inaktuell' : 'Aktuell'}
                                           </span>
-                                          <span className="text-gray-400">{s.date}</span>
+                                          <span className="text-muted-foreground/60">{s.date}</span>
                                         </div>
                                       </div>
                                     ))}
@@ -1545,20 +1540,20 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
               {/* Feedback widget */}
               {feedbackSent ? (
-                <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex items-center gap-2 text-sm text-gray-600">
-                  <CheckCircle size={16} className="text-green-500 shrink-0" />
+                <div className="bg-card border border-border rounded-2xl px-6 py-5 flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle size={16} className="text-conf-high-solid shrink-0" />
                   Tack – din feedback har loggats
                 </div>
               ) : (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4">
+                <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4">
                   {/* Header */}
                   <div className="flex flex-col gap-2">
-                    <p className="text-xl font-bold text-gray-900">Var AI:ns rekommendation korrekt?</p>
-                    <p className="text-sm text-gray-500">Din feedback används för att förbättra AI-modellen. Loggat med tidsstämpel och handläggare-ID.</p>
+                    <p className="text-xl font-bold text-foreground">Var AI:ns rekommendation korrekt?</p>
+                    <p className="text-sm text-muted-foreground">Din feedback används för att förbättra AI-modellen. Loggat med tidsstämpel och handläggare-ID.</p>
                   </div>
 
                   {/* Segmented control */}
-                  <div className="bg-[#f2f2f2] flex gap-0.5 items-center p-0.5 rounded-md w-full">
+                  <div className="bg-muted flex gap-0.5 items-center p-0.5 rounded-md w-full">
                     {[
                       { id: 'rätt', label: 'Rätt' },
                       { id: 'fel', label: 'Fel' },
@@ -1568,8 +1563,8 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                         key={id}
                         onClick={() => setFeedbackChoice(id)}
                         className={`flex flex-1 items-center justify-center px-3 py-2 rounded text-base font-medium transition-all border ${feedbackChoice === id
-                          ? 'bg-white border-gray-300 text-gray-900 shadow-sm'
-                          : 'bg-[#f2f2f2] border-transparent text-gray-700 hover:bg-gray-100'
+                          ? 'bg-card border-border text-foreground shadow-sm'
+                          : 'bg-muted border-transparent text-muted-foreground hover:bg-muted/80'
                           }`}
                       >
                         {label}
@@ -1579,34 +1574,31 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
                   {/* Textarea */}
                   <div className="flex flex-col gap-2">
-                    <p className="text-base font-medium text-gray-900">Ge din feedback</p>
+                    <p className="text-base font-medium text-foreground">Ge din feedback</p>
                     <textarea
                       value={feedbackComment}
                       onChange={e => setFeedbackComment(e.target.value.slice(0, 500))}
                       placeholder="Valfri kommentar - vad tyckte du om AI:ns rekommendation?"
-                      className="w-full h-[182px] text-base text-gray-700 placeholder-gray-400 border border-gray-400 rounded px-2 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+                      className="w-full h-[182px] text-base text-foreground placeholder-muted-foreground/60 border border-border rounded px-2 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-ring bg-card"
                     />
-                    <div className="text-right text-sm text-gray-400">{feedbackComment.length}/500 tecken</div>
+                    <div className="text-right text-sm text-muted-foreground/60">{feedbackComment.length}/500 tecken</div>
                   </div>
 
                   {/* Submit */}
                   <div className="flex justify-end">
-                    <button
-                      onClick={() => setFeedbackSent(true)}
-                      className="bg-[#245bd1] text-white px-4 py-2 rounded text-base font-medium hover:bg-[#1d4db8] transition-colors"
-                    >
+                    <Button onClick={() => setFeedbackSent(true)}>
                       Skicka feedback
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* Footer */}
               <div className="flex items-center justify-between pb-6">
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors">
                   <Download size={14} /> Exportera logg
                 </button>
-                <button onClick={onClose} className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                <button onClick={onClose} className="text-sm text-accent-strong hover:text-accent-strong/80 font-medium transition-colors">
                   ← Tillbaka till ärendelistan
                 </button>
               </div>
@@ -1635,24 +1627,24 @@ function ApprovedCaseView({ d, confidence, onClose }) {
           <div className="max-w-[760px] flex flex-col gap-5">
 
             {/* Confirmation banner */}
-            <div className="bg-green-600 text-white rounded-xl px-6 py-5 flex items-start gap-4">
+            <div className="bg-conf-high-solid text-white rounded-xl px-6 py-5 flex items-start gap-4">
               <CheckCircle size={20} className="mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold">Kreditansökan godkänd – ärende avslutat</p>
-                <p className="text-sm text-green-100 mt-0.5">{today} · {d.officer} · {d.id}</p>
+                <p className="text-sm text-white/80 mt-0.5">{today} · {d.officer} · {d.id}</p>
               </div>
             </div>
 
             {/* Decision summary */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-                <p className="text-sm font-semibold text-gray-700">Beslutssummering</p>
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-border bg-muted/40">
+                <p className="text-sm font-semibold text-muted-foreground">Beslutssummering</p>
               </div>
               <div className="px-6 py-5 grid grid-cols-2 gap-5">
                 <div>
-                  <p className="text-xs text-gray-400 mb-1.5">AI rekommenderade</p>
+                  <p className="text-xs text-muted-foreground/60 mb-1.5">AI rekommenderade</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-lg font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-green-600' : 'text-red-600'}`}>{d.aiRecommendation}</span>
+                    <span className={`text-lg font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-conf-high-fg' : 'text-conf-low-fg'}`}>{d.aiRecommendation}</span>
                     <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-sm border ${confBadge.cls}`}>
                       <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
                       {confBadge.label}
@@ -1660,13 +1652,13 @@ function ApprovedCaseView({ d, confidence, onClose }) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1.5">Saras beslut</p>
+                  <p className="text-xs text-muted-foreground/60 mb-1.5">Saras beslut</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-lg font-bold text-gray-900">GODKÄNN</span>
-                    <span className="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-sm">Följde AI-rekommendation</span>
+                    <span className="text-lg font-bold text-foreground">GODKÄNN</span>
+                    <span className="text-xs text-conf-high-fg bg-conf-high-bg border border-conf-high-border px-2 py-0.5 rounded-sm">Följde AI-rekommendation</span>
                   </div>
                 </div>
-                <div className="col-span-2 border-t border-gray-100 pt-3 flex justify-between text-xs text-gray-400">
+                <div className="col-span-2 border-t border-border pt-3 flex justify-between text-xs text-muted-foreground/60">
                   <span>Handläggare: {d.officer}</span>
                   <span>{today} · {timeNow}</span>
                 </div>
@@ -1675,10 +1667,10 @@ function ApprovedCaseView({ d, confidence, onClose }) {
 
             {/* Footer */}
             <div className="flex items-center justify-between pb-6">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors">
                 <Download size={14} /> Exportera logg
               </button>
-              <button onClick={onClose} className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+              <button onClick={onClose} className="text-sm text-accent-strong hover:text-accent-strong/80 font-medium transition-colors">
                 ← Tillbaka till ärendelistan
               </button>
             </div>
@@ -1694,16 +1686,16 @@ function ApprovedCaseView({ d, confidence, onClose }) {
 
 function SpårloggTag({ type = 'system' }) {
   const map = {
-    system: { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'System' },
-    ai: { bg: '#f0eafb', border: '#d6c3f3', color: '#451b88', label: 'AI' },
-    handlaggare: { bg: '#e9effb', border: '#c2d2f5', color: '#112b64', label: 'Handläggare' },
-    granskning: { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'Granskning' },
+    system: { cls: 'bg-muted border-border text-muted-foreground', label: 'System' },
+    ai: { cls: 'bg-accent-subtle border-accent-border text-accent-strong', label: 'AI' },
+    handlaggare: { cls: 'bg-accent-subtle border-accent-border text-accent-strong', label: 'Handläggare' },
+    granskning: { cls: 'bg-muted border-border text-muted-foreground', label: 'Granskning' },
   }
-  const { bg, border, color, label } = map[type]
+  const { cls, label } = map[type]
   return (
     <span
-      className="inline-flex items-center justify-center px-2 py-0.5 rounded-sm border text-[12px] leading-[20px] font-semibold shrink-0"
-      style={{ fontFamily: "'IBM Plex Mono', monospace", backgroundColor: bg, borderColor: border, color }}
+      className={`inline-flex items-center justify-center px-2 py-0.5 rounded-sm border text-[12px] leading-[20px] font-semibold shrink-0 ${cls}`}
+      style={{ fontFamily: "'IBM Plex Mono', monospace" }}
     >
       {label}
     </span>
@@ -1711,20 +1703,20 @@ function SpårloggTag({ type = 'system' }) {
 }
 
 function SpårloggIcon({ type }) {
-  const grey = 'w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#dbdbdb] border-[#c4c4c4]'
+  const grey = 'w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-muted border-border'
   if (type === 'ai') return (
-    <div className="w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#f0eafb] border-[#d6c3f3]">
-      <Sparkles size={12} className="text-[#451b88]" />
+    <div className="w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-accent-subtle border-accent-border">
+      <Sparkles size={12} className="text-accent-strong" />
     </div>
   )
-  if (type === 'empty') return <div className="w-6 h-6 rounded-xl border border-[#c4c4c4] bg-white shrink-0" />
+  if (type === 'empty') return <div className="w-6 h-6 rounded-xl border border-border bg-card shrink-0" />
   const icons = {
-    'clipboard': <ClipboardList size={12} className="text-[#696969]" />,
-    'file-search': <FileText size={12} className="text-[#696969]" />,
-    'user': <User size={12} className="text-[#696969]" />,
-    'search': <Search size={12} className="text-[#696969]" />,
+    'clipboard': <ClipboardList size={12} className="text-muted-foreground" />,
+    'file-search': <FileText size={12} className="text-muted-foreground" />,
+    'user': <User size={12} className="text-muted-foreground" />,
+    'search': <Search size={12} className="text-muted-foreground" />,
   }
-  return <div className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-[#696969]" />}</div>
+  return <div className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-muted-foreground" />}</div>
 }
 
 function SpårloggTab({ d }) {
@@ -1736,18 +1728,18 @@ function SpårloggTab({ d }) {
 
   const sourceStatusUI = (src) => {
     if (src.status === 'current') return (
-      <span className="flex items-center gap-1 text-[12px] font-medium text-[#525252]">
-        <span className="w-[5px] h-[5px] rounded-full bg-[#969696] inline-block shrink-0" />
+      <span className="flex items-center gap-1 text-[12px] font-medium text-muted-foreground">
+        <span className="w-[5px] h-[5px] rounded-full bg-dq-missing-solid inline-block shrink-0" />
         Ej flaggad
       </span>
     )
     if (src.status === 'stale') return (
-      <span className="flex items-center gap-1 text-[12px] font-medium text-[#d97706]">
+      <span className="flex items-center gap-1 text-[12px] font-medium text-dq-stale-fg">
         <AlertTriangle size={12} className="shrink-0" /> Oreviderad
       </span>
     )
     return (
-      <span className="flex items-center gap-1 text-[12px] font-medium text-[#525252]">
+      <span className="flex items-center gap-1 text-[12px] font-medium text-muted-foreground">
         <CircleMinus size={12} className="shrink-0" /> Otillgänglig
       </span>
     )
@@ -1762,12 +1754,12 @@ function SpårloggTab({ d }) {
   ]
 
   return (
-    <div className="bg-white border border-[#c4c4c4] rounded-xlg p-6 flex flex-col gap-6">
+    <div className="bg-card border border-border rounded-xlg p-6 flex flex-col gap-6">
 
       {/* Header med divider */}
-      <div className="border-b border-[#c4c4c4] pb-[13px] flex items-center justify-between">
-        <p className="text-xlg font-semibold text-[#242424]">Spårlogg</p>
-        <div className="flex items-center gap-1 bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium px-2 py-0.5 rounded-sm">
+      <div className="border-b border-border pb-[13px] flex items-center justify-between">
+        <p className="text-xlg font-semibold text-foreground">Spårlogg</p>
+        <div className="flex items-center gap-1 bg-accent-subtle border border-accent-border text-accent-strong text-[12px] font-medium px-2 py-0.5 rounded-sm">
           <Sparkles size={12} />
           <span>AI-modell: Kreditrisk v2.3 - Tränad nov 2024</span>
         </div>
@@ -1782,7 +1774,7 @@ function SpårloggTab({ d }) {
             <div className="flex flex-col items-center w-6 shrink-0 pt-1">
               <SpårloggIcon type={ev.icon} />
               {i < events.length - 1 && (
-                <div className="w-px flex-1 bg-[#e5e7eb] mt-2 min-h-6" />
+                <div className="w-px flex-1 bg-border mt-2 min-h-6" />
               )}
             </div>
 
@@ -1793,30 +1785,30 @@ function SpårloggTab({ d }) {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <SpårloggTag type={ev.type} />
-                  <p className="text-sm font-semibold text-[#242424]">{ev.title}</p>
+                  <p className="text-sm font-semibold text-foreground">{ev.title}</p>
                 </div>
-                <p className="text-[12px] text-[#525252] shrink-0">{ev.time}</p>
+                <p className="text-[12px] text-muted-foreground shrink-0">{ev.time}</p>
               </div>
 
               {/* Event 1 – Ärende öppnat */}
               {ev.id === 1 && (
-                <p className="text-sm text-[#525252]">
+                <p className="text-sm text-muted-foreground">
                   Kreditlimitökning {d.id} skapades och tilldelades{' '}
-                  <strong className="font-semibold text-[#242424]">{d.officer}</strong>.
+                  <strong className="font-semibold text-foreground">{d.officer}</strong>.
                 </p>
               )}
 
               {/* Event 2 – Datahämtning */}
               {ev.id === 2 && (
                 <>
-                  <p className="text-sm text-[#525252]">3 av 4 datakällor hämtades. 1 källa otillgänglig.</p>
-                  <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-md overflow-hidden">
+                  <p className="text-sm text-muted-foreground">3 av 4 datakällor hämtades. 1 källa otillgänglig.</p>
+                  <div className="bg-muted border border-border rounded-md overflow-hidden">
                     {d.dataSources.map((src, si) => (
                       <div
                         key={src.name}
-                        className={`flex items-center justify-between px-4 h-[37px] text-sm ${si < d.dataSources.length - 1 ? 'border-b border-[#f3f4f6]' : ''}`}
+                        className={`flex items-center justify-between px-4 h-[37px] text-sm ${si < d.dataSources.length - 1 ? 'border-b border-border' : ''}`}
                       >
-                        <span className="text-[#242424]">{sourceDisplayName(src.name)}</span>
+                        <span className="text-foreground">{sourceDisplayName(src.name)}</span>
                         {sourceStatusUI(src)}
                       </div>
                     ))}
@@ -1829,29 +1821,29 @@ function SpårloggTab({ d }) {
                 <>
                   <div className="flex items-center gap-3 flex-wrap text-sm">
                     <div className="flex items-center gap-1">
-                      <span className="text-[#525252]">Rekommendation:</span>
-                      <span className="font-semibold text-[#242424] ml-1">
+                      <span className="text-muted-foreground">Rekommendation:</span>
+                      <span className="font-semibold text-foreground ml-1">
                         {d.aiRecommendation.charAt(0) + d.aiRecommendation.slice(1).toLowerCase()}
                       </span>
                     </div>
-                    <span className="text-[#969696]">·</span>
+                    <span className="text-muted-foreground/60">·</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[#525252]">Konfidensgrad:</span>
+                      <span className="text-muted-foreground">Konfidensgrad:</span>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[12px] font-medium ${cb.cls}`}>
                         <span className={`w-1 h-1 rounded-full ${cb.dot}`} />
                         {confShortLabel}
                       </span>
                     </div>
                   </div>
-                  <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-md p-[13px] flex flex-col gap-1.5">
+                  <div className="bg-muted border border-border rounded-md p-[13px] flex flex-col gap-1.5">
                     {[
                       { label: 'Modell', value: 'Kreditrisk v2.3' },
                       { label: 'Faktorer analyserade', value: '4 (2 aktiva, 1 oreviderad, 1 saknad)' },
                       { label: 'Konfidensnedsättning', value: 'Oreviderat bokslut + saknad branschdata' },
                     ].map(row => (
                       <div key={row.label} className="flex items-center gap-4 text-[12px]">
-                        <span className="text-[#525252] w-40 shrink-0">{row.label}</span>
-                        <span className="text-[#242424] font-medium">{row.value}</span>
+                        <span className="text-muted-foreground w-40 shrink-0">{row.label}</span>
+                        <span className="text-foreground font-medium">{row.value}</span>
                       </div>
                     ))}
                   </div>
@@ -1860,7 +1852,7 @@ function SpårloggTab({ d }) {
 
               {/* Event 4 – Granskning påbörjad */}
               {ev.id === 4 && (
-                <p className="text-sm text-[#525252]">
+                <p className="text-sm text-muted-foreground">
                   {d.officer} öppnade ärendet och påbörjade granskning av AI-underlag.
                 </p>
               )}
@@ -1868,14 +1860,14 @@ function SpårloggTab({ d }) {
               {/* Event 5 – Kritisk källa granskad */}
               {ev.id === 5 && (
                 <>
-                  <p className="text-sm text-[#525252]">
+                  <p className="text-sm text-muted-foreground">
                     {d.officer} granskade Bokslut (oreviderat) · Jan–Dec 2022.
                   </p>
                   <div className="inline-flex items-center">
-                    <span className="inline-flex items-center gap-1 bg-[#f2f2f2] border border-[#dbdbdb] text-[#525252] text-[12px] font-medium px-2 py-0.5 rounded-sm">
+                    <span className="inline-flex items-center gap-1 bg-muted border border-border text-muted-foreground text-[12px] font-medium px-2 py-0.5 rounded-sm">
                       Bokslut <FileText size={12} />
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[#d97706] text-[12px] font-medium px-2 py-0.5">
+                    <span className="inline-flex items-center gap-1 text-dq-stale-fg text-[12px] font-medium px-2 py-0.5">
                       <AlertTriangle size={12} /> Oreviderad
                     </span>
                   </div>
@@ -1891,7 +1883,7 @@ function SpårloggTab({ d }) {
           <div className="w-6 flex justify-center shrink-0 pt-1">
             <SpårloggIcon type="empty" />
           </div>
-          <p className="text-sm text-[#525252] italic">Väntar på beslut från {d.officer}</p>
+          <p className="text-sm text-muted-foreground italic">Väntar på beslut från {d.officer}</p>
         </div>
 
       </div>

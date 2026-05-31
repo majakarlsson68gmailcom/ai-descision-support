@@ -3,10 +3,10 @@ import { Info, ArrowRight } from 'lucide-react'
 
 function Pill({ children, color = 'indigo', pulse = false }) {
     const styles = {
-        indigo: { bg: 'var(--c-indigo-light)', text: 'var(--c-indigo)', border: 'var(--c-indigo-border)' },
-        orange: { bg: 'var(--c-orange-light)', text: 'var(--c-orange-text)', border: 'var(--c-orange-border)' },
-        red: { bg: 'var(--c-red-light)', text: 'var(--c-red)', border: 'var(--c-red-border)' },
-        green: { bg: 'var(--c-green-light)', text: 'var(--c-green)', border: 'var(--c-green-border)' },
+        indigo: { bg: 'hsl(var(--accent-subtle))', text: 'hsl(var(--accent-strong))', border: 'hsl(var(--accent-border))' },
+        orange: { bg: 'hsl(var(--dq-stale-bg))', text: 'hsl(var(--dq-stale-fg))', border: 'hsl(var(--dq-stale-border))' },
+        red: { bg: 'hsl(var(--conf-low-bg))', text: 'hsl(var(--conf-low-fg))', border: 'hsl(var(--conf-low-border))' },
+        green: { bg: 'hsl(var(--conf-high-bg))', text: 'hsl(var(--conf-high-fg))', border: 'hsl(var(--conf-high-border))' },
     }
     const s = styles[color]
     return (
@@ -26,7 +26,7 @@ function Pill({ children, color = 'indigo', pulse = false }) {
                     className="pulse-dot flex-shrink-0"
                     style={{
                         width: 6, height: 6, borderRadius: '50%',
-                        background: color === 'orange' ? 'var(--c-orange)' : 'var(--c-indigo)',
+                        background: color === 'orange' ? 'hsl(var(--dq-stale-solid))' : 'hsl(var(--accent-strong))',
                     }}
                 />
             )}
@@ -51,8 +51,8 @@ export default function InterestCoverageCard({
         <div
             className="card-enter"
             style={{
-                background: 'var(--c-white)',
-                border: '1px solid var(--c-border)',
+                background: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
                 borderRadius: 8,
                 animationDelay: `${delay}ms`,
                 overflow: 'hidden',
@@ -63,18 +63,18 @@ export default function InterestCoverageCard({
             {/* Zon 1: Rubrik & Badges */}
             <div style={{ padding: '16px 16px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--c-ink-2)', margin: 0, letterSpacing: '0.02em' }}>
+                    <h3 style={{ fontSize: 12, fontWeight: 500, color: 'hsl(var(--muted-foreground))', margin: 0, letterSpacing: '0.02em' }}>
                         Räntetäckningsgrad
                     </h3>
                     <div className="group relative" style={{ display: 'flex', cursor: 'help' }}>
-                        <Info size={14} style={{ color: 'var(--c-ink-4)' }} />
+                        <Info size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />
                         {/* Tooltip */}
                         <div
                             className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block"
                             style={{
                                 width: 220,
-                                background: 'var(--c-ink)',
-                                color: 'white',
+                                background: 'hsl(var(--foreground))',
+                                color: 'hsl(var(--card))',
                                 fontSize: 11,
                                 padding: '8px 10px',
                                 borderRadius: 6,
@@ -91,7 +91,7 @@ export default function InterestCoverageCard({
                                 style={{
                                     borderLeft: '5px solid transparent',
                                     borderRight: '5px solid transparent',
-                                    borderTop: '5px solid var(--c-ink)',
+                                    borderTop: '5px solid hsl(var(--foreground))',
                                 }}
                             />
                         </div>
@@ -104,9 +104,9 @@ export default function InterestCoverageCard({
                             fontWeight: 500,
                             padding: '2px 8px',
                             borderRadius: 9999,
-                            background: '#EEF2FF', // var(--c-indigo-light) equivalent
-                            color: '#4338CA', // var(--c-indigo) equivalent
-                            border: '1px solid #C7D2FE',
+                            background: 'hsl(var(--accent-subtle))',
+                            color: 'hsl(var(--accent-strong))',
+                            border: '1px solid hsl(var(--accent-border))',
                         }}
                     >
                         ✦ AI-analys
@@ -116,7 +116,7 @@ export default function InterestCoverageCard({
 
             {/* Zon 2: Värde och status */}
             <div style={{ padding: '0 16px 16px' }}>
-                <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--c-ink)', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 8 }}>
+                <div style={{ fontSize: 32, fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 8 }}>
                     {formattedValue}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -125,7 +125,7 @@ export default function InterestCoverageCard({
                     ) : (
                         <Pill color="green">✓ Godkänd nivå</Pill>
                     )}
-                    <span style={{ fontSize: 11, color: 'var(--c-ink-4)' }}>
+                    <span style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
                         Krav: {formattedReq} · Delta: {delta > 0 ? '+' : ''}{delta}
                     </span>
                 </div>
@@ -134,12 +134,12 @@ export default function InterestCoverageCard({
             {/* Zon 3: Påverkanindikator */}
             <div style={{ padding: '0 16px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, color: 'var(--c-ink-4)' }}>Vikt i beslut</span>
+                    <span style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>Vikt i beslut</span>
                     <div style={{ display: 'flex', gap: 4 }}>
                         {[1, 2, 3].map(i => (
                             <span key={i} style={{
                                 width: 6, height: 6, borderRadius: '50%',
-                                background: i <= 2 ? 'var(--c-indigo)' : 'var(--c-border-strong)'
+                                background: i <= 2 ? 'hsl(var(--accent-strong))' : 'hsl(var(--border))'
                             }} />
                         ))}
                     </div>
@@ -148,32 +148,32 @@ export default function InterestCoverageCard({
 
             {/* Källa rad */}
             <div style={{
-                borderTop: '1px solid var(--c-border)',
+                borderTop: '1px solid hsl(var(--border))',
                 padding: '10px 16px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6
             }}>
-                <span style={{ fontSize: 11, color: 'var(--c-ink-4)' }}>📄 Årsredovisning 2024</span>
+                <span style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>📄 Årsredovisning 2024</span>
                 <Pill color="green">✓ Aktuell</Pill>
             </div>
 
             {/* Zon 4: Åtgärdsknappar */}
-            <div style={{ borderTop: '1px solid var(--c-border)', padding: '12px 16px', display: 'flex', gap: 8 }}>
+            <div style={{ borderTop: '1px solid hsl(var(--border))', padding: '12px 16px', display: 'flex', gap: 8 }}>
                 <button
                     style={{
                         flex: 1,
                         padding: '6px 0',
                         fontSize: 13,
                         fontWeight: 500,
-                        color: 'var(--c-ink-2)',
-                        background: 'var(--c-white)',
-                        border: '1px solid var(--c-border-strong)',
+                        color: 'hsl(var(--foreground))',
+                        background: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: 6,
                         cursor: 'pointer',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--c-bg)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--c-white)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'hsl(var(--muted))'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'hsl(var(--card))'}
                 >
                     Visa beräkning
                 </button>
@@ -184,9 +184,9 @@ export default function InterestCoverageCard({
                         padding: '6px 0',
                         fontSize: 13,
                         fontWeight: 500,
-                        color: 'white',
-                        background: 'var(--c-indigo)',
-                        border: '1px solid var(--c-indigo)',
+                        color: 'hsl(var(--primary-foreground))',
+                        background: 'hsl(var(--primary))',
+                        border: '1px solid hsl(var(--primary))',
                         borderRadius: 6,
                         cursor: 'pointer',
                         display: 'flex',
@@ -194,8 +194,8 @@ export default function InterestCoverageCard({
                         justifyContent: 'center',
                         gap: 4,
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--c-indigo-mid)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--c-indigo)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'hsl(var(--primary) / 0.9)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'hsl(var(--primary))'}
                 >
                     Visa källor <ArrowRight size={14} />
                 </button>

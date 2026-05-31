@@ -6,9 +6,9 @@ import { AlertTriangle } from 'lucide-react'
 const SCALE_MAX = 2.0
 const THRESHOLD = 1.0
 const ZONES = [
-  { from: 0,    to: 0.75, color: '#FEE2E2', label: 'Kritisk' },
-  { from: 0.75, to: 1.0,  color: '#FFEDD5', label: 'Varning' },
-  { from: 1.0,  to: 2.0,  color: '#DCFCE7', label: 'OK' },
+  { from: 0,    to: 0.75, color: 'hsl(var(--conf-low-bg))', label: 'Kritisk' },
+  { from: 0.75, to: 1.0,  color: 'hsl(var(--dq-stale-bg))', label: 'Varning' },
+  { from: 1.0,  to: 2.0,  color: 'hsl(var(--conf-high-bg))', label: 'OK' },
 ]
 
 function pct(value) {
@@ -27,8 +27,8 @@ export default function LiquidityGaugeCard({
   return (
     <div
       style={{
-        background: '#fff',
-        border: '1px solid #E5E7EB',
+        background: 'hsl(var(--card))',
+        border: '1px solid hsl(var(--border))',
         borderRadius: 8,
         overflow: 'hidden',
       }}
@@ -36,7 +36,7 @@ export default function LiquidityGaugeCard({
       {/* Header */}
       <div style={{ padding: '14px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 32, fontWeight: 700, color: '#111827', lineHeight: 1 }}>
+          <span style={{ fontSize: 32, fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1 }}>
             {value}
           </span>
           <span
@@ -48,14 +48,14 @@ export default function LiquidityGaugeCard({
               fontWeight: 600,
               padding: '2px 8px',
               borderRadius: 9999,
-              background: isNegative ? '#FEF2F2' : '#ECFDF5',
-              color: isNegative ? '#DC2626' : '#065F46',
+              background: isNegative ? 'hsl(var(--conf-low-bg))' : 'hsl(var(--conf-high-bg))',
+              color: isNegative ? 'hsl(var(--conf-low-fg))' : 'hsl(var(--conf-high-fg))',
             }}
           >
             {isNegative ? '↓' : '↑'} {isNegative ? 'Under kritisk gräns' : 'Godkänd nivå'}
           </span>
         </div>
-        <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 12 }}>Likviditetsgrad</p>
+        <p style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 12 }}>Likviditetsgrad</p>
       </div>
 
       {/* Gauge */}
@@ -77,8 +77,8 @@ export default function LiquidityGaugeCard({
                 width: `${pct(z.to) - pct(z.from)}%`,
                 background: z.color,
                 borderRadius: i === 0 ? '4px 0 0 4px' : i === ZONES.length - 1 ? '0 4px 4px 0' : 0,
-                border: '1px solid #E5E7EB',
-                borderLeft: i > 0 ? 'none' : '1px solid #E5E7EB',
+                border: '1px solid hsl(var(--border))',
+                borderLeft: i > 0 ? 'none' : '1px solid hsl(var(--border))',
               }}
             />
           ))}
@@ -91,7 +91,7 @@ export default function LiquidityGaugeCard({
               top: -4,
               bottom: -4,
               width: 2,
-              background: '#374151',
+              background: 'hsl(var(--foreground))',
               transform: 'translateX(-50%)',
             }}
           />
@@ -107,7 +107,7 @@ export default function LiquidityGaugeCard({
               height: 0,
               borderLeft: '6px solid transparent',
               borderRight: '6px solid transparent',
-              borderTop: '8px solid #111827',
+              borderTop: '8px solid hsl(var(--foreground))',
             }}
           />
         </div>
@@ -119,7 +119,7 @@ export default function LiquidityGaugeCard({
               position: 'absolute',
               left: 0,
               fontSize: 11,
-              color: '#6B7280',
+              color: 'hsl(var(--muted-foreground))',
             }}
           >
             0
@@ -133,7 +133,7 @@ export default function LiquidityGaugeCard({
               transform: 'translateX(-50%)',
               fontSize: 12,
               fontWeight: 700,
-              color: '#111827',
+              color: 'hsl(var(--foreground))',
               whiteSpace: 'nowrap',
             }}
           >
@@ -147,7 +147,7 @@ export default function LiquidityGaugeCard({
               left: `${pct(THRESHOLD)}%`,
               transform: 'translateX(-50%)',
               fontSize: 11,
-              color: '#374151',
+              color: 'hsl(var(--foreground))',
               whiteSpace: 'nowrap',
               marginTop: 16,
               top: 14,
@@ -161,7 +161,7 @@ export default function LiquidityGaugeCard({
               position: 'absolute',
               right: 0,
               fontSize: 11,
-              color: '#6B7280',
+              color: 'hsl(var(--muted-foreground))',
             }}
           >
             2.0
@@ -169,7 +169,7 @@ export default function LiquidityGaugeCard({
         </div>
 
         {/* Zonlabels */}
-        <div style={{ display: 'flex', fontSize: 10, color: '#9CA3AF', gap: 4, marginTop: 2 }}>
+        <div style={{ display: 'flex', fontSize: 10, color: 'hsl(var(--muted-foreground))', gap: 4, marginTop: 2 }}>
           <span style={{ flex: `${pct(0.75)}`, textAlign: 'left' }}>Kritisk</span>
           <span style={{ flex: `${pct(1.0) - pct(0.75)}`, textAlign: 'center' }}>Varning</span>
           <span style={{ flex: `${pct(2.0) - pct(1.0)}`, textAlign: 'right' }}>OK</span>
@@ -177,7 +177,7 @@ export default function LiquidityGaugeCard({
       </div>
 
       {/* Footer */}
-      <div style={{ borderTop: '1px solid #E5E7EB', padding: '10px 16px' }}>
+      <div style={{ borderTop: '1px solid hsl(var(--border))', padding: '10px 16px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
           <span
             style={{
@@ -185,15 +185,15 @@ export default function LiquidityGaugeCard({
               fontWeight: 500,
               padding: '2px 8px',
               borderRadius: 9999,
-              background: '#EEF2FF',
-              color: '#4338CA',
+              background: 'hsl(var(--accent-subtle))',
+              color: 'hsl(var(--accent-strong))',
             }}
           >
             ✦ AI-analys
           </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, color: '#6B7280' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
             Källa: {source}
-            {sourceStale && <AlertTriangle size={10} style={{ color: '#F97316', flexShrink: 0 }} />}
+            {sourceStale && <AlertTriangle size={10} style={{ color: 'hsl(var(--dq-stale-solid))', flexShrink: 0 }} />}
           </span>
           <span
             style={{
@@ -201,8 +201,8 @@ export default function LiquidityGaugeCard({
               fontWeight: 500,
               padding: '2px 8px',
               borderRadius: 9999,
-              background: '#FEF2F2',
-              color: '#DC2626',
+              background: 'hsl(var(--conf-low-bg))',
+              color: 'hsl(var(--conf-low-fg))',
             }}
           >
             Påverkan: Hög negativ
