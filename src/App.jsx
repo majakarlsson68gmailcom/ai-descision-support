@@ -90,34 +90,41 @@ function Sidebar() {
 
       {/* Collapse-toggle */}
       <div className="flex justify-end px-3 pb-1">
-        <button className="rounded-md p-1.5 flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors">
-          <PanelLeftClose size={16} />
+        <button
+          aria-label="Fäll ihop sidofältet"
+          className="rounded-md p-1.5 flex items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <PanelLeftClose size={16} aria-hidden="true" />
         </button>
       </div>
 
-      {sections.map((section) => (
-        <div key={section.label} className="px-3 pt-4 flex flex-col gap-1">
-          {/* Liten grå sektionsetikett (Cloudflare-stil) */}
-          <span className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-            {section.label}
-          </span>
-          <div className="flex flex-col gap-0.5">
-            {section.items.map(({ label, Icon, active }) => (
-              <button
-                key={label}
-                className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-left transition-colors ${
-                  active
-                    ? 'bg-accent text-foreground font-medium'
-                    : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
-                }`}
-              >
-                <Icon size={16} className="flex-shrink-0" />
-                {label}
-              </button>
-            ))}
+      <nav aria-label="Huvudnavigation" className="flex flex-col">
+        {sections.map((section, i) => (
+          <div key={section.label} role="group" aria-labelledby={`navsec-${i}`} className="px-3 pt-4 flex flex-col gap-1">
+            {/* Liten grå sektionsetikett */}
+            <span id={`navsec-${i}`} className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+              {section.label}
+            </span>
+            <ul className="flex flex-col gap-0.5">
+              {section.items.map(({ label, Icon, active }) => (
+                <li key={label}>
+                  <button
+                    aria-current={active ? 'page' : undefined}
+                    className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      active
+                        ? 'bg-accent text-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon size={16} className="flex-shrink-0" aria-hidden="true" />
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      ))}
+        ))}
+      </nav>
 
     </aside>
   )
@@ -1701,20 +1708,21 @@ function SpårloggTag({ type = 'system' }) {
 }
 
 function SpårloggIcon({ type }) {
-  const grey = 'w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-muted border-border'
+  const base = 'w-6 h-6 rounded-full flex items-center justify-center border shrink-0'
+  const grey = `${base} bg-muted border-border`
   if (type === 'ai') return (
-    <div className="w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-accent-subtle border-accent-border">
+    <div aria-hidden="true" className={`${base} bg-accent-subtle border-accent-border`}>
       <Sparkles size={12} className="text-accent-strong" />
     </div>
   )
-  if (type === 'empty') return <div className="w-6 h-6 rounded-xl border border-border bg-card shrink-0" />
+  if (type === 'empty') return <div aria-hidden="true" className={`${base} bg-card`} />
   const icons = {
     'clipboard': <ClipboardList size={12} className="text-muted-foreground" />,
     'file-search': <FileText size={12} className="text-muted-foreground" />,
     'user': <User size={12} className="text-muted-foreground" />,
     'search': <Search size={12} className="text-muted-foreground" />,
   }
-  return <div className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-muted-foreground" />}</div>
+  return <div aria-hidden="true" className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-muted-foreground" />}</div>
 }
 
 function SpårloggTab({ d }) {
@@ -1756,7 +1764,7 @@ function SpårloggTab({ d }) {
 
       {/* Header med divider */}
       <div className="border-b border-border pb-[13px] flex items-center justify-between">
-        <p className="text-xlg font-semibold text-foreground">Spårlogg</p>
+        <h2 className="text-xlg font-semibold text-foreground">Spårlogg</h2>
         <div className="flex items-center gap-1 bg-accent-subtle border border-accent-border text-accent-strong text-[12px] font-medium px-2 py-0.5 rounded-sm">
           <Sparkles size={12} />
           <span>AI-modell: Kreditrisk v2.3 - Tränad nov 2024</span>
@@ -1764,20 +1772,18 @@ function SpårloggTab({ d }) {
       </div>
 
       {/* Timeline */}
-      <div className="flex flex-col gap-3">
-        {events.map((ev, i) => (
-          <div key={ev.id} className="flex gap-4 items-start">
+      <ol className="flex flex-col">
+        {events.map((ev) => (
+          <li key={ev.id} className="flex gap-4">
 
-            {/* Ikonkolumn */}
-            <div className="flex flex-col items-center w-6 shrink-0 pt-1">
+            {/* Ikonkolumn – linjen sträcker sig hela vägen ner till nästa ikon */}
+            <div className="flex flex-col items-center w-6 shrink-0">
               <SpårloggIcon type={ev.icon} />
-              {i < events.length - 1 && (
-                <div className="w-px flex-1 bg-border mt-2 min-h-6" />
-              )}
+              <div aria-hidden="true" className="w-px flex-1 min-h-[1.25rem] bg-border my-1.5" />
             </div>
 
             {/* Innehåll */}
-            <div className={`flex-1 min-w-0 flex flex-col gap-2 ${i < events.length - 1 ? 'pb-3' : ''}`}>
+            <div className="flex-1 min-w-0 flex flex-col gap-2 pb-6">
 
               {/* Tag + titel + tidsstämpel */}
               <div className="flex items-center justify-between gap-2">
@@ -1873,18 +1879,18 @@ function SpårloggTab({ d }) {
               )}
 
             </div>
-          </div>
+          </li>
         ))}
 
-        {/* Väntar på beslut */}
-        <div className="flex gap-4 items-center">
-          <div className="w-6 flex justify-center shrink-0 pt-1">
+        {/* Terminus – inväntar beslut */}
+        <li className="flex gap-4 items-center">
+          <div className="w-6 flex justify-center shrink-0">
             <SpårloggIcon type="empty" />
           </div>
           <p className="text-sm text-muted-foreground italic">Väntar på beslut från {d.officer}</p>
-        </div>
+        </li>
 
-      </div>
+      </ol>
     </div>
   )
 }
