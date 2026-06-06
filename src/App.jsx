@@ -10,7 +10,7 @@ import {
   FileText, ClipboardList, LayoutGrid, Bell, Sparkles, Lightbulb,
   BookOpen, Settings, HelpCircle, AlertTriangle, CircleAlert, Lock, ChevronRight, ChevronDown, User,
   Download, Send, CheckCircle, X, RotateCcw, ArrowRight, ArrowUpRight, ArrowDown, Info, Loader2,
-  Shield, PanelLeftClose, CircleMinus, Search, Sun, Moon,
+  Shield, PanelLeftClose, CircleMinus, Search, Sun, Moon, Files,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -57,69 +57,67 @@ function getConfidenceBadge(confidence) {
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 function Sidebar() {
+  const sections = [
+    {
+      label: 'Ärenden',
+      items: [
+        { label: 'Översikt', Icon: LayoutGrid },
+        { label: 'Kunder', Icon: User },
+        { label: 'Mina ärenden', Icon: ClipboardList, active: true },
+        { label: 'Alla ärenden', Icon: Files },
+      ],
+    },
+    {
+      label: 'Beslutsstöd',
+      items: [
+        { label: 'Aviseringar', Icon: Bell },
+        { label: 'Rekommendationer', Icon: Lightbulb },
+        { label: 'Beslutslogg', Icon: BookOpen },
+      ],
+    },
+    {
+      label: 'System',
+      items: [
+        { label: 'Inställningar', Icon: Settings },
+        { label: 'Hjälp', Icon: HelpCircle },
+        { label: 'Säkerhet', Icon: Shield },
+      ],
+    },
+  ]
+
   return (
-    <aside className="w-[220px] flex-shrink-0 h-screen overflow-y-auto bg-secondary border-r border-border flex flex-col">
+    <aside className="w-[220px] flex-shrink-0 h-screen overflow-y-auto bg-secondary border-r border-border flex flex-col py-3">
 
-      {/* Section: Ärenden */}
-      <div className="pl-6 pr-4 py-4 flex flex-col gap-4">
-        <div className="flex items-center justify-between px-4">
-          <span className="text-base font-semibold text-muted-foreground leading-normal">Ärenden</span>
-          <button className="bg-card border border-border rounded-md p-2 flex items-center justify-center hover:bg-accent transition-colors">
-            <PanelLeftClose size={16} className="text-muted-foreground" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-1">
-          {[
-            { label: 'Översikt', Icon: LayoutGrid },
-            { label: 'Kunder', Icon: User },
-            { label: 'Mina ärenden', Icon: ClipboardList, active: true },
-            { label: 'Alla ärenden', Icon: ClipboardList },
-          ].map(({ label, Icon, active }) => (
-            <button key={label} className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-left transition-colors ${active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`}>
-              <Icon size={16} className="flex-shrink-0" />
-              {label}
-            </button>
-          ))}
-        </div>
+      {/* Collapse-toggle */}
+      <div className="flex justify-end px-3 pb-1">
+        <button className="rounded-md p-1.5 flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors">
+          <PanelLeftClose size={16} />
+        </button>
       </div>
 
-      {/* Section: Beslutsstöd */}
-      <div className="pl-6 pr-4 py-6 border-t border-border flex flex-col gap-4">
-        <div className="px-4">
-          <span className="text-base font-semibold text-muted-foreground leading-normal">Beslutsstöd</span>
+      {sections.map((section) => (
+        <div key={section.label} className="px-3 pt-4 flex flex-col gap-1">
+          {/* Liten grå sektionsetikett (Cloudflare-stil) */}
+          <span className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+            {section.label}
+          </span>
+          <div className="flex flex-col gap-0.5">
+            {section.items.map(({ label, Icon, active }) => (
+              <button
+                key={label}
+                className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-left transition-colors ${
+                  active
+                    ? 'bg-accent text-foreground font-medium'
+                    : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                }`}
+              >
+                <Icon size={16} className="flex-shrink-0" />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-col gap-1">
-          {[
-            { label: 'Aviseringar', Icon: Bell },
-            { label: 'Rekommendationer', Icon: Lightbulb },
-            { label: 'Beslutslogg', Icon: BookOpen },
-          ].map(({ label, Icon }) => (
-            <button key={label} className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground text-left transition-colors hover:bg-accent hover:text-foreground">
-              <Icon size={16} className="flex-shrink-0" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Section: System */}
-      <div className="pl-6 pr-4 py-6 border-t border-border flex flex-col gap-4">
-        <div className="px-4">
-          <span className="text-base font-semibold text-muted-foreground leading-normal">System</span>
-        </div>
-        <div className="flex flex-col gap-1">
-          {[
-            { label: 'Inställningar', Icon: Settings },
-            { label: 'Hjälp', Icon: HelpCircle },
-            { label: 'Säkerhet', Icon: Shield },
-          ].map(({ label, Icon }) => (
-            <button key={label} className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground text-left transition-colors hover:bg-accent hover:text-foreground">
-              <Icon size={16} className="flex-shrink-0" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      ))}
 
     </aside>
   )
