@@ -10,7 +10,7 @@ import {
   FileText, ClipboardList, LayoutGrid, Bell, Sparkles, Lightbulb,
   BookOpen, Settings, HelpCircle, AlertTriangle, CircleAlert, Lock, ChevronRight, ChevronDown, User,
   Download, Send, CheckCircle, X, RotateCcw, ArrowRight, ArrowUpRight, ArrowDown, Info, Loader2,
-  Shield, PanelLeftClose, CircleMinus, Search, Sun, Moon, Files,
+  Shield, PanelLeftClose, CircleMinus, Search, Sun, Moon, Files, Menu, MoreHorizontal,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -56,39 +56,73 @@ function getConfidenceBadge(confidence) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
-function Sidebar() {
-  const sections = [
-    {
-      label: 'Ärenden',
-      items: [
-        { label: 'Översikt', Icon: LayoutGrid },
-        { label: 'Kunder', Icon: User },
-        { label: 'Mina ärenden', Icon: ClipboardList, active: true },
-        { label: 'Alla ärenden', Icon: Files },
-      ],
-    },
-    {
-      label: 'Beslutsstöd',
-      items: [
-        { label: 'Aviseringar', Icon: Bell },
-        { label: 'Rekommendationer', Icon: Lightbulb },
-        { label: 'Beslutslogg', Icon: BookOpen },
-      ],
-    },
-    {
-      label: 'System',
-      items: [
-        { label: 'Inställningar', Icon: Settings },
-        { label: 'Hjälp', Icon: HelpCircle },
-        { label: 'Säkerhet', Icon: Shield },
-      ],
-    },
-  ]
+const SIDEBAR_SECTIONS = [
+  {
+    label: 'Ärenden',
+    items: [
+      { label: 'Översikt', Icon: LayoutGrid },
+      { label: 'Kunder', Icon: User },
+      { label: 'Mina ärenden', Icon: ClipboardList, active: true },
+      { label: 'Alla ärenden', Icon: Files },
+    ],
+  },
+  {
+    label: 'Beslutsstöd',
+    items: [
+      { label: 'Aviseringar', Icon: Bell },
+      { label: 'Rekommendationer', Icon: Lightbulb },
+      { label: 'Beslutslogg', Icon: BookOpen },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Inställningar', Icon: Settings },
+      { label: 'Hjälp', Icon: HelpCircle },
+      { label: 'Säkerhet', Icon: Shield },
+    ],
+  },
+]
 
+// Delad navigation – används av både desktop-sidebar och mobil drawer.
+// py-3 på mobil ger ≥44px touch-target; lg:py-1.5 återställer kompakt desktop.
+function SidebarNav({ onNavigate }) {
   return (
-    <aside className="w-[220px] flex-shrink-0 h-screen overflow-y-auto bg-secondary border-r border-border flex flex-col py-3">
+    <nav aria-label="Huvudnavigation" className="flex flex-col">
+      {SIDEBAR_SECTIONS.map((section, i) => (
+        <div key={section.label} role="group" aria-labelledby={`navsec-${i}`} className="px-3 pt-4 flex flex-col gap-1">
+          {/* Liten grå sektionsetikett */}
+          <span id={`navsec-${i}`} className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+            {section.label}
+          </span>
+          <ul className="flex flex-col gap-0.5">
+            {section.items.map(({ label, Icon, active }) => (
+              <li key={label}>
+                <button
+                  aria-current={active ? 'page' : undefined}
+                  onClick={onNavigate}
+                  className={`w-full flex items-center gap-2.5 px-3 py-3 lg:py-1.5 rounded-md text-sm text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    active
+                      ? 'bg-accent text-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                  }`}
+                >
+                  <Icon size={16} className="flex-shrink-0" aria-hidden="true" />
+                  {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  )
+}
 
-      {/* Collapse-toggle */}
+// Desktop-sidebar (≥1024px). Dold på mobil – där används MobileSidebar.
+function Sidebar() {
+  return (
+    <aside className="hidden lg:flex w-[220px] flex-shrink-0 h-screen overflow-y-auto bg-secondary border-r border-border flex-col py-3">
       <div className="flex justify-end px-3 pb-1">
         <button
           aria-label="Fäll ihop sidofältet"
@@ -97,56 +131,75 @@ function Sidebar() {
           <PanelLeftClose size={16} aria-hidden="true" />
         </button>
       </div>
-
-      <nav aria-label="Huvudnavigation" className="flex flex-col">
-        {sections.map((section, i) => (
-          <div key={section.label} role="group" aria-labelledby={`navsec-${i}`} className="px-3 pt-4 flex flex-col gap-1">
-            {/* Liten grå sektionsetikett */}
-            <span id={`navsec-${i}`} className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-              {section.label}
-            </span>
-            <ul className="flex flex-col gap-0.5">
-              {section.items.map(({ label, Icon, active }) => (
-                <li key={label}>
-                  <button
-                    aria-current={active ? 'page' : undefined}
-                    className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      active
-                        ? 'bg-accent text-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
-                    }`}
-                  >
-                    <Icon size={16} className="flex-shrink-0" aria-hidden="true" />
-                    {label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </nav>
-
+      <SidebarNav />
     </aside>
+  )
+}
+
+// Mobil drawer (<1024px) – overlay + slide-in, Esc/backdrop stänger.
+function MobileSidebar({ open, onClose }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  return (
+    <div className={`lg:hidden fixed inset-0 z-50 ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
+      <div
+        onClick={onClose}
+        className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0'}`}
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Huvudmeny"
+        className={`absolute left-0 top-0 h-full w-[260px] bg-secondary border-r border-border flex flex-col py-3 shadow-xl transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="flex justify-end px-3 pb-1">
+          <button
+            onClick={onClose}
+            aria-label="Stäng meny"
+            className="rounded-md p-2 flex items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="overflow-y-auto">
+          <SidebarNav onNavigate={onClose} />
+        </div>
+      </aside>
+    </div>
   )
 }
 
 // ── Page header ───────────────────────────────────────────────────────────────
 
-function PageHeader({ d, theme, onToggleTheme }) {
+function PageHeader({ d, theme, onToggleTheme, onMenuClick }) {
   return (
-    <header className="px-6 py-6 pb-2 shrink-0">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground mb-2">
-            <span className="hover:text-foreground cursor-pointer transition-colors">Mina ärenden</span>
-            <ChevronRight size={14} className="text-muted-foreground/60" />
-            <span className="hover:text-foreground cursor-pointer transition-colors">Företagslån</span>
-            <ChevronRight size={14} className="text-muted-foreground/60" />
-            <span className="text-foreground">{d.id} · {d.company}</span>
+    <header className="px-4 lg:px-6 py-4 lg:py-6 pb-2 shrink-0">
+      <div className="flex justify-between items-start gap-3 mb-4">
+        <div className="flex items-start gap-2 min-w-0">
+          <button
+            onClick={onMenuClick}
+            aria-label="Öppna meny"
+            className="lg:hidden -ml-1 mt-0.5 p-2 rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Menu size={20} aria-hidden="true" />
+          </button>
+          <div className="min-w-0">
+            <div className="hidden sm:flex items-center gap-2 text-[13px] font-medium text-muted-foreground mb-2">
+              <span className="hover:text-foreground cursor-pointer transition-colors">Mina ärenden</span>
+              <ChevronRight size={14} className="text-muted-foreground/60" />
+              <span className="hover:text-foreground cursor-pointer transition-colors">Företagslån</span>
+              <ChevronRight size={14} className="text-muted-foreground/60" />
+              <span className="text-foreground">{d.id} · {d.company}</span>
+            </div>
+            <h1 className="text-2xl lg:text-4xl font-bold text-foreground tracking-tight">{d.id}</h1>
           </div>
-          <h1 className="text-4xl font-bold text-foreground tracking-tight">{d.id}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -155,10 +208,11 @@ function PageHeader({ d, theme, onToggleTheme }) {
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </Button>
-          <Button variant="outline">
+          {/* Sekundära åtgärder – på mobil flyttade till MobileQuickActions (FAB) */}
+          <Button variant="outline" className="hidden lg:inline-flex">
             Exportera PDF <Download size={16} />
           </Button>
-          <Button>
+          <Button className="hidden lg:inline-flex">
             Eskalera ärende <ArrowUpRight size={16} />
           </Button>
         </div>
@@ -174,7 +228,7 @@ function CaseInfoCard({ d }) {
   return (
     <Card className="p-6 flex flex-col gap-3 text-left">
       {/* Rad 1: Ärende-rubrik + Företag (vänster) | Org.nr (höger) */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
           <p className="text-base font-medium text-foreground leading-6">Ärende</p>
           <div className="flex flex-col gap-0.5 leading-5">
@@ -182,29 +236,29 @@ function CaseInfoCard({ d }) {
             <p className="text-sm text-foreground">{d.company}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-0.5 leading-5 w-[173px]">
+        <div className="flex flex-col gap-0.5 leading-5 sm:w-[173px]">
           <p className="text-xs text-muted-foreground">Org.nr</p>
           <p className="text-xs text-foreground">{d.orgNr}</p>
         </div>
       </div>
       {/* Rad 2: Belopp (vänster) | Ändamål (höger) */}
-      <div className="flex items-center justify-between leading-5">
+      <div className="flex flex-col gap-3 leading-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-0.5">
           <p className="text-xs text-muted-foreground">Belopp</p>
-          <p className="text-sm text-foreground w-[308px]">{amountStr}</p>
+          <p className="text-sm text-foreground sm:w-[308px]">{amountStr}</p>
         </div>
         <div className="flex flex-col gap-0.5">
           <p className="text-xs text-muted-foreground">Ändamål</p>
-          <p className="text-sm text-foreground w-[171px]">{d.purpose}</p>
+          <p className="text-sm text-foreground sm:w-[171px]">{d.purpose}</p>
         </div>
       </div>
       {/* Rad 3: Handläggare (vänster) | Ärendenummer (höger) */}
-      <div className="flex items-center justify-between leading-5">
-        <div className="flex flex-col gap-0.5 w-[112px]">
+      <div className="flex flex-col gap-3 leading-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-0.5 sm:w-[112px]">
           <p className="text-xs text-muted-foreground">Handläggare</p>
           <p className="text-xs text-foreground">{d.officer}</p>
         </div>
-        <div className="flex flex-col gap-0.5 w-[172px]">
+        <div className="flex flex-col gap-0.5 sm:w-[172px]">
           <p className="text-xs text-muted-foreground">Ärendenummer</p>
           <p className="text-xs text-foreground">{d.id}</p>
         </div>
@@ -423,8 +477,8 @@ function WhyDecisionCard({ factors, d }) {
         </div>
         <Badge variant="accent"><Sparkles size={12} />AI</Badge>
       </div>
-      {/* Tabellhuvud */}
-      <div className="flex items-center justify-between border-b border-border pb-3 pt-1 text-[14px] text-foreground leading-5">
+      {/* Tabellhuvud – dolt på mobil där raderna stackar med egna etiketter */}
+      <div className="hidden sm:flex items-center justify-between border-b border-border pb-3 pt-1 text-[14px] text-foreground leading-5">
         <span>Faktor</span>
         <div className="flex items-center gap-5">
           <span className="w-[117px]">Nyckelvärde</span>
@@ -434,15 +488,22 @@ function WhyDecisionCard({ factors, d }) {
       </div>
       {/* Rader */}
       {factors.map((f, i) => (
-        <div key={i} className="flex items-center justify-between py-3 border-b border-border">
-          <span className="text-[14px] text-foreground leading-5">{f.factor}</span>
-          <div className="flex items-center gap-5">
-            <span className="text-[14px] font-medium text-foreground leading-5 w-[117px]">{cleanValue(f)}</span>
-            <div className="w-[170px] flex items-center gap-2.5">
-              {renderDirectionChip(f)}
-              {renderDots(f)}
+        <div key={i} className="flex flex-col gap-2 py-3 border-b border-border sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-[14px] font-medium text-foreground leading-5 sm:font-normal">{f.factor}</span>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+            <div className="flex items-center justify-between gap-3 sm:block sm:w-[117px]">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Nyckelvärde</span>
+              <span className="text-[14px] font-medium text-foreground leading-5">{cleanValue(f)}</span>
             </div>
-            <div className="w-[95px] flex items-end flex-col justify-center">
+            <div className="flex items-center justify-between gap-3 sm:w-[170px]">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Bidrag</span>
+              <div className="flex items-center gap-2.5">
+                {renderDirectionChip(f)}
+                {renderDots(f)}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 sm:w-[95px] sm:flex-col sm:items-end sm:justify-center">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Underlag</span>
               {renderStatus(f)}
             </div>
           </div>
@@ -520,8 +581,8 @@ function ConfidenceImpactCard({ factors }) {
         </div>
         <Badge variant="accent"><Sparkles size={12} />AI</Badge>
       </div>
-      {/* Tabellhuvud */}
-      <div className="flex items-center justify-between border-b border-border pb-3 pt-1 text-[14px] text-foreground leading-5">
+      {/* Tabellhuvud – dolt på mobil där raderna stackar med egna etiketter */}
+      <div className="hidden sm:flex items-center justify-between border-b border-border pb-3 pt-1 text-[14px] text-foreground leading-5">
         <span>Faktor</span>
         <div className="flex items-center gap-5">
           <span className="w-[165px]">Källa</span>
@@ -531,16 +592,19 @@ function ConfidenceImpactCard({ factors }) {
       </div>
       {/* Rader */}
       {impactFactors.map((f, i) => (
-        <div key={i} className="flex items-center justify-between py-4">
-          <span className="text-[14px] text-foreground leading-5">{f.factor}</span>
-          <div className="flex items-center gap-5">
-            <div className="w-[165px] flex items-start">
+        <div key={i} className="flex flex-col gap-2 py-4 border-b border-border last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:border-b-0">
+          <span className="text-[14px] font-medium text-foreground leading-5 sm:font-normal">{f.factor}</span>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+            <div className="flex items-center justify-between gap-3 sm:w-[165px] sm:items-start sm:justify-start">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Källa</span>
               {getSourceChip(f)}
             </div>
-            <div className="w-[90px] flex items-start">
+            <div className="flex items-center justify-between gap-3 sm:w-[90px] sm:items-start sm:justify-start">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Status</span>
               {getStatusBadge(f)}
             </div>
-            <div className="w-[151px] flex items-end justify-end">
+            <div className="flex items-center justify-between gap-3 sm:w-[151px] sm:items-end sm:justify-end">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Konfidens</span>
               {getImpactChip(f)}
             </div>
           </div>
@@ -1895,12 +1959,58 @@ function SpårloggTab({ d }) {
   )
 }
 
+// ── MobileQuickActions (FAB) ────────────────────────────────────────────────────
+// Sekundära genvägar (Export, Eskalera) på mobil. Medvetet INTE för beslutet (H1/H2):
+// en flytande Godkänn/Avslå skulle inbjuda beslut före granskning (automation bias).
+function MobileQuickActions({ actions }) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  return (
+    <div className="lg:hidden fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+      {/* Åtgärdslista */}
+      <div
+        className={`flex flex-col items-end gap-2 transition-all duration-200 ${
+          open ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+        }`}
+      >
+        {actions.map(({ label, Icon, onClick }) => (
+          <button
+            key={label}
+            onClick={() => { setOpen(false); onClick?.() }}
+            className="flex items-center gap-2 h-11 px-4 rounded-full bg-card border border-border shadow-lg text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Icon size={16} aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </div>
+      {/* Toggle */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-label={open ? 'Stäng snabbåtgärder' : 'Öppna snabbåtgärder'}
+        className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <MoreHorizontal size={24} aria-hidden="true" className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
+      </button>
+    </div>
+  )
+}
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [aiReviewed, setAiReviewed] = useState(false)
   const [activeTab, setActiveTab] = useState('overblick')
   const [showAIBanner, setShowAIBanner] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Tema (ljust/mörkt) – init från localStorage, annars systeminställning
   const [theme, setTheme] = useState(() => {
@@ -1966,6 +2076,7 @@ export default function App() {
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground font-sans">
       <Sidebar />
+      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {activeSourceDocument ? (
         <SourceDocumentView
@@ -1979,13 +2090,13 @@ export default function App() {
         />
       ) : (
         <div className="flex flex-col flex-1 min-w-0 h-full">
-          <PageHeader d={CASE} theme={theme} onToggleTheme={toggleTheme} />
+          <PageHeader d={CASE} theme={theme} onToggleTheme={toggleTheme} onMenuClick={() => setSidebarOpen(true)} />
 
-          <main className="flex-1 overflow-y-auto p-6 pt-2">
-            <div className="flex gap-6 items-start max-w-[1400px]">
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6 pt-2 pb-24 lg:pb-6">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start max-w-[1400px]">
 
               {/* ── Vänster kolumn ─────────────────────────────────────── */}
-              <div className="flex-1 min-w-0 flex flex-col gap-4">
+              <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-4">
                 <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
                 {activeTab === 'overblick' && (
@@ -2024,7 +2135,7 @@ export default function App() {
               </div>
 
               {/* ── Höger kolumn ───────────────────────────────────────── */}
-              <div className="w-[360px] flex-shrink-0 sticky top-6">
+              <div className="w-full lg:w-[360px] flex-shrink-0 lg:sticky lg:top-6">
                 <DecisionPanel
                   d={CASE}
                   aiReviewed={aiReviewed}
@@ -2037,6 +2148,14 @@ export default function App() {
 
             </div>
           </main>
+
+          {/* Mobil: sekundära åtgärder som flytande meny (FAB) */}
+          <MobileQuickActions
+            actions={[
+              { label: 'Exportera PDF', Icon: Download },
+              { label: 'Eskalera ärende', Icon: ArrowUpRight },
+            ]}
+          />
         </div>
       )}
 
