@@ -1,3 +1,17 @@
 node_modules
 dist
 .env
+
+# System files
+.DS_Store
+*.DS_Store
+Thumbs.db
+
+# Temp/hidden files
+.fuse_hidden*
+
+# Claude Code worktrees
+.claude/worktrees
+
+# Playwright
+.playwright-cli
