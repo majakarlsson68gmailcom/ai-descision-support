@@ -9,7 +9,7 @@ function SourceRow({ source }) {
     <div className="flex items-center gap-3 py-2.5 border-b last:border-b-0 border-gray-100">
       {/* Status badge */}
       <span
-        className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${c.bg} ${c.text} ${c.border} flex-shrink-0`}
+        className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-sm border ${c.bg} ${c.text} ${c.border} flex-shrink-0`}
       >
         {source.status === 'ok' ? '✓' : '⚠'} {label}
       </span>

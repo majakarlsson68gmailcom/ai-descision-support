@@ -10,22 +10,28 @@ import {
   FileText, ClipboardList, LayoutGrid, Bell, Sparkles, Lightbulb,
   BookOpen, Settings, HelpCircle, AlertTriangle, CircleAlert, Lock, ChevronRight, ChevronDown, User,
   Download, Send, CheckCircle, X, RotateCcw, ArrowRight, ArrowUpRight, ArrowDown, Info, Loader2,
-  Shield, PanelLeftClose, CircleMinus, Search, FileSearch,
+  Shield, PanelLeftClose, CircleMinus, Search, Sun, Moon, Files, Menu, MoreHorizontal,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { confidence as confTokens } from './tokens'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function Tag({ children, color = 'neutral' }) {
   const styles = {
-    orange: 'bg-orange-50 text-orange-700 border-orange-100',
-    red: 'bg-red-50    text-red-700    border-red-100',
-    green: 'bg-green-50  text-green-700  border-green-100',
-    neutral: 'bg-grey-50   text-grey-600   border-grey-100',
-    blue: 'bg-blue-50   text-blue-800   border-blue-100',
-    purple: 'bg-purple-50 text-purple-700 border-purple-500',
+    orange:  'bg-conf-medium-bg text-conf-medium-fg border-conf-medium-border',
+    red:     'bg-conf-low-bg     text-conf-low-fg     border-conf-low-border',
+    green:   'bg-conf-high-bg    text-conf-high-fg    border-conf-high-border',
+    neutral: 'bg-muted          text-muted-foreground border-border',
+    blue:    'bg-accent-subtle   text-accent-strong   border-accent-border',
+    purple:  'bg-accent-subtle   text-accent-strong   border-accent-border',
   }
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xsm font-medium ${styles[color]}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xsm font-medium ${styles[color]}`}>
       {children}
     </span>
   )
@@ -33,115 +39,182 @@ function Tag({ children, color = 'neutral' }) {
 
 function SectionLabel({ children }) {
   return (
-    <p className="text-xsm font-semibold uppercase tracking-widest text-grey-600 mb-2">
+    <p className="text-xsm font-semibold uppercase tracking-widest text-muted-foreground mb-2">
       {children}
     </p>
   )
 }
 
+// Enda källa till sanning för konfidensbadgen – härleds ur tokens.confidence
 function getConfidenceBadge(confidence) {
   const level = typeof confidence === 'number'
     ? confidence >= 80 ? 'high' : confidence >= 60 ? 'medium' : 'low'
     : confidence // 'high' | 'medium' | 'low'
-  if (level === 'high') return { label: 'Hög konfidens', dot: 'bg-green-500', cls: 'bg-green-50 border-green-200 text-green-800' }
-  if (level === 'medium') return { label: 'Medel konfidens', dot: 'bg-[#f97316]', cls: 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]' }
-  return { label: 'Låg konfidens', dot: 'bg-red-500', cls: 'bg-red-50 border-red-200 text-red-800' }
+  const t = confTokens[level] ?? confTokens.low
+  return { label: t.label, dot: t.dot, cls: `${t.bg} ${t.border} ${t.text}` }
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
+const SIDEBAR_SECTIONS = [
+  {
+    label: 'Ärenden',
+    items: [
+      { label: 'Översikt', Icon: LayoutGrid },
+      { label: 'Kunder', Icon: User },
+      { label: 'Mina ärenden', Icon: ClipboardList, active: true },
+      { label: 'Alla ärenden', Icon: Files },
+    ],
+  },
+  {
+    label: 'Beslutsstöd',
+    items: [
+      { label: 'Aviseringar', Icon: Bell },
+      { label: 'Rekommendationer', Icon: Lightbulb },
+      { label: 'Beslutslogg', Icon: BookOpen },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Inställningar', Icon: Settings },
+      { label: 'Hjälp', Icon: HelpCircle },
+      { label: 'Säkerhet', Icon: Shield },
+    ],
+  },
+]
+
+// Delad navigation – används av både desktop-sidebar och mobil drawer.
+// py-3 på mobil ger ≥44px touch-target; lg:py-1.5 återställer kompakt desktop.
+function SidebarNav({ onNavigate }) {
+  return (
+    <nav aria-label="Huvudnavigation" className="flex flex-col">
+      {SIDEBAR_SECTIONS.map((section, i) => (
+        <div key={section.label} role="group" aria-labelledby={`navsec-${i}`} className="px-3 pt-4 flex flex-col gap-1">
+          {/* Liten grå sektionsetikett */}
+          <span id={`navsec-${i}`} className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+            {section.label}
+          </span>
+          <ul className="flex flex-col gap-0.5">
+            {section.items.map(({ label, Icon, active }) => (
+              <li key={label}>
+                <button
+                  aria-current={active ? 'page' : undefined}
+                  onClick={onNavigate}
+                  className={`w-full flex items-center gap-2.5 px-3 py-3 lg:py-1.5 rounded-md text-sm text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    active
+                      ? 'bg-accent text-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                  }`}
+                >
+                  <Icon size={16} className="flex-shrink-0" aria-hidden="true" />
+                  {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  )
+}
+
+// Desktop-sidebar (≥1024px). Dold på mobil – där används MobileSidebar.
 function Sidebar() {
   return (
-    <aside className="w-[220px] flex-shrink-0 h-screen overflow-y-auto bg-[#f2f2f2] border-r border-[#d4d4d4] flex flex-col">
+    <aside className="hidden lg:flex w-[220px] flex-shrink-0 h-screen overflow-y-auto bg-secondary border-r border-border flex-col py-3">
+      <div className="flex justify-end px-3 pb-1">
+        <button
+          aria-label="Fäll ihop sidofältet"
+          className="rounded-md p-1.5 flex items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <PanelLeftClose size={16} aria-hidden="true" />
+        </button>
+      </div>
+      <SidebarNav />
+    </aside>
+  )
+}
 
-      {/* Section: Ärenden */}
-      <div className="pl-6 pr-4 py-4 flex flex-col gap-4">
-        <div className="flex items-center justify-between px-4">
-          <span className="text-[18px] font-medium text-black/60 leading-normal">Ärenden</span>
-          <button className="bg-gradient-to-b from-[#fbfbfb] to-[rgba(207,207,207,0.1)] border border-[#d4d4d4] rounded-lg p-2 flex items-center justify-center">
-            <PanelLeftClose size={16} className="text-black/60" />
+// Mobil drawer (<1024px) – overlay + slide-in, Esc/backdrop stänger.
+function MobileSidebar({ open, onClose }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  return (
+    <div className={`lg:hidden fixed inset-0 z-50 ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
+      <div
+        onClick={onClose}
+        className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0'}`}
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Huvudmeny"
+        className={`absolute left-0 top-0 h-full w-[260px] bg-secondary border-r border-border flex flex-col py-3 shadow-xl transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="flex justify-end px-3 pb-1">
+          <button
+            onClick={onClose}
+            aria-label="Stäng meny"
+            className="rounded-md p-2 flex items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
-        <div className="flex flex-col gap-2">
-          {[
-            { label: 'Översikt', Icon: LayoutGrid },
-            { label: 'Kunder', Icon: User },
-            { label: 'Mina ärenden', Icon: ClipboardList, active: true },
-            { label: 'Alla ärenden', Icon: ClipboardList },
-          ].map(({ label, Icon, active }) => (
-            <button key={label} className={`w-full flex items-center gap-2 px-4 py-2 rounded-[4px] text-[16px] font-medium text-black text-left transition-colors ${active ? 'bg-[rgba(71,71,71,0.15)]' : 'hover:bg-[rgba(71,71,71,0.08)]'}`}>
-              <Icon size={16} className="flex-shrink-0" />
-              {label}
-            </button>
-          ))}
+        <div className="overflow-y-auto">
+          <SidebarNav onNavigate={onClose} />
         </div>
-      </div>
-
-      {/* Section: Beslutsstöd */}
-      <div className="pl-6 pr-4 py-6 border-t border-[#d4d4d4] flex flex-col gap-4">
-        <div className="px-4">
-          <span className="text-[18px] font-medium text-black/60 leading-normal">Beslutsstöd</span>
-        </div>
-        <div className="flex flex-col gap-2">
-          {[
-            { label: 'Aviseringar', Icon: Bell },
-            { label: 'Rekommendationer', Icon: Lightbulb },
-            { label: 'Beslutslogg', Icon: BookOpen },
-          ].map(({ label, Icon }) => (
-            <button key={label} className="w-full flex items-center gap-2 px-4 py-2 rounded-[4px] text-[16px] font-medium text-black text-left transition-colors hover:bg-[rgba(71,71,71,0.08)]">
-              <Icon size={16} className="flex-shrink-0" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Section: System */}
-      <div className="pl-6 pr-4 py-6 border-t border-[#d4d4d4] flex flex-col gap-4">
-        <div className="px-4">
-          <span className="text-[18px] font-medium text-black/60 leading-normal">System</span>
-        </div>
-        <div className="flex flex-col gap-2">
-          {[
-            { label: 'Inställningar', Icon: Settings },
-            { label: 'Hjälp', Icon: HelpCircle },
-            { label: 'Säkerhet', Icon: Shield },
-          ].map(({ label, Icon }) => (
-            <button key={label} className="w-full flex items-center gap-2 px-4 py-2 rounded-[4px] text-[16px] font-medium text-black text-left transition-colors hover:bg-[rgba(71,71,71,0.08)]">
-              <Icon size={16} className="flex-shrink-0" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-    </aside>
+      </aside>
+    </div>
   )
 }
 
 // ── Page header ───────────────────────────────────────────────────────────────
 
-function PageHeader({ d }) {
+function PageHeader({ d, theme, onToggleTheme, onMenuClick }) {
   return (
-    <header className="px-6 py-6 pb-2 shrink-0">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <div className="flex items-center gap-2 text-[13px] font-medium text-grey-500 mb-2">
-            <span className="hover:text-gray-700 cursor-pointer transition-colors">Mina ärenden</span>
-            <ChevronRight size={14} className="text-gray-400" />
-            <span className="hover:text-gray-700 cursor-pointer transition-colors">Företagslån</span>
-            <ChevronRight size={14} className="text-gray-400" />
-            <span className="text-grey-900">{d.id} · {d.company}</span>
+    <header className="px-4 lg:px-6 py-4 lg:py-6 pb-2 shrink-0">
+      <div className="flex justify-between items-start gap-3 mb-4">
+        <div className="flex items-start gap-2 min-w-0">
+          <button
+            onClick={onMenuClick}
+            aria-label="Öppna meny"
+            className="lg:hidden -ml-1 mt-0.5 p-2 rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Menu size={20} aria-hidden="true" />
+          </button>
+          <div className="min-w-0">
+            <div className="hidden sm:flex items-center gap-2 text-[13px] font-medium text-muted-foreground mb-2">
+              <span className="hover:text-foreground cursor-pointer transition-colors">Mina ärenden</span>
+              <ChevronRight size={14} className="text-muted-foreground/60" />
+              <span className="hover:text-foreground cursor-pointer transition-colors">Företagslån</span>
+              <ChevronRight size={14} className="text-muted-foreground/60" />
+              <span className="text-foreground">{d.id} · {d.company}</span>
+            </div>
+            <h1 className="text-2xl lg:text-4xl font-bold text-foreground tracking-tight">{d.id}</h1>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">{d.id}</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 text-sm font-medium text-[#3059CE] bg-white border border-[#3059CE]/30 rounded px-5 py-2 hover:bg-blue-50 transition-colors">
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleTheme}
+            aria-label={theme === 'dark' ? 'Byt till ljust läge' : 'Byt till mörkt läge'}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
+          {/* Sekundära åtgärder – på mobil flyttade till MobileQuickActions (FAB) */}
+          <Button variant="outline" className="hidden lg:inline-flex">
             Exportera PDF <Download size={16} />
-          </button>
-          <button className="flex items-center gap-2 text-sm font-medium text-white bg-[#3059CE] rounded px-5 py-2 hover:bg-blue-700 transition-colors shadow-sm">
+          </Button>
+          <Button className="hidden lg:inline-flex">
             Eskalera ärende <ArrowUpRight size={16} />
-          </button>
+          </Button>
         </div>
       </div>
     </header>
@@ -153,44 +226,44 @@ function CaseInfoCard({ d }) {
     ? `${d.amount.toLocaleString('sv-SE')} kr`
     : d.amount
   return (
-    <section className="bg-white border border-[#c4c4c4] rounded-2xl p-6 flex flex-col gap-3 text-left">
+    <Card className="p-6 flex flex-col gap-3 text-left">
       {/* Rad 1: Ärende-rubrik + Företag (vänster) | Org.nr (höger) */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
-          <p className="text-base font-medium text-black leading-6">Ärende</p>
+          <p className="text-base font-medium text-foreground leading-6">Ärende</p>
           <div className="flex flex-col gap-0.5 leading-5">
-            <p className="text-xs text-[#525252]">Företag</p>
-            <p className="text-sm text-[#242424]">{d.company}</p>
+            <p className="text-xs text-muted-foreground">Företag</p>
+            <p className="text-sm text-foreground">{d.company}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-0.5 leading-5 w-[173px]">
-          <p className="text-xs text-[#525252]">Org.nr</p>
-          <p className="text-xs text-[#242424]">{d.orgNr}</p>
+        <div className="flex flex-col gap-0.5 leading-5 sm:w-[173px]">
+          <p className="text-xs text-muted-foreground">Org.nr</p>
+          <p className="text-xs text-foreground">{d.orgNr}</p>
         </div>
       </div>
       {/* Rad 2: Belopp (vänster) | Ändamål (höger) */}
-      <div className="flex items-center justify-between leading-5">
+      <div className="flex flex-col gap-3 leading-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-0.5">
-          <p className="text-xs text-[#525252]">Belopp</p>
-          <p className="text-sm text-[#242424] w-[308px]">{amountStr}</p>
+          <p className="text-xs text-muted-foreground">Belopp</p>
+          <p className="text-sm text-foreground sm:w-[308px]">{amountStr}</p>
         </div>
         <div className="flex flex-col gap-0.5">
-          <p className="text-xs text-[#525252]">Ändamål</p>
-          <p className="text-sm text-[#242424] w-[171px]">{d.purpose}</p>
+          <p className="text-xs text-muted-foreground">Ändamål</p>
+          <p className="text-sm text-foreground sm:w-[171px]">{d.purpose}</p>
         </div>
       </div>
       {/* Rad 3: Handläggare (vänster) | Ärendenummer (höger) */}
-      <div className="flex items-center justify-between leading-5">
-        <div className="flex flex-col gap-0.5 w-[112px]">
-          <p className="text-xs text-[#525252]">Handläggare</p>
-          <p className="text-xs text-[#242424]">{d.officer}</p>
+      <div className="flex flex-col gap-3 leading-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-0.5 sm:w-[112px]">
+          <p className="text-xs text-muted-foreground">Handläggare</p>
+          <p className="text-xs text-foreground">{d.officer}</p>
         </div>
-        <div className="flex flex-col gap-0.5 w-[172px]">
-          <p className="text-xs text-[#525252]">Ärendenummer</p>
-          <p className="text-xs text-[#242424]">{d.id}</p>
+        <div className="flex flex-col gap-0.5 sm:w-[172px]">
+          <p className="text-xs text-muted-foreground">Ärendenummer</p>
+          <p className="text-xs text-foreground">{d.id}</p>
         </div>
       </div>
-    </section>
+    </Card>
   )
 }
 
@@ -203,24 +276,13 @@ function TabBar({ activeTab, onTabChange }) {
     { id: 'sparlogg', label: 'Spårlogg' },
   ]
   return (
-    <div className="border-b-2 border-[#969696] flex items-center w-full">
-      {tabs.map(tab => {
-        const isActive = activeTab === tab.id
-        return (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex items-center justify-center px-5 py-3 text-base font-medium border-b-2 -mb-[2px] transition-colors whitespace-nowrap
-              ${isActive
-                ? 'text-[#245bd1] border-[#245bd1]'
-                : 'text-[#525252] border-[#969696] hover:text-[#242424]'
-              }`}
-          >
-            {tab.label}
-          </button>
-        )
-      })}
-    </div>
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+      <TabsList>
+        {tabs.map(tab => (
+          <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   )
 }
 
@@ -228,30 +290,27 @@ function TabBar({ activeTab, onTabChange }) {
 
 function AIBanner({ onClose }) {
   return (
-    <div className="bg-[#e9effb] border border-[#c2d2f5] rounded-md p-4 w-full">
+    <div className="bg-accent-surface border border-accent-border rounded-lg p-4 w-full">
       <div className="flex items-start justify-between w-full">
         {/* Left: icon + content */}
         <div className="flex items-start gap-4 flex-1 min-w-0">
           <div className="flex items-center py-1 shrink-0">
-            <CircleAlert size={20} className="text-[#112b64]" />
+            <CircleAlert size={20} className="text-accent-strong" />
           </div>
           <div className="flex flex-col gap-3 flex-1 min-w-0">
             {/* Header row: "AI" title + AI badge */}
             <div className="flex items-center gap-2">
-              <p className="text-[20px] font-bold leading-7 text-[#112b64]">AI</p>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium leading-5">
-                <Sparkles size={12} />
-                AI
-              </span>
+              <p className="text-[20px] font-bold leading-7 text-accent-strong">AI</p>
+              <Badge variant="accent"><Sparkles size={12} />AI</Badge>
             </div>
             {/* Body text */}
-            <div className="text-[14px] leading-5 text-[#112b64]">
+            <div className="text-[14px] leading-5 text-foreground/80">
               <p><span className="font-bold">Analyserar:</span>{' '}Strukturerad data från kopplade källor · Nyckeltal mot bankpolicy · Datakvalitet. </p>
               <p><span className="font-bold">Bedömer inte:</span>{' '}Oreviderade siffrors tillförlitlighet · Framtida marknadsutveckling · Affärsbedömning</p>
             </div>
             {/* Läs mer link */}
             <div className="flex justify-end">
-              <button className="text-[12px] font-medium leading-5 text-[#245bd1] hover:underline">
+              <button className="text-[12px] font-medium leading-5 text-accent-strong hover:underline">
                 Läs mer
               </button>
             </div>
@@ -260,10 +319,10 @@ function AIBanner({ onClose }) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="w-5 h-5 flex items-center justify-center bg-[#f2f2f2] border border-[#dbdbdb] rounded overflow-hidden shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)] shrink-0 ml-4"
+          className="w-6 h-6 flex items-center justify-center bg-card border border-border rounded-md shrink-0 ml-4 hover:bg-accent transition-colors"
           aria-label="Stäng"
         >
-          <X size={12} className="text-[#525252]" />
+          <X size={12} className="text-muted-foreground" />
         </button>
       </div>
     </div>
@@ -279,49 +338,49 @@ function RecommendationCard({ d, confidence }) {
     : (d.confidence ?? confidence) >= 80 ? 'high' : (d.confidence ?? confidence) >= 60 ? 'medium' : 'low'
 
   const innerCls = level === 'high'
-    ? 'bg-[#f9fff9] border-[#bbf0bb]'
+    ? 'bg-conf-high-surface border-conf-high-border'
     : level === 'medium'
-      ? 'bg-[#fffaf5] border-[#fddeb9]'
-      : 'bg-[#fffcfc] border-[#f5c2c2]'
+      ? 'bg-conf-medium-surface border-conf-medium-border'
+      : 'bg-conf-low-surface border-conf-low-border'
 
   const shortLabel = confBadge.label.split(' ')[0] // "Låg" / "Medel" / "Hög"
 
   return (
-    <section className="bg-white border border-[#c4c4c4] rounded-2xl p-3 flex flex-col gap-4 text-left">
+    <Card className="p-3 flex flex-col gap-4 text-left">
       {/* AI-rekommendation badge */}
-      <div className="flex items-center gap-1 self-start px-3 py-1 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-sm font-medium">
+      <Badge variant="accent" className="self-start px-3 py-1 text-sm">
         <Sparkles size={14} />
         AI-rekommendation
-      </div>
+      </Badge>
       {/* Inner confidence box */}
-      <div className={`border rounded-lg p-2 flex flex-col gap-4 w-full ${innerCls}`}>
+      <div className={`border rounded-lg p-3 flex flex-col gap-4 w-full ${innerCls}`}>
         {/* Rekommendation + Konfidensgrad */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
-            <p className="text-lg font-bold text-[#525252] leading-7">Rekommendation:</p>
-            <p className="text-lg font-bold text-[#242424] leading-7">{d.aiRecommendation}</p>
+            <p className="text-lg font-bold text-muted-foreground leading-7">Rekommendation:</p>
+            <p className="text-lg font-bold text-foreground leading-7">{d.aiRecommendation}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-1">
-              <p className="text-xs text-[#525252]">Konfidensgrad</p>
-              <Info size={12} className="text-[#525252]" />
+              <p className="text-xs text-muted-foreground">Konfidensgrad</p>
+              <Info size={12} className="text-muted-foreground" />
             </div>
-            <div className={`flex items-center gap-2 px-4 py-0.5 rounded-xl border ${confBadge.cls}`}>
+            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-sm border ${confBadge.cls}`}>
               <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
-              <p className="text-base font-medium">{shortLabel}</p>
+              <p className="text-[12px] font-medium leading-5">{shortLabel}</p>
             </div>
           </div>
         </div>
         {/* Konfidensorsak */}
         <div className="flex justify-end">
-          <p className="text-sm font-medium text-[#dc2626]">{d.aiSummaryShort}</p>
+          <p className="text-sm font-medium text-muted-foreground">{d.aiSummaryShort}</p>
         </div>
         {/* Divider + beskrivning */}
-        <div className="border-t border-[#c4c4c4] pt-3">
-          <p className="text-base text-[#242424] leading-6">{d.aiSummary}</p>
+        <div className="border-t border-border pt-3">
+          <p className="text-base text-foreground leading-6">{d.aiSummary}</p>
         </div>
       </div>
-    </section>
+    </Card>
   )
 }
 
@@ -336,26 +395,26 @@ function WhyDecisionCard({ factors, d }) {
   const renderDirectionChip = (f) => {
     if (f.status === 'unavailable') {
       return (
-        <div className="flex items-center gap-0.5 px-2 py-0.5 rounded-sm bg-[#e5e5e5] border border-[#a3a3a3]">
-          <p className="text-[12px] font-medium text-[#404040] whitespace-nowrap leading-5">Ej bedömt</p>
+        <div className="flex items-center gap-0.5 px-2 py-0.5 rounded-sm bg-muted border border-border">
+          <p className="text-[12px] font-medium text-muted-foreground whitespace-nowrap leading-5">Ej bedömt</p>
         </div>
       )
     }
     const isPositive = f.direction === 'positiv'
     if (isPositive) {
       return (
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-[#f0fdf4] border border-[#bbf7d0]">
-          <ArrowRight size={12} className="text-[#166534]" />
-          <p className="text-[12px] font-medium text-[#166534] whitespace-nowrap leading-5">Godkänn</p>
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-conf-high-bg border border-conf-high-border">
+          <ArrowRight size={12} className="text-conf-high-fg" />
+          <p className="text-[12px] font-medium text-conf-high-fg whitespace-nowrap leading-5">Godkänn</p>
         </div>
       )
     }
 
     return (
-      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-[#fef2f2] border border-[#fecaca]">
-        <ArrowRight size={12} className="text-[#991b1b]" />
-        <p className="text-[12px] font-medium text-[#991b1b] whitespace-nowrap leading-5">Avslå</p>
-        {f.stale && <AlertTriangle size={12} className="text-[#991b1b]" />}
+      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-conf-low-bg border border-conf-low-border">
+        <ArrowRight size={12} className="text-conf-low-fg" />
+        <p className="text-[12px] font-medium text-conf-low-fg whitespace-nowrap leading-5">Avslå</p>
+        {f.stale && <AlertTriangle size={12} className="text-dq-stale-fg" />}
       </div>
     )
   }
@@ -363,7 +422,7 @@ function WhyDecisionCard({ factors, d }) {
   // Impact dots (3 dots) + weight label + info icon
   const renderDots = (f) => {
     if (f.status === 'unavailable') {
-      return <span className="text-[12px] font-medium text-[#525252]">–</span>
+      return <span className="text-[12px] font-medium text-muted-foreground">–</span>
     }
     const count = f.weight === 'hög' ? 3 : f.weight === 'medel' ? 2 : 1
     const label = f.weight === 'hög' ? 'Hög' : f.weight === 'medel' ? 'Medel' : 'Låg'
@@ -371,12 +430,12 @@ function WhyDecisionCard({ factors, d }) {
       <div className="flex items-center gap-2">
         <div className="flex gap-1">
           {[1, 2, 3].map(i => (
-            <div key={i} className={`w-2 h-2 rounded-full ${i <= count ? 'bg-[#245bd1]' : 'bg-[#dbdbdb]'}`} />
+            <div key={i} className={`w-2 h-2 rounded-full ${i <= count ? 'bg-accent-strong' : 'bg-border'}`} />
           ))}
         </div>
         <div className="flex items-center gap-0.5">
-          <span className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">{label}</span>
-          <Info size={12} className="text-[#525252]" />
+          <span className="text-[12px] font-medium text-muted-foreground whitespace-nowrap leading-5">{label}</span>
+          <Info size={12} className="text-muted-foreground" />
         </div>
       </div>
     )
@@ -387,42 +446,39 @@ function WhyDecisionCard({ factors, d }) {
     if (f.status === 'unavailable') {
       return (
         <div className="flex items-center gap-1 px-2 py-0.5">
-          <CircleMinus size={12} className="text-[#525252] shrink-0" />
-          <span className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Otillgänglig</span>
+          <CircleMinus size={12} className="text-muted-foreground shrink-0" />
+          <span className="text-[12px] font-medium text-muted-foreground whitespace-nowrap leading-5">Otillgänglig</span>
         </div>
       )
     }
     if (f.stale) {
       return (
         <div className="flex items-center gap-1 px-2 py-0.5">
-          <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
-          <span className="text-[12px] font-medium text-[#d97706] whitespace-nowrap leading-5">Oreviderad</span>
+          <AlertTriangle size={12} className="text-dq-stale-fg shrink-0" />
+          <span className="text-[12px] font-medium text-dq-stale-fg whitespace-nowrap leading-5">Oreviderad</span>
         </div>
       )
     }
     return (
       <div className="flex items-center gap-1 px-2 py-0.5">
-        <div className="w-[5px] h-[5px] rounded-full bg-[#adadad] shrink-0" />
-        <span className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Ej flaggad</span>
+        <div className="w-[5px] h-[5px] rounded-full bg-dq-ok-solid shrink-0" />
+        <span className="text-[12px] font-medium text-muted-foreground whitespace-nowrap leading-5">Ej flaggad</span>
       </div>
     )
   }
 
   return (
-    <section className="bg-white border border-[#c4c4c4] rounded-2xl px-6 py-5 text-left">
+    <Card className="px-6 py-5 text-left">
       {/* Header */}
       <div className="flex items-center justify-between pb-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-[20px] font-bold text-[#242424] leading-7">Varför detta beslut?</h2>
-          <Info size={20} className="text-[#525252]" />
+          <h2 className="text-[20px] font-bold text-foreground leading-7">Varför detta beslut?</h2>
+          <Info size={20} className="text-muted-foreground" />
         </div>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium leading-5">
-          <Sparkles size={12} />
-          AI
-        </span>
+        <Badge variant="accent"><Sparkles size={12} />AI</Badge>
       </div>
-      {/* Tabellhuvud */}
-      <div className="flex items-center justify-between border-b border-[#c4c4c4] pb-3 pt-1 text-[14px] text-[#242424] leading-5">
+      {/* Tabellhuvud – dolt på mobil där raderna stackar med egna etiketter */}
+      <div className="hidden sm:flex items-center justify-between border-b border-border pb-3 pt-1 text-[14px] text-foreground leading-5">
         <span>Faktor</span>
         <div className="flex items-center gap-5">
           <span className="w-[117px]">Nyckelvärde</span>
@@ -432,25 +488,32 @@ function WhyDecisionCard({ factors, d }) {
       </div>
       {/* Rader */}
       {factors.map((f, i) => (
-        <div key={i} className="flex items-center justify-between py-3 border-b border-[#c4c4c4]">
-          <span className="text-[14px] text-[#242424] leading-5">{f.factor}</span>
-          <div className="flex items-center gap-5">
-            <span className="text-[14px] font-medium text-[#242424] leading-5 w-[117px]">{cleanValue(f)}</span>
-            <div className="w-[170px] flex items-center gap-2.5">
-              {renderDirectionChip(f)}
-              {renderDots(f)}
+        <div key={i} className="flex flex-col gap-2 py-3 border-b border-border sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-[14px] font-medium text-foreground leading-5 sm:font-normal">{f.factor}</span>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+            <div className="flex items-center justify-between gap-3 sm:block sm:w-[117px]">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Nyckelvärde</span>
+              <span className="text-[14px] font-medium text-foreground leading-5">{cleanValue(f)}</span>
             </div>
-            <div className="w-[95px] flex items-end flex-col justify-center">
+            <div className="flex items-center justify-between gap-3 sm:w-[170px]">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Bidrag</span>
+              <div className="flex items-center gap-2.5">
+                {renderDirectionChip(f)}
+                {renderDots(f)}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 sm:w-[95px] sm:flex-col sm:items-end sm:justify-center">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Underlag</span>
               {renderStatus(f)}
             </div>
           </div>
         </div>
       ))}
       {/* Sammanfattningstext */}
-      <p className="text-[12px] font-medium text-[#696969] mt-5 max-w-[500px] leading-5">
+      <p className="text-[12px] font-medium text-muted-foreground mt-5 max-w-[500px] leading-5">
         {d.aiSummary}
       </p>
-    </section>
+    </Card>
   )
 }
 
@@ -464,17 +527,17 @@ function ConfidenceImpactCard({ factors }) {
   const getSourceChip = (f) => {
     if (f.status === 'unavailable') {
       return (
-        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#c4c4c4] border border-[#adadad]">
-          <p className="text-[12px] font-medium text-[#3b3b3b] whitespace-nowrap leading-5">{f.source}</p>
-          <CircleMinus size={12} className="text-[#3b3b3b] shrink-0" />
+        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-muted border border-border opacity-80">
+          <p className="text-[12px] font-medium text-muted-foreground whitespace-nowrap leading-5">{f.source}</p>
+          <CircleMinus size={12} className="text-muted-foreground shrink-0" />
         </div>
       )
     }
     // stale
     return (
-      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f2f2f2] border border-[#dbdbdb]">
-        <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">{f.source}</p>
-        <FileText size={12} className="text-[#525252] shrink-0" />
+      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-muted border border-border">
+        <p className="text-[12px] font-medium text-muted-foreground whitespace-nowrap leading-5">{f.source}</p>
+        <FileText size={12} className="text-muted-foreground shrink-0" />
       </div>
     )
   }
@@ -484,45 +547,42 @@ function ConfidenceImpactCard({ factors }) {
     if (f.status === 'unavailable') {
       return (
         <div className="flex items-center gap-1 px-2 py-0.5">
-          <CircleMinus size={12} className="text-[#525252] shrink-0" />
-          <p className="text-[12px] font-medium text-[#525252] whitespace-nowrap leading-5">Otillgänglig</p>
+          <CircleMinus size={12} className="text-muted-foreground shrink-0" />
+          <p className="text-[12px] font-medium text-muted-foreground whitespace-nowrap leading-5">Otillgänglig</p>
         </div>
       )
     }
     return (
       <div className="flex items-center gap-1 px-2 py-0.5">
-        <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
-        <p className="text-[12px] font-medium text-[#d97706] whitespace-nowrap leading-5">Oreviderad</p>
+        <AlertTriangle size={12} className="text-dq-stale-fg shrink-0" />
+        <p className="text-[12px] font-medium text-dq-stale-fg whitespace-nowrap leading-5">Oreviderad</p>
       </div>
     )
   }
 
-  // Konfidenspåverkan chip (red, ArrowDown)
+  // Konfidenspåverkan chip (röd, ArrowDown – konflikt/täckning sänker konfidens)
   const getImpactChip = (f) => {
     const text = f.status === 'unavailable' ? 'Konfidens (täckning)' : 'Konfidens (data kvalitet)'
     return (
-      <div className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-[#fbe9e9] border border-[#f5c2c2]">
-        <ArrowDown size={12} className="text-[#8c1717] shrink-0" />
-        <p className="text-[12px] font-medium text-[#8c1717] whitespace-nowrap leading-5">{text}</p>
+      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-conf-low-bg border border-conf-low-border">
+        <ArrowDown size={12} className="text-conf-low-fg shrink-0" />
+        <p className="text-[12px] font-medium text-conf-low-fg whitespace-nowrap leading-5">{text}</p>
       </div>
     )
   }
 
   return (
-    <section className="bg-white border border-[#c4c4c4] rounded-2xl px-6 py-5 text-left">
+    <Card className="px-6 py-5 text-left">
       {/* Header */}
       <div className="flex items-center justify-between pb-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-[20px] font-bold text-[#242424] leading-7">Vad påverkar konfidensen?</h2>
-          <Info size={20} className="text-[#525252]" />
+          <h2 className="text-[20px] font-bold text-foreground leading-7">Vad påverkar konfidensen?</h2>
+          <Info size={20} className="text-muted-foreground" />
         </div>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-[12px] font-medium leading-5">
-          <Sparkles size={12} />
-          AI
-        </span>
+        <Badge variant="accent"><Sparkles size={12} />AI</Badge>
       </div>
-      {/* Tabellhuvud */}
-      <div className="flex items-center justify-between border-b border-[#c4c4c4] pb-3 pt-1 text-[14px] text-[#242424] leading-5">
+      {/* Tabellhuvud – dolt på mobil där raderna stackar med egna etiketter */}
+      <div className="hidden sm:flex items-center justify-between border-b border-border pb-3 pt-1 text-[14px] text-foreground leading-5">
         <span>Faktor</span>
         <div className="flex items-center gap-5">
           <span className="w-[165px]">Källa</span>
@@ -532,22 +592,25 @@ function ConfidenceImpactCard({ factors }) {
       </div>
       {/* Rader */}
       {impactFactors.map((f, i) => (
-        <div key={i} className="flex items-center justify-between py-4">
-          <span className="text-[14px] text-[#242424] leading-5">{f.factor}</span>
-          <div className="flex items-center gap-5">
-            <div className="w-[165px] flex items-start">
+        <div key={i} className="flex flex-col gap-2 py-4 border-b border-border last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:border-b-0">
+          <span className="text-[14px] font-medium text-foreground leading-5 sm:font-normal">{f.factor}</span>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+            <div className="flex items-center justify-between gap-3 sm:w-[165px] sm:items-start sm:justify-start">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Källa</span>
               {getSourceChip(f)}
             </div>
-            <div className="w-[90px] flex items-start">
+            <div className="flex items-center justify-between gap-3 sm:w-[90px] sm:items-start sm:justify-start">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Status</span>
               {getStatusBadge(f)}
             </div>
-            <div className="w-[151px] flex items-end justify-end">
+            <div className="flex items-center justify-between gap-3 sm:w-[151px] sm:items-end sm:justify-end">
+              <span className="text-[12px] text-muted-foreground sm:hidden">Konfidens</span>
               {getImpactChip(f)}
             </div>
           </div>
         </div>
       ))}
-    </section>
+    </Card>
   )
 }
 
@@ -562,8 +625,8 @@ function UnderlandOverviewCard({ sources }) {
     if (s.status === 'stale') {
       return (
         <div className="flex items-center gap-1">
-          <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
-          <span className="text-xs font-medium text-[#d97706] whitespace-nowrap">
+          <AlertTriangle size={12} className="text-dq-stale-fg shrink-0" />
+          <span className="text-xs font-medium text-dq-stale-fg whitespace-nowrap">
             {s.statusLabel ?? 'Oreviderad'}
           </span>
         </div>
@@ -572,45 +635,45 @@ function UnderlandOverviewCard({ sources }) {
     if (s.status === 'unavailable') {
       return (
         <div className="flex items-center gap-1">
-          <CircleMinus size={12} className="text-[#525252] shrink-0" />
-          <span className="text-xs font-medium text-[#525252] whitespace-nowrap">Otillgänglig</span>
+          <CircleMinus size={12} className="text-muted-foreground shrink-0" />
+          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Otillgänglig</span>
         </div>
       )
     }
     return (
       <div className="flex items-center gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-[#525252] shrink-0" />
-        <span className="text-xs font-medium text-[#525252] whitespace-nowrap">Ej flaggad</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-dq-ok-solid shrink-0" />
+        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Ej flaggad</span>
       </div>
     )
   }
 
   return (
-    <div className="bg-white border border-[#c4c4c4] rounded-2xl p-3">
+    <Card className="p-3">
       <div className="flex flex-col gap-4">
-        <p className="text-base font-medium text-[#525252]">Underlag</p>
+        <p className="text-base font-medium text-muted-foreground">Underlag</p>
         <div className="flex gap-14">
           {/* Källa */}
           <div className="flex flex-col gap-3 flex-1 min-w-0">
-            <p className="text-sm text-[#525252]">Källa</p>
+            <p className="text-sm text-muted-foreground">Källa</p>
             <div className="flex flex-col gap-2">
               {sources.map((s, i) => (
                 <div
                   key={i}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f2f2f2] border border-[#dbdbdb] self-start ${s.status === 'unavailable' ? 'opacity-40' : ''}`}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-sm bg-muted border border-border self-start ${s.status === 'unavailable' ? 'opacity-50' : ''}`}
                 >
-                  <span className="text-xs font-medium text-[#525252] whitespace-nowrap">{s.name}</span>
-                  <FileText size={14} className="text-[#525252] shrink-0" />
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">{s.name}</span>
+                  <FileText size={14} className="text-muted-foreground shrink-0" />
                 </div>
               ))}
             </div>
           </div>
           {/* Datum */}
           <div className="flex flex-col gap-3 flex-1 min-w-0">
-            <p className="text-sm text-[#525252]">Datum</p>
+            <p className="text-sm text-muted-foreground">Datum</p>
             <div className="flex flex-col gap-3">
               {sources.map((s, i) => (
-                <p key={i} className="text-xs font-medium text-[#242424] leading-5">
+                <p key={i} className="text-xs font-medium text-foreground leading-5">
                   {s.status === 'unavailable' ? '–' : s.period}
                 </p>
               ))}
@@ -618,7 +681,7 @@ function UnderlandOverviewCard({ sources }) {
           </div>
           {/* Status */}
           <div className="flex flex-col gap-3 flex-1 min-w-0 items-end">
-            <p className="text-sm text-[#525252] text-right w-full">Status</p>
+            <p className="text-sm text-muted-foreground text-right w-full">Status</p>
             <div className="flex flex-col gap-2 items-end">
               {sources.map((s, i) => (
                 <div key={i}>{getStatusBadge(s)}</div>
@@ -628,12 +691,12 @@ function UnderlandOverviewCard({ sources }) {
         </div>
         {/* Summary */}
         <div className="flex justify-end">
-          <p className="text-xs font-medium text-[#696969] whitespace-nowrap">
+          <p className="text-xs font-medium text-muted-foreground whitespace-nowrap">
             Underlag: {ejFlaggade} ej flaggade{oreviderade > 0 ? ` · ${oreviderade} oreviderad` : ''}{saknas > 0 ? ` · ${saknas} saknas` : ''}
           </p>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -650,43 +713,40 @@ function MetricCard({ factor, onGranska }) {
     : factor.value ? factor.value.replace(/↑|↓/g, '').trim() : '—'
 
   return (
-    <div className="bg-white border border-[#e5e7eb] rounded-2xl shadow-sm flex flex-col">
+    <Card className="flex flex-col">
 
       {/* Header: värde + status badge + AI badge */}
       <div className="px-6 pt-5 pb-0 flex flex-col gap-4">
         <div className="flex items-center justify-between h-8">
           <div className="flex items-center gap-4">
-            <span className="text-2xl font-semibold text-[#242424]">{displayValue}</span>
+            <span className="text-2xl font-semibold text-foreground">{displayValue}</span>
             {isUnavailable ? (
-              <span className="text-xs font-medium text-[#525252] px-2 py-0.5">Kan ej bedömas</span>
+              <span className="text-xs font-medium text-muted-foreground px-2 py-0.5">Kan ej bedömas</span>
             ) : isPositive ? (
-              <span className="text-xs font-medium text-[#38852d] px-2 py-0.5">Uppfyller krav</span>
+              <span className="text-xs font-medium text-conf-high-fg px-2 py-0.5">Uppfyller krav</span>
             ) : (
-              <span className="text-xs font-medium text-[#8c1717] px-2 py-0.5">Uppfyller ej krav</span>
+              <span className="text-xs font-medium text-conf-low-fg px-2 py-0.5">Uppfyller ej krav</span>
             )}
           </div>
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
-            <Sparkles size={12} />
-            AI
-          </div>
+          <Badge variant="accent" className="shrink-0"><Sparkles size={12} />AI</Badge>
         </div>
 
         {/* Faktornamn */}
-        <p className="text-base font-semibold text-[#242424]">{factor.factor}</p>
+        <p className="text-base font-semibold text-foreground">{factor.factor}</p>
 
         {/* Krav/gräns + diff, eller beskrivning */}
         {isUnavailable ? (
-          <p className="text-base text-[#696969] leading-6">{factor.description}</p>
+          <p className="text-base text-muted-foreground leading-6">{factor.description}</p>
         ) : (
           <div className="flex items-center gap-3">
-            <p className="text-lg font-bold text-[#525252]">
+            <p className="text-lg font-bold text-muted-foreground">
               {factor.limitLabel ?? 'Krav'}:{' '}
-              <span className="text-[#242424]">{factor.limit}</span>
+              <span className="text-foreground">{factor.limit}</span>
             </p>
             {showDiff && (
               <>
-                <div className="w-px h-14 bg-[#c4c4c4]" />
-                <p className="text-lg font-bold text-[#242424]">
+                <div className="w-px h-14 bg-border" />
+                <p className="text-lg font-bold text-foreground">
                   {factor.diff}{factor.diffDirection ? ` ${factor.diffDirection}` : ''}
                 </p>
               </>
@@ -696,73 +756,67 @@ function MetricCard({ factor, onGranska }) {
 
         {/* Tidsperiod */}
         {!isUnavailable && (
-          <p className="text-base text-[#696969]">Tidsperiod: {factor.period.replace('–', '-')}</p>
+          <p className="text-base text-muted-foreground">Tidsperiod: {factor.period.replace('–', '-')}</p>
         )}
       </div>
 
       {/* Footer */}
-      <div className="mt-6 border-t border-[#c4c4c4] px-3 pt-3 pb-4 flex items-center justify-between">
+      <div className="mt-6 border-t border-border px-3 pt-3 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
           {/* Påverkan-chip + impact dots */}
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-[#f2f2f2] border border-[#dbdbdb]">
-              {!isUnavailable && <ArrowRight size={12} className="text-[#525252]" />}
-              <span className="text-xs font-medium text-[#525252] whitespace-nowrap">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-muted border border-border">
+              {!isUnavailable && <ArrowRight size={12} className="text-muted-foreground" />}
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
                 {isUnavailable ? 'Ej bedömt' : isPositive ? 'Godkänn' : 'Avslå'}
               </span>
-              {isStale && <AlertTriangle size={12} className="text-[#525252] ml-0.5 shrink-0" />}
+              {isStale && <AlertTriangle size={12} className="text-dq-stale-fg ml-0.5 shrink-0" />}
             </div>
             {!isUnavailable ? (
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className={`w-2 h-2 rounded-full ${i <= paverkanLevel ? 'bg-[#245bd1]' : 'bg-[#dbdbdb]'}`} />
+                    <div key={i} className={`w-2 h-2 rounded-full ${i <= paverkanLevel ? 'bg-accent-strong' : 'bg-border'}`} />
                   ))}
                 </div>
                 <div className="flex items-center gap-0.5">
-                  <span className="text-xs font-medium text-[#525252] whitespace-nowrap">
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
                     {factor.weight === 'hög' ? 'Hög' : factor.weight === 'medel' ? 'Medel' : 'Låg'}
                   </span>
-                  <Info size={12} className="text-[#525252]" />
+                  <Info size={12} className="text-muted-foreground" />
                 </div>
               </div>
             ) : (
-              <span className="text-xs text-[#525252]">–</span>
+              <span className="text-xs text-muted-foreground">–</span>
             )}
           </div>
           {/* Source chip + status badge */}
           <div className="flex items-center">
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium whitespace-nowrap
-              ${isUnavailable
-                ? 'bg-[#c4c4c4] border-[#adadad] text-[#3b3b3b]'
-                : 'bg-[#f2f2f2] border-[#dbdbdb] text-[#525252]'}`}>
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium whitespace-nowrap bg-muted border-border text-muted-foreground ${isUnavailable ? 'opacity-80' : ''}`}>
               {factor.source}
               {isUnavailable
-                ? <CircleMinus size={12} className="ml-1 text-[#3b3b3b] shrink-0" />
-                : <FileText size={12} className="ml-1 text-[#525252] shrink-0" />}
+                ? <CircleMinus size={12} className="ml-1 text-muted-foreground shrink-0" />
+                : <FileText size={12} className="ml-1 text-muted-foreground shrink-0" />}
             </div>
             {isStale && (
               <div className="flex items-center gap-1 px-2 py-0.5">
-                <AlertTriangle size={12} className="text-[#d97706] shrink-0" />
-                <span className="text-xs font-medium text-[#d97706] whitespace-nowrap">Oreviderat</span>
+                <AlertTriangle size={12} className="text-dq-stale-fg shrink-0" />
+                <span className="text-xs font-medium text-dq-stale-fg whitespace-nowrap">Oreviderat</span>
               </div>
             )}
             {isUnavailable && (
               <div className="flex items-center gap-1 px-2 py-0.5">
-                <CircleMinus size={12} className="text-[#525252] shrink-0" />
-                <span className="text-xs font-medium text-[#525252] whitespace-nowrap">Otillgänglig</span>
+                <CircleMinus size={12} className="text-muted-foreground shrink-0" />
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Otillgänglig</span>
               </div>
             )}
           </div>
         </div>
-        <button
-          onClick={onGranska}
-          className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-[#245bd1] border border-[#245bd1] hover:bg-blue-50 transition-colors rounded"
-        >
+        <Button variant="outline" size="sm" onClick={onGranska}>
           Granska underlag <ArrowUpRight size={16} />
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -804,36 +858,36 @@ function AIAnalysisProgress({ onComplete }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-[520px] flex flex-col gap-4">
+      <div className="bg-card rounded-2xl shadow-xl p-8 w-[520px] flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-blue-600" />
-          <span className="text-base font-semibold text-gray-900">AI analyserar nytt underlag</span>
+          <Sparkles size={16} className="text-accent-strong" />
+          <span className="text-base font-semibold text-foreground">AI analyserar nytt underlag</span>
           {done
-            ? <CheckCircle size={15} className="text-green-500 ml-auto" />
-            : <Loader2 size={15} className="animate-spin text-blue-500 ml-auto" />
+            ? <CheckCircle size={15} className="text-conf-high-solid ml-auto" />
+            : <Loader2 size={15} className="animate-spin text-accent-strong ml-auto" />
           }
         </div>
         <div className="flex flex-col gap-2.5">
           {visibleSteps.map(step => (
             <div key={step.id} className="flex items-start gap-2">
-              {step.type === 'found' && <CheckCircle size={13} className="text-green-500 mt-0.5 shrink-0" />}
+              {step.type === 'found' && <CheckCircle size={13} className="text-conf-high-solid mt-0.5 shrink-0" />}
               {(step.type === 'loading' || step.type === 'verifying') && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse mt-1.5 shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent-strong animate-pulse mt-1.5 shrink-0" />
               )}
-              {step.type === 'searching' && <span className="text-xs text-gray-400 mt-0.5 shrink-0">Söker</span>}
-              {step.type === 'updating' && <span className="text-xs text-orange-500 mt-0.5 shrink-0">↑</span>}
+              {step.type === 'searching' && <span className="text-xs text-muted-foreground/60 mt-0.5 shrink-0">Söker</span>}
+              {step.type === 'updating' && <span className="text-xs text-dq-stale-fg mt-0.5 shrink-0">↑</span>}
               {step.type === 'searching'
                 ? (
                   <div className="flex items-center gap-1 flex-wrap">
                     {step.text.split(' · ').map((q, j) => (
-                      <span key={j} className="inline-flex items-center px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-xs text-gray-700 font-mono">
+                      <span key={j} className="inline-flex items-center px-2 py-0.5 rounded border border-border bg-muted text-xs text-muted-foreground font-mono">
                         {q}
                       </span>
                     ))}
                   </div>
                 )
                 : (
-                  <span className={`text-sm ${step.type === 'found' ? 'text-gray-800' : step.type === 'updating' ? 'text-orange-700 font-semibold' : 'text-gray-600'}`}>
+                  <span className={`text-sm ${step.type === 'found' ? 'text-foreground' : step.type === 'updating' ? 'text-dq-stale-fg font-semibold' : 'text-muted-foreground'}`}>
                     {step.text}
                   </span>
                 )
@@ -842,7 +896,7 @@ function AIAnalysisProgress({ onComplete }) {
           ))}
         </div>
         {done && (
-          <p className="text-xs text-green-700 font-medium border-t border-gray-100 pt-3">
+          <p className="text-xs text-conf-high-fg font-medium border-t border-border pt-3">
             Analys klar – konfidensgrad uppdaterad.
           </p>
         )}
@@ -857,18 +911,18 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
   const hasUnavailableSource = (d.topFactors ?? []).some(f => f.status === 'unavailable')
 
   return (
-    <section className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 mt-2">
+    <section className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4 mt-2">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <h2 className="text-3xl font-bold text-gray-900">Sammanfattning</h2>
-        <div className="flex items-center gap-1 text-xs font-medium text-[#451b88] bg-[#f0eafb] px-2 py-0.5 rounded-full border border-[#d6c3f3]">
+        <h2 className="text-3xl font-bold text-foreground">Sammanfattning</h2>
+        <div className="flex items-center gap-1 text-xs font-medium text-accent-strong bg-accent-subtle px-2 py-0.5 rounded-sm border border-accent-border">
           <Sparkles size={12} /> AI
         </div>
       </div>
 
       {/* Unavailable source warning */}
       {hasUnavailableSource && (
-        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 text-amber-800">
+        <div className="flex items-start gap-2 bg-dq-stale-bg border border-dq-stale-border rounded-lg px-3 py-2.5 text-dq-stale-fg">
           <AlertTriangle size={14} className="shrink-0 mt-0.5" />
           <p className="text-xs leading-relaxed">En datakälla kunde inte nås. AI-rekommendationen baseras på ofullständigt underlag.</p>
         </div>
@@ -876,30 +930,30 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
 
       {/* Konfidensgrad */}
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs text-gray-500 flex items-center gap-1">
-          Konfidensgrad <Info size={12} className="text-gray-400" />
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          Konfidensgrad <Info size={12} className="text-muted-foreground/60" />
         </span>
-        <div className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border w-fit ${confidenceBadge.cls}`}>
+        <div className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-sm border w-fit ${confidenceBadge.cls}`}>
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${confidenceBadge.dot}`} />
           {confidenceBadge.label}
         </div>
       </div>
 
       {/* Korttext */}
-      <p className="text-xs text-gray-500 font-medium">{d.aiSummaryShort}</p>
+      <p className="text-xs text-muted-foreground font-medium">{d.aiSummaryShort}</p>
 
       {/* Mittsektion */}
-      <div className="border-t border-b border-gray-200 py-4 flex gap-12 items-start">
+      <div className="border-t border-b border-border py-4 flex gap-12 items-start">
         {/* Vänster */}
         <div className="flex flex-col gap-3 flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-medium text-gray-500">Rekommendation:</span>
-            <span className={`text-2xl font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-gray-900' : 'text-red-600'}`}>{d.aiRecommendation.charAt(0).toUpperCase() + d.aiRecommendation.slice(1).toLowerCase()}</span>
+            <span className="text-2xl font-medium text-muted-foreground">Rekommendation:</span>
+            <span className={`text-2xl font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-foreground' : 'text-conf-low-fg'}`}>{d.aiRecommendation.charAt(0).toUpperCase() + d.aiRecommendation.slice(1).toLowerCase()}</span>
           </div>
-          <p className="text-sm text-gray-500 leading-6">{d.aiSummary}</p>
+          <p className="text-sm text-muted-foreground leading-6">{d.aiSummary}</p>
           <div className="mt-2">
-            <p className="text-base font-bold text-gray-900 mb-1">Nästa steg:</p>
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-0.5 text-left">
+            <p className="text-base font-bold text-foreground mb-1">Nästa steg:</p>
+            <button className="text-sm text-accent-strong hover:text-accent-strong/80 font-medium flex items-center gap-0.5 text-left">
               {d.nextBestActions[0]}
               <ArrowRight size={14} className="shrink-0" />
             </button>
@@ -908,29 +962,29 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
 
         {/* Höger */}
         <div className="w-[420px] shrink-0 flex flex-col gap-3">
-          <p className="text-sm font-medium text-gray-500">Underlag</p>
+          <p className="text-sm font-medium text-muted-foreground">Underlag</p>
           <table className="w-full text-left border-separate border-spacing-y-2">
             <thead>
               <tr>
-                <th className="text-sm font-normal text-gray-500 pb-1 pr-8">Källa</th>
-                <th className="text-sm font-normal text-gray-500 pb-1 pr-8">Datum</th>
-                <th className="text-sm font-normal text-gray-500 pb-1">Status</th>
+                <th className="text-sm font-normal text-muted-foreground pb-1 pr-8">Källa</th>
+                <th className="text-sm font-normal text-muted-foreground pb-1 pr-8">Datum</th>
+                <th className="text-sm font-normal text-muted-foreground pb-1">Status</th>
               </tr>
             </thead>
             <tbody>
               {sources.map((s, i) => (
                 <tr key={i}>
                   <td className="pr-8 align-middle">
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-gray-200 bg-gray-100 text-xs text-gray-700 font-medium whitespace-nowrap">
-                      {s.name} <FileText size={12} className="text-gray-400 shrink-0" />
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-border bg-muted text-xs text-muted-foreground font-medium whitespace-nowrap">
+                      {s.name} <FileText size={12} className="text-muted-foreground/60 shrink-0" />
                     </div>
                   </td>
-                  <td className="pr-8 align-middle text-xs font-medium text-gray-900 whitespace-nowrap">{s.period}</td>
+                  <td className="pr-8 align-middle text-xs font-medium text-foreground whitespace-nowrap">{s.period}</td>
                   <td className="align-middle">
-                    <div className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'unavailable' ? 'text-gray-400' :
-                      s.status === 'ok' || s.status === 'current' ? 'text-green-700' : 'text-amber-700'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'unavailable' ? 'bg-gray-300' :
-                        s.status === 'ok' || s.status === 'current' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                    <div className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'unavailable' ? 'text-muted-foreground/60' :
+                      s.status === 'ok' || s.status === 'current' ? 'text-conf-high-fg' : 'text-dq-stale-fg'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.status === 'unavailable' ? 'bg-dq-missing-solid' :
+                        s.status === 'ok' || s.status === 'current' ? 'bg-conf-high-solid' : 'bg-dq-stale-solid'}`} />
                       {s.status === 'unavailable' ? 'Otillgänglig' : (s.statusLabel ?? statusLabel[s.status] ?? s.status)}
                     </div>
                   </td>
@@ -949,16 +1003,16 @@ function AISummaryCard({ d, confidence, sources, aiReviewed, onUnlocked }) {
             id="ai-reviewed"
             checked={aiReviewed}
             onChange={e => onUnlocked(e.target.checked)}
-            className="w-4 h-4 rounded border border-gray-400 accent-blue-600 cursor-pointer"
+            className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
           />
         </div>
         <div className="flex flex-col gap-0.5">
           <label htmlFor="ai-reviewed" className="flex items-center gap-2 cursor-pointer">
-            <span className="text-base text-gray-900">Jag har tagit del av och granskat AI-underlaget</span>
-            <span className="text-sm text-gray-500">(Valfritt)</span>
-            <Info size={14} className="text-gray-400 shrink-0" />
+            <span className="text-base text-foreground">Jag har tagit del av och granskat AI-underlaget</span>
+            <span className="text-sm text-muted-foreground">(Valfritt)</span>
+            <Info size={14} className="text-muted-foreground/60 shrink-0" />
           </label>
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             Genom att kryssa i rutan bekräftar du att du tagit del av och värderat AI-rekommendationen. Detta val loggas med din tidsstämpel och identitet
           </p>
         </div>
@@ -975,17 +1029,17 @@ function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGra
   )
 
   return (
-    <div className="flex flex-col gap-2.5 px-2.5">
+    <div className="flex flex-col gap-2.5">
 
       {/* Kort 1: Beslutspanel */}
-      <div className="bg-white rounded-lg overflow-hidden w-full flex flex-col gap-5 pb-5">
+      <Card className="overflow-hidden w-full flex flex-col gap-5 pb-5">
 
-        {/* Orange banner */}
-        <div className="bg-[#fef3e6] border border-[#fddeb9] px-3 py-2 flex flex-col gap-0.5">
+        {/* Banner – datakvalitet (orange = stale, ej rött) */}
+        <div className="bg-dq-stale-bg border-b border-dq-stale-border px-3 py-2 flex flex-col gap-0.5">
           <div className="py-1">
-            <CircleAlert size={20} className="text-[#9f5704]" />
+            <CircleAlert size={20} className="text-dq-stale-fg" />
           </div>
-          <div className="flex flex-col gap-[5px] text-[#9f5704]">
+          <div className="flex flex-col gap-[5px] text-dq-stale-fg">
             <p className="text-base font-medium leading-6">Datakvalitet kräver uppmärksamhet</p>
             <div className="text-xs leading-5">
               {(d?.uncertaintyReasons ?? []).map((reason, i) => (
@@ -996,61 +1050,53 @@ function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGra
         </div>
 
         {/* Nästa steg */}
-        <div className="px-3 pb-3 border-b border-[#c4c4c4] flex flex-col gap-2">
-          <p className="text-base font-medium text-[#242424]">Nästa steg:</p>
-          <button
-            onClick={onGranskaKallor}
-            className="w-full flex items-center justify-center gap-2.5 px-6 py-3 bg-[#245bd1] border border-[#245bd1] text-[#f9f9f9] rounded text-base font-medium hover:bg-blue-700 transition-colors"
-          >
+        <div className="px-3 pb-3 border-b border-border flex flex-col gap-2">
+          <p className="text-base font-medium text-foreground">Nästa steg:</p>
+          <Button onClick={onGranskaKallor} className="w-full">
             Granska kritiska källor ({criticalCount})
-            <ArrowUpRight size={20} />
-          </button>
-          <ul className="list-disc pl-[18px] text-xs font-medium text-[#525252] leading-5">
+            <ArrowUpRight size={18} />
+          </Button>
+          <ul className="list-disc pl-[18px] text-xs font-medium text-muted-foreground leading-5">
             {criticalNames.map((name, i) => <li key={i}>{name}</li>)}
           </ul>
         </div>
 
         {/* Beslut */}
         <div className="px-3 flex flex-col gap-1">
-          <p className="text-base font-medium text-[#242424]">Beslut</p>
+          <p className="text-base font-medium text-foreground">Beslut</p>
           <div className="flex flex-col gap-5">
 
-            {/* Godkänn */}
+            {/* Godkänn (AI rekommenderar godkänn → primär) */}
             <div className="flex flex-col gap-1">
-              <button
+              <Button
+                className="w-full"
                 disabled={!aiReviewed}
                 onClick={aiReviewed ? onApprove : undefined}
-                className={`w-full flex items-center justify-center gap-2.5 px-4 py-2 rounded text-base font-medium transition-colors
-                  ${aiReviewed
-                    ? 'bg-white border border-[#245bd1] text-[#245bd1] hover:bg-blue-50'
-                    : 'bg-[#dbdbdb] border border-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
               >
                 Godkänn
-              </button>
+              </Button>
               {!aiReviewed && (
                 <div className="flex items-center gap-1">
-                  <p className="text-[12px] text-[#242424]">Låst tills AI-underlaget har granskats.</p>
-                  <Info size={14} className="text-gray-400 shrink-0" />
+                  <p className="text-[12px] text-muted-foreground">Låst tills AI-underlaget har granskats.</p>
+                  <Info size={14} className="text-muted-foreground/60 shrink-0" />
                 </div>
               )}
             </div>
 
-            {/* Avslå */}
+            {/* Avslå (sekundär) */}
             <div className="flex flex-col gap-1">
-              <button
+              <Button
+                variant="outline"
+                className="w-full"
                 disabled={!aiReviewed}
                 onClick={aiReviewed ? onOverride : undefined}
-                className={`w-full flex items-center justify-center gap-2.5 px-4 py-2 rounded text-base font-medium transition-colors
-                  ${aiReviewed
-                    ? 'bg-white border border-[#245bd1] text-[#245bd1] hover:bg-blue-50'
-                    : 'bg-[#dbdbdb] border border-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
               >
                 Avslå
-              </button>
+              </Button>
               {!aiReviewed && (
                 <div className="flex items-center gap-1">
-                  <p className="text-[12px] text-[#242424]">Låst tills AI-underlaget har granskats.</p>
-                  <Info size={14} className="text-gray-400 shrink-0" />
+                  <p className="text-[12px] text-muted-foreground">Låst tills AI-underlaget har granskats.</p>
+                  <Info size={14} className="text-muted-foreground/60 shrink-0" />
                 </div>
               )}
             </div>
@@ -1059,40 +1105,38 @@ function DecisionPanel({ d, aiReviewed, onUnlocked, onOverride, onApprove, onGra
 
         {/* Hantera ärende */}
         <div className="px-3 flex flex-col gap-1">
-          <p className="text-base font-medium text-[#242424]">Hantera ärende</p>
+          <p className="text-base font-medium text-foreground">Hantera ärende</p>
           <div className="flex flex-col gap-1">
-            <button className="w-full flex items-center justify-center gap-2.5 px-4 py-2 border border-[#245bd1] rounded text-base font-medium text-[#245bd1] hover:bg-blue-50 transition-colors">
+            <Button variant="outline" className="w-full">
               Begär komplettering
-            </button>
+            </Button>
             {!aiReviewed && (
               <div className="flex items-center gap-1">
-                <p className="text-[12px] text-[#6b7280]">Låst tills AI-underlaget har granskats.</p>
-                <Info size={14} className="text-gray-400 shrink-0" />
+                <p className="text-[12px] text-muted-foreground">Låst tills AI-underlaget har granskats.</p>
+                <Info size={14} className="text-muted-foreground/60 shrink-0" />
               </div>
             )}
           </div>
         </div>
 
-      </div>
+      </Card>
 
       {/* Kort 2: Checkbox */}
-      <div className="bg-white border-t border-[#c4c4c4] rounded-2xl p-6 flex flex-col gap-2">
+      <Card className="p-6 flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
+          <Checkbox
             id="ai-reviewed"
             checked={aiReviewed}
-            onChange={e => onUnlocked(e.target.checked)}
-            className="w-4 h-4 rounded-sm border border-[#969696] accent-blue-600 cursor-pointer"
+            onCheckedChange={onUnlocked}
           />
-          <label htmlFor="ai-reviewed" className="text-base font-medium text-black cursor-pointer">
+          <label htmlFor="ai-reviewed" className="text-base font-medium text-foreground cursor-pointer">
             Jag har tagit del av AI-underlaget
           </label>
         </div>
-        <p className="text-xs font-medium text-[#525252] leading-5">
+        <p className="text-xs font-medium text-muted-foreground leading-5">
           Genom att kryssa i rutan bekräftar du att du tagit del av och värderat AI-rekommendationen. Detta val loggas med din tidsstämpel och identitet
         </p>
-      </div>
+      </Card>
 
     </div>
   )
@@ -1116,54 +1160,54 @@ function OverrideModal({ d, onConfirm, onCancel }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl px-9 py-6 w-[606px] flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-2xl shadow-xl px-9 py-6 w-[606px] flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 
         {/* 1. Header */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-[#242424]">Avslå ansökan — {d.id}</h2>
+            <h2 className="text-2xl font-semibold text-foreground">Avslå ansökan — {d.id}</h2>
             <button
               onClick={onCancel}
-              className="w-8 h-8 flex items-center justify-center bg-[#f2f2f2] border border-[#dbdbdb] rounded shrink-0"
+              className="w-8 h-8 flex items-center justify-center bg-muted border border-border rounded shrink-0"
             >
-              <X size={20} className="text-[#525252]" />
+              <X size={20} className="text-muted-foreground" />
             </button>
           </div>
-          <p className="text-base text-[#525252]">
+          <p className="text-base text-muted-foreground">
             {d.company} beviljas inte kreditlimitökning från 500 000 kr till 900 000 kr.
           </p>
         </div>
 
         {/* 2. Beslutsbanner */}
-        <div className="bg-[#f2f2f2] border-l-2 border-[#969696] px-2 py-3 rounded-r-md">
-          <p className="text-2xl font-semibold text-[#242424]">Slutgiltigt beslut: AVSLÅ</p>
+        <div className="bg-muted border-l-2 border-border px-2 py-3 rounded-r-md">
+          <p className="text-2xl font-semibold text-foreground">Slutgiltigt beslut: AVSLÅ</p>
         </div>
 
         {/* 3. AI-rekommendationsrad */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-base font-medium text-[#525252]">Rekommendation: GODKÄNN</span>
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
+              <span className="text-base font-medium text-muted-foreground">Rekommendation: GODKÄNN</span>
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-accent-subtle border border-accent-border text-accent-strong text-xs font-medium shrink-0">
                 <Sparkles size={12} />AI
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-[#525252]">Konfidensgrad:</span>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${cb.cls}`}>
+              <span className="text-xs text-muted-foreground">Konfidensgrad:</span>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${cb.cls}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${cb.dot}`} />
                 {cb.label.replace(' konfidens', '')}
               </span>
             </div>
           </div>
-          <p className="text-xs text-[#696969]">
+          <p className="text-xs text-muted-foreground">
             AI:ns rekommendation var GODKÄNN med låg konfidens. Din motivering sparas i spårloggen.
           </p>
         </div>
 
         {/* 4. Kategorisektionen */}
         <div className="flex flex-col gap-5">
-          <p className="text-xl font-bold text-[#242424]">Välj orsak till ditt beslut</p>
+          <p className="text-xl font-bold text-foreground">Välj orsak till ditt beslut</p>
           <div className="flex flex-col gap-5">
             {OVERRIDE_CATEGORIES.map(cat => (
               <div
@@ -1172,7 +1216,7 @@ function OverrideModal({ d, onConfirm, onCancel }) {
                 className="flex items-center gap-3 cursor-pointer"
               >
                 <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0
-                  ${selected === cat ? 'bg-[#245bd1] border-[#245bd1]' : 'border-[#969696]'}`}
+                  ${selected === cat ? 'bg-primary border-primary' : 'border-border'}`}
                 >
                   {selected === cat && (
                     <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
@@ -1180,7 +1224,7 @@ function OverrideModal({ d, onConfirm, onCancel }) {
                     </svg>
                   )}
                 </div>
-                <span className="text-base text-[#242424]">{cat}</span>
+                <span className="text-base text-foreground">{cat}</span>
               </div>
             ))}
           </div>
@@ -1188,14 +1232,14 @@ function OverrideModal({ d, onConfirm, onCancel }) {
 
         {/* 5. Textfält */}
         <div className="flex flex-col gap-2">
-          <label className="text-base font-medium text-[#242424]">Motivering (fri text)</label>
+          <label className="text-base font-medium text-foreground">Motivering (fri text)</label>
           <textarea
             value={freetext}
             onChange={e => setFreetext(e.target.value.slice(0, 300))}
             placeholder="Beskriv din bedömning. Var specifik — motiveringen kan granskas vid revision."
-            className="w-full border border-[#969696] rounded p-2 text-base text-[#242424] resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 h-[182px]"
+            className="w-full border border-border rounded p-2 text-base text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring h-[182px]"
           />
-          <div className="flex items-start justify-between gap-4 text-sm text-[#808080]">
+          <div className="flex items-start justify-between gap-4 text-sm text-muted-foreground">
             <p>Beslutet och din motivering loggas automatiskt med tidsstämpel och kopplas till ärende {d.id}.</p>
             <p className="shrink-0">{freetext.length}/300 tecken</p>
           </div>
@@ -1203,8 +1247,8 @@ function OverrideModal({ d, onConfirm, onCancel }) {
 
         {/* 6. Loggsektion – alltid synlig */}
         <div className="flex flex-col gap-1">
-          <p className="text-base font-semibold text-[#242424]">Följande loggas</p>
-          <div className="bg-[#f2f2f2] rounded-xl p-3 flex flex-col gap-2">
+          <p className="text-base font-semibold text-foreground">Följande loggas</p>
+          <div className="bg-muted rounded-xl p-3 flex flex-col gap-2">
             {[
               { label: 'Ärende', value: d.id },
               { label: 'Handläggare', value: d.officer },
@@ -1212,34 +1256,29 @@ function OverrideModal({ d, onConfirm, onCancel }) {
               { label: 'Kategori', value: selected ?? '' },
             ].map(row => (
               <div key={row.label} className="flex gap-9 items-center text-xs">
-                <span className="w-[70px] shrink-0 text-[#696969]">{row.label}</span>
-                <span className="font-medium text-black">{row.value}</span>
+                <span className="w-[70px] shrink-0 text-muted-foreground">{row.label}</span>
+                <span className="font-medium text-foreground">{row.value}</span>
               </div>
             ))}
             <div className="flex gap-9 items-center text-xs">
-              <span className="w-[70px] shrink-0 text-[#696969]">Beslut</span>
-              <span className="font-medium text-black">Avslå</span>
-              <span className="italic text-[#696969]">Avviker från AI-rekommendation</span>
+              <span className="w-[70px] shrink-0 text-muted-foreground">Beslut</span>
+              <span className="font-medium text-foreground">Avslå</span>
+              <span className="italic text-muted-foreground">Avviker från AI-rekommendation</span>
             </div>
           </div>
         </div>
 
         {/* 7. Knappar */}
         <div className="flex items-center justify-between">
-          <button
-            onClick={onCancel}
-            className="border border-[#245bd1] text-[#245bd1] px-4 py-2 rounded text-base font-medium hover:bg-blue-50 transition-colors"
-          >
+          <Button variant="outline" onClick={onCancel}>
             Avbryt
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onConfirm({ category: selected, text: freetext.trim() })}
             disabled={!selected}
-            className={`px-4 py-2 rounded text-base font-medium transition-colors
-              ${selected ? 'bg-[#245bd1] text-white hover:bg-blue-700' : 'bg-[#dbdbdb] text-[#808080] cursor-not-allowed'}`}
           >
             Bekräfta
-          </button>
+          </Button>
         </div>
 
       </div>
@@ -1341,7 +1380,7 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
   ]
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F6F6F6] font-sans">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground font-sans">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 h-full">
         <PageHeader d={d} />
@@ -1349,59 +1388,59 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
           <div className="flex flex-col gap-5">
 
             {/* Override banner */}
-            <div className="bg-[#e9effb] border border-[#c2d2f5] rounded-xl p-4 flex items-start gap-4">
+            <div className="bg-dq-stale-bg border border-dq-stale-border rounded-xl p-4 flex items-start gap-4">
               <div className="flex items-center py-1 flex-shrink-0">
-                <CircleAlert size={16} className="text-[#112b64]" />
+                <CircleAlert size={16} className="text-dq-stale-fg" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[#112b64] leading-7 text-lg">Avvikelse från AI-rekommendation registrerad</p>
-                <p className="text-sm text-[#112b64] leading-5 mt-0.5">{today} · {timeNow} · {d.officer} · {d.id}</p>
+                <p className="font-semibold text-dq-stale-fg leading-7 text-lg">Avvikelse från AI-rekommendation registrerad</p>
+                <p className="text-sm text-dq-stale-fg leading-5 mt-0.5">{today} · {timeNow} · {d.officer} · {d.id}</p>
               </div>
               <button
-                className="w-5 h-5 flex items-center justify-center rounded bg-[#f2f2f2] border border-[#dbdbdb] flex-shrink-0 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)] hover:bg-[#e8e8e8] transition-colors"
+                className="w-5 h-5 flex items-center justify-center rounded bg-muted border border-border flex-shrink-0 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)] hover:bg-muted/80 transition-colors"
                 aria-label="Stäng"
               >
-                <X size={12} className="text-gray-500" />
+                <X size={12} className="text-muted-foreground" />
               </button>
             </div>
 
             {/* DiffView (S3) */}
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 flex flex-col gap-3">
-              <p className="text-xl font-bold text-gray-900">AI-rekommendation vs Beslut</p>
+            <div className="bg-card border border-border rounded-2xl shadow-sm p-6 flex flex-col gap-3">
+              <p className="text-xl font-bold text-foreground">AI-rekommendation vs Beslut</p>
               <div className="flex items-center gap-12">
                 {/* Vänster: AI-rekommendation */}
                 <div className="flex items-start justify-between w-[343px]">
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-col gap-2">
-                      <p className="text-sm text-gray-500">AI-rekommendation</p>
-                      <p className="text-2xl font-medium text-gray-900">{d.aiRecommendation}</p>
+                      <p className="text-sm text-muted-foreground">AI-rekommendation</p>
+                      <p className="text-2xl font-medium text-foreground">{d.aiRecommendation}</p>
                     </div>
-                    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium w-fit ${confBadge.cls}`}>
+                    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium w-fit ${confBadge.cls}`}>
                       <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
                       {confBadge.label}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-xs font-medium shrink-0">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-accent-subtle border border-accent-border text-accent-strong text-xs font-medium shrink-0">
                     <Sparkles size={14} />
                     AI
                   </div>
                 </div>
                 {/* Divider */}
-                <div className="w-px h-[131px] bg-gray-200 shrink-0" />
+                <div className="w-px h-[131px] bg-border shrink-0" />
                 {/* Höger: Slutgiltigt beslut */}
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-2">
-                    <p className="text-sm text-gray-500">Slutgiltigt beslut</p>
-                    <p className="text-2xl font-medium text-gray-900">AVSLAG</p>
+                    <p className="text-sm text-muted-foreground">Slutgiltigt beslut</p>
+                    <p className="text-2xl font-medium text-foreground">AVSLAG</p>
                   </div>
                   {motivation?.category && (
                     <div className="flex items-center gap-1">
-                      <p className="text-sm text-gray-500">Kategori:</p>
-                      <p className="text-base font-medium text-gray-900">{motivation.category}</p>
+                      <p className="text-sm text-muted-foreground">Kategori:</p>
+                      <p className="text-base font-medium text-foreground">{motivation.category}</p>
                     </div>
                   )}
                   {motivation?.text && (
-                    <p className="text-xs text-gray-600">{motivation.text}</p>
+                    <p className="text-xs text-muted-foreground">{motivation.text}</p>
                   )}
                 </div>
               </div>
@@ -1409,13 +1448,13 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
             <div className="max-w-[760px] flex flex-col gap-5 w-full">
               {/* Spårlogg */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-6">
+              <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-6">
                 {/* Header */}
-                <div className="flex items-end justify-between pb-3 border-b border-gray-200">
-                  <p className="text-3xl font-bold text-gray-900">Spårlogg</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex items-end justify-between pb-3 border-b border-border">
+                  <p className="text-3xl font-bold text-foreground">Spårlogg</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>AI-modell:</span>
-                    <span className="text-gray-900">Kreditrisk v2.3 · Tränad nov 2024</span>
+                    <span className="text-foreground">Kreditrisk v2.3 · Tränad nov 2024</span>
                   </div>
                 </div>
 
@@ -1433,17 +1472,17 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                       <div key={ev.id} className="flex gap-4">
                         {/* Icon + connector line */}
                         <div className="flex flex-col items-center w-6 flex-shrink-0">
-                          <div className={`mt-3 w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 ${ev.type === 'ai' ? 'bg-[#f0eafb] border-[#d6c3f3]' : 'bg-gray-100 border-gray-300'
+                          <div className={`mt-3 w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 ${ev.type === 'ai' ? 'bg-accent-subtle border-accent-border' : 'bg-muted border-border'
                             }`}>
                             {ev.type === 'ai'
-                              ? <Sparkles size={12} className="text-[#451b88]" />
+                              ? <Sparkles size={12} className="text-accent-strong" />
                               : ev.type === 'system'
-                                ? <ClipboardList size={12} className="text-gray-500" />
-                                : <User size={12} className="text-gray-500" />
+                                ? <ClipboardList size={12} className="text-muted-foreground" />
+                                : <User size={12} className="text-muted-foreground" />
                             }
                           </div>
                           {i < auditEvents.length - 1 && (
-                            <div className="w-px flex-1 bg-gray-200 mt-3 min-h-4" />
+                            <div className="w-px flex-1 bg-border mt-3 min-h-4" />
                           )}
                         </div>
 
@@ -1454,28 +1493,28 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                             <div className="flex items-center justify-between p-3">
                               <div className="flex flex-col gap-0.5">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-sm font-medium text-gray-700">{ev.label}</p>
+                                  <p className="text-sm font-medium text-muted-foreground">{ev.label}</p>
                                   {ev.type === 'ai' && ev.chips?.map(chip => (
-                                    <div key={chip.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium ${chip.style === 'low' ? 'bg-red-50 border-red-200 text-red-800'
-                                      : chip.style === 'medium' ? 'bg-[#fef3e6] border-[#fddeb9] text-[#9f5704]'
-                                        : 'bg-green-50 border-green-200 text-green-700'
+                                    <div key={chip.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${chip.style === 'low' ? 'bg-conf-low-bg border-conf-low-border text-conf-low-fg'
+                                      : chip.style === 'medium' ? 'bg-dq-stale-bg border-dq-stale-border text-dq-stale-fg'
+                                        : 'bg-conf-high-bg border-conf-high-border text-conf-high-fg'
                                       }`}>
-                                      <div className={`w-1 h-1 rounded-full ${chip.style === 'low' ? 'bg-red-500'
-                                        : chip.style === 'medium' ? 'bg-[#f97316]'
-                                          : 'bg-green-500'
+                                      <div className={`w-1 h-1 rounded-full ${chip.style === 'low' ? 'bg-conf-low-solid'
+                                        : chip.style === 'medium' ? 'bg-dq-stale-solid'
+                                          : 'bg-conf-high-solid'
                                         }`} />
                                       {chip.label}
                                     </div>
                                   ))}
                                 </div>
-                                <p className="text-xs text-gray-500">{ev.time}</p>
+                                <p className="text-xs text-muted-foreground">{ev.time}</p>
                               </div>
                               <button
                                 onClick={toggleOpen}
-                                className="flex items-center gap-2 text-xs font-medium text-gray-900 shrink-0"
+                                className="flex items-center gap-2 text-xs font-medium text-foreground shrink-0"
                               >
                                 Visa detaljer
-                                <div className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 border border-gray-200 shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)]">
+                                <div className="w-5 h-5 flex items-center justify-center rounded bg-muted border border-border shadow-[inset_0px_-3px_4px_rgba(0,0,0,0.07),inset_0px_2px_2px_1px_rgba(244,244,244,0.93)]">
                                   <ChevronDown size={12} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                                 </div>
                               </button>
@@ -1483,10 +1522,10 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
                             {/* Detail section */}
                             {isOpen && ev.detail && (
-                              <div className="px-5 py-4 bg-gray-50 flex flex-col gap-2 text-xs border-t border-gray-100">
+                              <div className="px-5 py-4 bg-muted flex flex-col gap-2 text-xs border-t border-border">
                                 {/* Decision type: override badge first */}
                                 {ev.type === 'decision' && (
-                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border bg-[#e9effb] border-[#c2d2f5] text-[#112b64] text-xs font-medium w-fit mb-1">
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border bg-dq-stale-bg border-dq-stale-border text-dq-stale-fg text-xs font-medium w-fit mb-1">
                                     Avvek från AI-rekommendation: {d.aiRecommendation}
                                     <CircleAlert size={12} />
                                   </div>
@@ -1495,50 +1534,50 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                                 {/* Rows (all types) */}
                                 {ev.detail.rows?.map(row => (
                                   <div key={row.label} className="flex items-start gap-6">
-                                    <span className="text-gray-400 w-28 shrink-0">{row.label}</span>
-                                    <span className="text-gray-700">{row.value}</span>
+                                    <span className="text-muted-foreground/60 w-28 shrink-0">{row.label}</span>
+                                    <span className="text-muted-foreground">{row.value}</span>
                                   </div>
                                 ))}
 
                                 {/* Decision: category + motivation */}
                                 {ev.type === 'decision' && ev.detail.motivationCategory && (
                                   <div className="flex items-center gap-6">
-                                    <span className="text-gray-400 w-28 shrink-0">Kategori:</span>
-                                    <span className="text-gray-700">{ev.detail.motivationCategory}</span>
+                                    <span className="text-muted-foreground/60 w-28 shrink-0">Kategori:</span>
+                                    <span className="text-muted-foreground">{ev.detail.motivationCategory}</span>
                                   </div>
                                 )}
                                 {ev.type === 'decision' && ev.detail.motivationText && (
                                   <div className="flex items-start gap-6">
-                                    <span className="text-gray-400 w-28 shrink-0">Motivering:</span>
-                                    <span className="text-gray-600 flex-1">{ev.detail.motivationText}</span>
+                                    <span className="text-muted-foreground/60 w-28 shrink-0">Motivering:</span>
+                                    <span className="text-muted-foreground flex-1">{ev.detail.motivationText}</span>
                                   </div>
                                 )}
 
                                 {/* AI type: intro + factors + sources */}
                                 {ev.type === 'ai' && ev.detail.intro && (
-                                  <p className="text-gray-500 mb-1">{ev.detail.intro}</p>
+                                  <p className="text-muted-foreground mb-1">{ev.detail.intro}</p>
                                 )}
                                 {ev.type === 'ai' && ev.detail.factors?.length > 0 && (
                                   <div className="flex flex-col gap-1.5">
-                                    <p className="text-sm font-medium text-gray-700">Nyckelfaktorer</p>
+                                    <p className="text-sm font-medium text-muted-foreground">Nyckelfaktorer</p>
                                     {ev.detail.factors.map(f => (
                                       <div key={f.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-6">
-                                          <span className="text-gray-400 w-[125px] shrink-0">{f.name}</span>
-                                          <span className="text-gray-900">{f.value}</span>
+                                          <span className="text-muted-foreground/60 w-[125px] shrink-0">{f.name}</span>
+                                          <span className="text-foreground">{f.value}</span>
                                         </div>
-                                        <span className="text-gray-400">Krav: {f.limit}</span>
+                                        <span className="text-muted-foreground/60">Krav: {f.limit}</span>
                                       </div>
                                     ))}
                                   </div>
                                 )}
                                 {ev.type === 'ai' && ev.detail.sources?.length > 0 && (
                                   <div className="flex flex-col gap-1.5 mt-1">
-                                    <p className="text-sm font-medium text-gray-700">Datakällor</p>
+                                    <p className="text-sm font-medium text-muted-foreground">Datakällor</p>
                                     {ev.detail.sources.map(s => (
                                       <div key={s.name} className="flex items-center justify-between">
-                                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xl border text-xs font-medium ${s.status === 'stale' ? 'bg-orange-50 border-orange-200 text-orange-700'
-                                          : 'bg-gray-100 border-gray-300 text-gray-600'
+                                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs font-medium ${s.status === 'stale' ? 'bg-dq-stale-bg border-dq-stale-border text-dq-stale-fg'
+                                          : 'bg-muted border-border text-muted-foreground'
                                           }`}>
                                           {s.name}
                                           {s.status === 'stale'
@@ -1546,13 +1585,13 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                                             : <FileText size={12} className="shrink-0" />}
                                         </div>
                                         <div className="flex items-center gap-3">
-                                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'stale' ? 'text-orange-700' : 'text-gray-600'
+                                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${s.status === 'stale' ? 'text-dq-stale-fg' : 'text-muted-foreground'
                                             }`}>
-                                            <div className={`w-1 h-1 rounded-full ${s.status === 'stale' ? 'bg-orange-500' : 'bg-gray-400'
+                                            <div className={`w-1 h-1 rounded-full ${s.status === 'stale' ? 'bg-dq-stale-solid' : 'bg-dq-missing-solid'
                                               }`} />
                                             {s.status === 'stale' ? 'Inaktuell' : 'Aktuell'}
                                           </span>
-                                          <span className="text-gray-400">{s.date}</span>
+                                          <span className="text-muted-foreground/60">{s.date}</span>
                                         </div>
                                       </div>
                                     ))}
@@ -1570,20 +1609,20 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
               {/* Feedback widget */}
               {feedbackSent ? (
-                <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex items-center gap-2 text-sm text-gray-600">
-                  <CheckCircle size={16} className="text-green-500 shrink-0" />
+                <div className="bg-card border border-border rounded-2xl px-6 py-5 flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle size={16} className="text-conf-high-solid shrink-0" />
                   Tack – din feedback har loggats
                 </div>
               ) : (
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4">
+                <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4">
                   {/* Header */}
                   <div className="flex flex-col gap-2">
-                    <p className="text-xl font-bold text-gray-900">Var AI:ns rekommendation korrekt?</p>
-                    <p className="text-sm text-gray-500">Din feedback används för att förbättra AI-modellen. Loggat med tidsstämpel och handläggare-ID.</p>
+                    <p className="text-xl font-bold text-foreground">Var AI:ns rekommendation korrekt?</p>
+                    <p className="text-sm text-muted-foreground">Din feedback används för att förbättra AI-modellen. Loggat med tidsstämpel och handläggare-ID.</p>
                   </div>
 
                   {/* Segmented control */}
-                  <div className="bg-[#f2f2f2] flex gap-0.5 items-center p-0.5 rounded-md w-full">
+                  <div className="bg-muted flex gap-0.5 items-center p-0.5 rounded-md w-full">
                     {[
                       { id: 'rätt', label: 'Rätt' },
                       { id: 'fel', label: 'Fel' },
@@ -1593,8 +1632,8 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
                         key={id}
                         onClick={() => setFeedbackChoice(id)}
                         className={`flex flex-1 items-center justify-center px-3 py-2 rounded text-base font-medium transition-all border ${feedbackChoice === id
-                          ? 'bg-white border-gray-300 text-gray-900 shadow-sm'
-                          : 'bg-[#f2f2f2] border-transparent text-gray-700 hover:bg-gray-100'
+                          ? 'bg-card border-border text-foreground shadow-sm'
+                          : 'bg-muted border-transparent text-muted-foreground hover:bg-muted/80'
                           }`}
                       >
                         {label}
@@ -1604,34 +1643,31 @@ function ClosedCaseView({ d, confidence, motivation, onClose }) {
 
                   {/* Textarea */}
                   <div className="flex flex-col gap-2">
-                    <p className="text-base font-medium text-gray-900">Ge din feedback</p>
+                    <p className="text-base font-medium text-foreground">Ge din feedback</p>
                     <textarea
                       value={feedbackComment}
                       onChange={e => setFeedbackComment(e.target.value.slice(0, 500))}
                       placeholder="Valfri kommentar - vad tyckte du om AI:ns rekommendation?"
-                      className="w-full h-[182px] text-base text-gray-700 placeholder-gray-400 border border-gray-400 rounded px-2 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+                      className="w-full h-[182px] text-base text-foreground placeholder-muted-foreground/60 border border-border rounded px-2 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-ring bg-card"
                     />
-                    <div className="text-right text-sm text-gray-400">{feedbackComment.length}/500 tecken</div>
+                    <div className="text-right text-sm text-muted-foreground/60">{feedbackComment.length}/500 tecken</div>
                   </div>
 
                   {/* Submit */}
                   <div className="flex justify-end">
-                    <button
-                      onClick={() => setFeedbackSent(true)}
-                      className="bg-[#245bd1] text-white px-4 py-2 rounded text-base font-medium hover:bg-[#1d4db8] transition-colors"
-                    >
+                    <Button onClick={() => setFeedbackSent(true)}>
                       Skicka feedback
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* Footer */}
               <div className="flex items-center justify-between pb-6">
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors">
                   <Download size={14} /> Exportera logg
                 </button>
-                <button onClick={onClose} className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                <button onClick={onClose} className="text-sm text-accent-strong hover:text-accent-strong/80 font-medium transition-colors">
                   ← Tillbaka till ärendelistan
                 </button>
               </div>
@@ -1652,7 +1688,7 @@ function ApprovedCaseView({ d, confidence, onClose }) {
   const confBadge = getConfidenceBadge(d.confidence ?? confidence)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F6F6F6] font-sans">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground font-sans">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 h-full">
         <PageHeader d={d} />
@@ -1660,38 +1696,38 @@ function ApprovedCaseView({ d, confidence, onClose }) {
           <div className="max-w-[760px] flex flex-col gap-5">
 
             {/* Confirmation banner */}
-            <div className="bg-green-600 text-white rounded-xl px-6 py-5 flex items-start gap-4">
+            <div className="bg-conf-high-solid text-white rounded-xl px-6 py-5 flex items-start gap-4">
               <CheckCircle size={20} className="mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold">Kreditansökan godkänd – ärende avslutat</p>
-                <p className="text-sm text-green-100 mt-0.5">{today} · {d.officer} · {d.id}</p>
+                <p className="text-sm text-white/80 mt-0.5">{today} · {d.officer} · {d.id}</p>
               </div>
             </div>
 
             {/* Decision summary */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/40">
-                <p className="text-sm font-semibold text-gray-700">Beslutssummering</p>
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-border bg-muted/40">
+                <p className="text-sm font-semibold text-muted-foreground">Beslutssummering</p>
               </div>
               <div className="px-6 py-5 grid grid-cols-2 gap-5">
                 <div>
-                  <p className="text-xs text-gray-400 mb-1.5">AI rekommenderade</p>
+                  <p className="text-xs text-muted-foreground/60 mb-1.5">AI rekommenderade</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-lg font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-green-600' : 'text-red-600'}`}>{d.aiRecommendation}</span>
-                    <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${confBadge.cls}`}>
+                    <span className={`text-lg font-bold ${d.aiRecommendation === 'GODKÄNN' ? 'text-conf-high-fg' : 'text-conf-low-fg'}`}>{d.aiRecommendation}</span>
+                    <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-sm border ${confBadge.cls}`}>
                       <div className={`w-1.5 h-1.5 rounded-full ${confBadge.dot}`} />
                       {confBadge.label}
                     </div>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1.5">Saras beslut</p>
+                  <p className="text-xs text-muted-foreground/60 mb-1.5">Saras beslut</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-lg font-bold text-gray-900">GODKÄNN</span>
-                    <span className="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">Följde AI-rekommendation</span>
+                    <span className="text-lg font-bold text-foreground">GODKÄNN</span>
+                    <span className="text-xs text-conf-high-fg bg-conf-high-bg border border-conf-high-border px-2 py-0.5 rounded-sm">Följde AI-rekommendation</span>
                   </div>
                 </div>
-                <div className="col-span-2 border-t border-gray-100 pt-3 flex justify-between text-xs text-gray-400">
+                <div className="col-span-2 border-t border-border pt-3 flex justify-between text-xs text-muted-foreground/60">
                   <span>Handläggare: {d.officer}</span>
                   <span>{today} · {timeNow}</span>
                 </div>
@@ -1700,10 +1736,10 @@ function ApprovedCaseView({ d, confidence, onClose }) {
 
             {/* Footer */}
             <div className="flex items-center justify-between pb-6">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors">
                 <Download size={14} /> Exportera logg
               </button>
-              <button onClick={onClose} className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+              <button onClick={onClose} className="text-sm text-accent-strong hover:text-accent-strong/80 font-medium transition-colors">
                 ← Tillbaka till ärendelistan
               </button>
             </div>
@@ -1719,16 +1755,16 @@ function ApprovedCaseView({ d, confidence, onClose }) {
 
 function SpårloggTag({ type = 'system' }) {
   const map = {
-    system: { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'System' },
-    ai: { bg: '#f0eafb', border: '#d6c3f3', color: '#451b88', label: 'AI' },
-    handlaggare: { bg: '#e9effb', border: '#c2d2f5', color: '#112b64', label: 'Handläggare' },
-    granskning: { bg: '#f9f9f9', border: '#c4c4c4', color: '#696969', label: 'Granskning' },
+    system: { cls: 'bg-muted border-border text-muted-foreground', label: 'System' },
+    ai: { cls: 'bg-accent-subtle border-accent-border text-accent-strong', label: 'AI' },
+    handlaggare: { cls: 'bg-accent-subtle border-accent-border text-accent-strong', label: 'Handläggare' },
+    granskning: { cls: 'bg-muted border-border text-muted-foreground', label: 'Granskning' },
   }
-  const { bg, border, color, label } = map[type]
+  const { cls, label } = map[type]
   return (
     <span
-      className="inline-flex items-center justify-center px-2 py-0.5 rounded-full border text-[12px] leading-[20px] font-semibold shrink-0"
-      style={{ fontFamily: "'IBM Plex Mono', monospace", backgroundColor: bg, borderColor: border, color }}
+      className={`inline-flex items-center justify-center px-2 py-0.5 rounded-sm border text-[12px] leading-[20px] font-semibold shrink-0 ${cls}`}
+      style={{ fontFamily: "'IBM Plex Mono', monospace" }}
     >
       {label}
     </span>
@@ -1736,20 +1772,21 @@ function SpårloggTag({ type = 'system' }) {
 }
 
 function SpårloggIcon({ type }) {
-  const grey = 'w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#c4c4c4] border-[#c4c4c4]'
+  const base = 'w-6 h-6 rounded-full flex items-center justify-center border shrink-0'
+  const grey = `${base} bg-muted border-border`
   if (type === 'ai') return (
-    <div className="w-6 h-6 rounded-xl flex items-center justify-center border shrink-0 bg-[#f0eafb] border-[#d6c3f3]">
-      <Sparkles size={16} className="text-[#451b88]" />
+    <div aria-hidden="true" className={`${base} bg-accent-subtle border-accent-border`}>
+      <Sparkles size={12} className="text-accent-strong" />
     </div>
   )
-  if (type === 'empty') return <div className="w-6 h-6 rounded-xl border border-[#c4c4c4] bg-white shrink-0" />
+  if (type === 'empty') return <div aria-hidden="true" className={`${base} bg-card`} />
   const icons = {
-    'clipboard': <ClipboardList size={16} className="text-[#525252]" />,
-    'file-search': <FileSearch size={16} className="text-[#525252]" />,
-    'user': <User size={16} className="text-[#525252]" />,
-    'search': <Search size={16} className="text-[#525252]" />,
+    'clipboard': <ClipboardList size={12} className="text-muted-foreground" />,
+    'file-search': <FileText size={12} className="text-muted-foreground" />,
+    'user': <User size={12} className="text-muted-foreground" />,
+    'search': <Search size={12} className="text-muted-foreground" />,
   }
-  return <div className={grey}>{icons[type] ?? <ClipboardList size={16} className="text-[#525252]" />}</div>
+  return <div aria-hidden="true" className={grey}>{icons[type] ?? <ClipboardList size={12} className="text-muted-foreground" />}</div>
 }
 
 function SpårloggTab({ d }) {
@@ -1761,18 +1798,18 @@ function SpårloggTab({ d }) {
 
   const sourceStatusUI = (src) => {
     if (src.status === 'current') return (
-      <span className="flex items-center gap-1 text-[12px] font-medium text-[#525252]">
-        <span className="w-[5px] h-[5px] rounded-full bg-[#969696] inline-block shrink-0" />
+      <span className="flex items-center gap-1 text-[12px] font-medium text-muted-foreground">
+        <span className="w-[5px] h-[5px] rounded-full bg-dq-missing-solid inline-block shrink-0" />
         Ej flaggad
       </span>
     )
     if (src.status === 'stale') return (
-      <span className="flex items-center gap-1 text-[12px] font-medium text-[#d97706]">
+      <span className="flex items-center gap-1 text-[12px] font-medium text-dq-stale-fg">
         <AlertTriangle size={12} className="shrink-0" /> Oreviderad
       </span>
     )
     return (
-      <span className="flex items-center gap-1 text-[12px] font-semibold text-[#B41D1D]">
+      <span className="flex items-center gap-1 text-[12px] font-medium text-muted-foreground">
         <CircleMinus size={12} className="shrink-0" /> Otillgänglig
       </span>
     )
@@ -1787,61 +1824,59 @@ function SpårloggTab({ d }) {
   ]
 
   return (
-    <div className="bg-white border border-[#c4c4c4] rounded-xlg p-6 flex flex-col gap-6">
+    <div className="bg-card border border-border rounded-xlg p-6 flex flex-col gap-6">
 
       {/* Header med divider */}
-      <div className="border-b border-[#c4c4c4] pb-3 flex items-center justify-between">
-        <p className="text-xlg font-semibold text-[#242424]">Spårlogg</p>
-        <div className="flex items-center gap-1 bg-[#f0eafb] border border-[#d6c3f3] text-[#451b88] text-sm font-medium px-4 py-2 rounded-full">
-          <Sparkles size={16} />
+      <div className="border-b border-border pb-[13px] flex items-center justify-between">
+        <h2 className="text-xlg font-semibold text-foreground">Spårlogg</h2>
+        <div className="flex items-center gap-1 bg-accent-subtle border border-accent-border text-accent-strong text-[12px] font-medium px-2 py-0.5 rounded-sm">
+          <Sparkles size={12} />
           <span>AI-modell: Kreditrisk v2.3 - Tränad nov 2024</span>
         </div>
       </div>
 
       {/* Timeline */}
-      <div className="flex flex-col gap-3">
-        {events.map((ev, i) => (
-          <div key={ev.id} className="flex gap-4 items-start">
+      <ol className="flex flex-col">
+        {events.map((ev) => (
+          <li key={ev.id} className="flex gap-4">
 
-            {/* Ikonkolumn */}
-            <div className="flex flex-col items-center w-6 shrink-0 pt-1">
+            {/* Ikonkolumn – linjen sträcker sig hela vägen ner till nästa ikon */}
+            <div className="flex flex-col items-center w-6 shrink-0">
               <SpårloggIcon type={ev.icon} />
-              {i < events.length - 1 && (
-                <div className="w-px flex-1 bg-[#e5e7eb] mt-2 min-h-6" />
-              )}
+              <div aria-hidden="true" className="w-px flex-1 min-h-[1.25rem] bg-border my-1.5" />
             </div>
 
             {/* Innehåll */}
-            <div className={`flex-1 min-w-0 flex flex-col gap-2 ${i < events.length - 1 ? 'pb-3' : ''}`}>
+            <div className="flex-1 min-w-0 flex flex-col gap-2 pb-6">
 
               {/* Tag + titel + tidsstämpel */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <SpårloggTag type={ev.type} />
-                  <p className="text-sm font-semibold text-[#242424]">{ev.title}</p>
+                  <p className="text-sm font-semibold text-foreground">{ev.title}</p>
                 </div>
-                <p className="text-[12px] text-[#525252] shrink-0">{ev.time}</p>
+                <p className="text-[12px] text-muted-foreground shrink-0">{ev.time}</p>
               </div>
 
               {/* Event 1 – Ärende öppnat */}
               {ev.id === 1 && (
-                <p className="text-sm text-[#525252]">
+                <p className="text-sm text-muted-foreground">
                   Kreditlimitökning {d.id} skapades och tilldelades{' '}
-                  <strong className="font-semibold text-[#242424]">{d.officer}</strong>.
+                  <strong className="font-semibold text-foreground">{d.officer}</strong>.
                 </p>
               )}
 
               {/* Event 2 – Datahämtning */}
               {ev.id === 2 && (
                 <>
-                  <p className="text-sm text-[#525252]">3 av 4 datakällor hämtades. 1 källa otillgänglig.</p>
-                  <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-md overflow-hidden">
+                  <p className="text-sm text-muted-foreground">3 av 4 datakällor hämtades. 1 källa otillgänglig.</p>
+                  <div className="bg-muted border border-border rounded-md overflow-hidden">
                     {d.dataSources.map((src, si) => (
                       <div
                         key={src.name}
-                        className={`flex items-center justify-between px-4 h-[37px] text-sm ${si < d.dataSources.length - 1 ? 'border-b border-[#f3f4f6]' : ''}`}
+                        className={`flex items-center justify-between px-4 h-[37px] text-sm ${si < d.dataSources.length - 1 ? 'border-b border-border' : ''}`}
                       >
-                        <span className="text-[#242424]">{sourceDisplayName(src.name)}</span>
+                        <span className="text-foreground">{sourceDisplayName(src.name)}</span>
                         {sourceStatusUI(src)}
                       </div>
                     ))}
@@ -1854,29 +1889,29 @@ function SpårloggTab({ d }) {
                 <>
                   <div className="flex items-center gap-3 flex-wrap text-sm">
                     <div className="flex items-center gap-1">
-                      <span className="text-[#525252]">Rekommendation:</span>
-                      <span className="font-semibold text-[#242424] ml-1">
+                      <span className="text-muted-foreground">Rekommendation:</span>
+                      <span className="font-semibold text-foreground ml-1">
                         {d.aiRecommendation.charAt(0) + d.aiRecommendation.slice(1).toLowerCase()}
                       </span>
                     </div>
-                    <span className="text-[#969696]">·</span>
+                    <span className="text-muted-foreground/60">·</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[#525252]">Konfidensgrad:</span>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[12px] font-medium ${cb.cls}`}>
+                      <span className="text-muted-foreground">Konfidensgrad:</span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[12px] font-medium ${cb.cls}`}>
                         <span className={`w-1 h-1 rounded-full ${cb.dot}`} />
                         {confShortLabel}
                       </span>
                     </div>
                   </div>
-                  <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-md p-[13px] flex flex-col gap-1.5">
+                  <div className="bg-muted border border-border rounded-md p-[13px] flex flex-col gap-1.5">
                     {[
                       { label: 'Modell', value: 'Kreditrisk v2.3' },
                       { label: 'Faktorer analyserade', value: '4 (2 aktiva, 1 oreviderad, 1 saknad)' },
                       { label: 'Konfidensnedsättning', value: 'Oreviderat bokslut + saknad branschdata' },
                     ].map(row => (
                       <div key={row.label} className="flex items-center gap-4 text-[12px]">
-                        <span className="text-[#525252] w-40 shrink-0">{row.label}</span>
-                        <span className="text-[#242424] font-medium">{row.value}</span>
+                        <span className="text-muted-foreground w-40 shrink-0">{row.label}</span>
+                        <span className="text-foreground font-medium">{row.value}</span>
                       </div>
                     ))}
                   </div>
@@ -1885,7 +1920,7 @@ function SpårloggTab({ d }) {
 
               {/* Event 4 – Granskning påbörjad */}
               {ev.id === 4 && (
-                <p className="text-sm text-[#525252]">
+                <p className="text-sm text-muted-foreground">
                   {d.officer} öppnade ärendet och påbörjade granskning av AI-underlag.
                 </p>
               )}
@@ -1893,14 +1928,14 @@ function SpårloggTab({ d }) {
               {/* Event 5 – Kritisk källa granskad */}
               {ev.id === 5 && (
                 <>
-                  <p className="text-sm text-[#525252]">
+                  <p className="text-sm text-muted-foreground">
                     {d.officer} granskade Bokslut (oreviderat) · Jan–Dec 2022.
                   </p>
                   <div className="inline-flex items-center">
-                    <span className="inline-flex items-center gap-1 bg-[#f2f2f2] border border-[#dbdbdb] text-[#525252] text-[12px] font-semibold px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 bg-muted border border-border text-muted-foreground text-[12px] font-medium px-2 py-0.5 rounded-sm">
                       Bokslut <FileText size={12} />
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[#d97706] text-[12px] font-medium px-2 py-0.5">
+                    <span className="inline-flex items-center gap-1 text-dq-stale-fg text-[12px] font-medium px-2 py-0.5">
                       <AlertTriangle size={12} /> Oreviderad
                     </span>
                   </div>
@@ -1908,18 +1943,63 @@ function SpårloggTab({ d }) {
               )}
 
             </div>
-          </div>
+          </li>
         ))}
 
-        {/* Väntar på beslut */}
-        <div className="flex gap-4 items-center">
-          <div className="w-6 flex justify-center shrink-0 pt-1">
+        {/* Terminus – inväntar beslut */}
+        <li className="flex gap-4 items-center">
+          <div className="w-6 flex justify-center shrink-0">
             <SpårloggIcon type="empty" />
           </div>
-          <p className="text-sm text-[#525252] italic">Väntar på beslut från {d.officer}</p>
-        </div>
+          <p className="text-sm text-muted-foreground italic">Väntar på beslut från {d.officer}</p>
+        </li>
 
+      </ol>
+    </div>
+  )
+}
+
+// ── MobileQuickActions (FAB) ────────────────────────────────────────────────────
+// Sekundära genvägar (Export, Eskalera) på mobil. Medvetet INTE för beslutet (H1/H2):
+// en flytande Godkänn/Avslå skulle inbjuda beslut före granskning (automation bias).
+function MobileQuickActions({ actions }) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  return (
+    <div className="lg:hidden fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+      {/* Åtgärdslista */}
+      <div
+        className={`flex flex-col items-end gap-2 transition-all duration-200 ${
+          open ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+        }`}
+      >
+        {actions.map(({ label, Icon, onClick }) => (
+          <button
+            key={label}
+            onClick={() => { setOpen(false); onClick?.() }}
+            className="flex items-center gap-2 h-11 px-4 rounded-full bg-card border border-border shadow-lg text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Icon size={16} aria-hidden="true" />
+            {label}
+          </button>
+        ))}
       </div>
+      {/* Toggle */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-label={open ? 'Stäng snabbåtgärder' : 'Öppna snabbåtgärder'}
+        className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <MoreHorizontal size={24} aria-hidden="true" className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
+      </button>
     </div>
   )
 }
@@ -1930,6 +2010,20 @@ export default function App() {
   const [aiReviewed, setAiReviewed] = useState(false)
   const [activeTab, setActiveTab] = useState('overblick')
   const [showAIBanner, setShowAIBanner] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Tema (ljust/mörkt) – init från localStorage, annars systeminställning
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'light'
+    return localStorage.getItem('theme')
+      ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  })
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('theme', theme)
+  }, [theme])
+  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'))
 
   // Track which metric's drawer or simulation is currently open
   const [activeDrawerMetric, setActiveDrawerMetric] = useState(null)
@@ -1980,8 +2074,9 @@ export default function App() {
   )
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F6F6F6] font-sans">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground font-sans">
       <Sidebar />
+      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {activeSourceDocument ? (
         <SourceDocumentView
@@ -1995,13 +2090,13 @@ export default function App() {
         />
       ) : (
         <div className="flex flex-col flex-1 min-w-0 h-full">
-          <PageHeader d={CASE} />
+          <PageHeader d={CASE} theme={theme} onToggleTheme={toggleTheme} onMenuClick={() => setSidebarOpen(true)} />
 
-          <main className="flex-1 overflow-y-auto p-6 pt-2">
-            <div className="flex gap-6 items-start max-w-[1400px]">
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6 pt-2 pb-24 lg:pb-6">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start max-w-[1400px]">
 
               {/* ── Vänster kolumn ─────────────────────────────────────── */}
-              <div className="flex-1 min-w-0 flex flex-col gap-4">
+              <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-4">
                 <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
                 {activeTab === 'overblick' && (
@@ -2017,7 +2112,7 @@ export default function App() {
                 {activeTab === 'underlag' && (
                   <>
                     <UnderlandOverviewCard sources={liveSources} />
-                    <h2 className="text-[20px] font-bold text-[#242424] leading-7">Nyckeldata</h2>
+                    <h2 className="text-[20px] font-bold text-foreground leading-7">Nyckeldata</h2>
                     <div className="flex flex-col gap-4">
                       {[
                         ...liveFactors.filter(f => f.direction === 'negativ' && f.status !== 'unavailable'),
@@ -2040,7 +2135,7 @@ export default function App() {
               </div>
 
               {/* ── Höger kolumn ───────────────────────────────────────── */}
-              <div className="w-[360px] flex-shrink-0 sticky top-6">
+              <div className="w-full lg:w-[360px] flex-shrink-0 lg:sticky lg:top-6">
                 <DecisionPanel
                   d={CASE}
                   aiReviewed={aiReviewed}
@@ -2053,6 +2148,14 @@ export default function App() {
 
             </div>
           </main>
+
+          {/* Mobil: sekundära åtgärder som flytande meny (FAB) */}
+          <MobileQuickActions
+            actions={[
+              { label: 'Exportera PDF', Icon: Download },
+              { label: 'Eskalera ärende', Icon: ArrowUpRight },
+            ]}
+          />
         </div>
       )}
 

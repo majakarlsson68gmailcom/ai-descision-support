@@ -15,25 +15,25 @@ export default function SimulationView({
     const simulatedImpact = removedCurrentSource ? (addedNewSource ? 15 : 0) : 45;
 
     let conclusionText = ""
-    let conclusionColor = ""
+    let conclusionClass = ""
 
     if (!removedCurrentSource && !addedNewSource) {
         conclusionText = "Med denna förändring: rekommendationen förblir Avslag"
-        conclusionColor = "var(--c-ink-2)"
+        conclusionClass = "text-muted-foreground border-border"
     } else if (removedCurrentSource && !addedNewSource) {
         conclusionText = "Varning: Ingen beräkningsdata vald"
-        conclusionColor = "var(--c-orange-text)"
+        conclusionClass = "text-dq-stale-fg border-dq-stale-border"
     } else if (removedCurrentSource && addedNewSource) {
         conclusionText = "Med denna förändring: rekommendationen ändras till Godkänn"
-        conclusionColor = "var(--c-green)"
+        conclusionClass = "text-conf-high-fg border-conf-high-border"
     }
 
     return (
         <div
+            className="bg-background"
             style={{
                 position: 'fixed',
                 inset: 0,
-                backgroundColor: 'var(--c-bg)',
                 zIndex: 100,
                 display: 'flex',
                 flexDirection: 'column',
@@ -41,63 +41,59 @@ export default function SimulationView({
             }}
         >
             {/* Simulation Banner */}
-            <div style={{
-                backgroundColor: '#FEF3C7', // yellow-100
-                borderBottom: '1px solid #FDE68A', // yellow-200
-                padding: '12px 24px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 8,
-                color: '#92400E', // yellow-800
-                fontSize: 13,
-                fontWeight: 500,
-            }}>
+            <div
+                className="bg-dq-stale-bg text-dq-stale-fg border-dq-stale-border"
+                style={{
+                    borderBottom: '1px solid',
+                    padding: '12px 24px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontSize: 13,
+                    fontWeight: 500,
+                }}
+            >
                 <Info size={16} />
                 Simulering — inga ändringar sparas i ärendet
             </div>
 
             {/* Header */}
-            <div style={{
-                padding: '16px 32px',
-                borderBottom: '1px solid var(--c-border)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: 'var(--c-white)',
-            }}>
+            <div
+                className="bg-card border-border"
+                style={{
+                    padding: '16px 32px',
+                    borderBottom: '1px solid',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                }}
+            >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <button
                         onClick={onClose}
+                        className="bg-background border border-border text-muted-foreground hover:bg-muted"
                         style={{
-                            background: 'var(--c-bg)', border: '1px solid var(--c-border-strong)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: 32, height: 32, borderRadius: 6, cursor: 'pointer',
-                            color: 'var(--c-ink-2)'
                         }}
-                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--c-border)'}
-                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--c-bg)'}
                     >
                         <ArrowLeft size={16} />
                     </button>
-                    <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--c-ink)' }}>
+                    <h1 className="text-foreground" style={{ fontSize: 18, fontWeight: 600 }}>
                         Simulera källpåverkan
                     </h1>
                 </div>
                 <button
                     onClick={onClose}
+                    className="text-muted-foreground bg-card border border-border hover:bg-muted"
                     style={{
                         padding: '8px 16px',
                         fontSize: 13,
                         fontWeight: 500,
-                        color: 'var(--c-ink-2)',
-                        background: 'var(--c-white)',
-                        border: '1px solid var(--c-border-strong)',
                         borderRadius: 6,
                         cursor: 'pointer',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--c-bg)'}
-                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--c-white)'}
                 >
                     Avsluta simulering
                 </button>
@@ -108,9 +104,9 @@ export default function SimulationView({
 
                 {/* Nuläge (Vänster) */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <h2 style={{ fontSize: 14, fontWeight: 500, color: 'var(--c-ink-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <h2 className="text-muted-foreground" style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                         Nuläge
-                        <span style={{ fontSize: 11, background: 'var(--c-red-light)', color: 'var(--c-red)', padding: '2px 6px', borderRadius: 4 }}>
+                        <span className="bg-conf-low-bg text-conf-low-fg rounded-sm" style={{ fontSize: 11, padding: '2px 6px' }}>
                             Avslag
                         </span>
                     </h2>
@@ -120,43 +116,45 @@ export default function SimulationView({
                     </div>
 
                     {/* AI Bedömning (Nuläge) */}
-                    <div style={{
-                        marginTop: 8, padding: 16, background: 'var(--c-white)', border: '1px solid var(--c-border)', borderRadius: 8
-                    }}>
-                        <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--c-ink-4)', textTransform: 'uppercase', marginBottom: 12 }}>AI-bedömning</h3>
+                    <div
+                        className="bg-card border border-border"
+                        style={{ marginTop: 8, padding: 16, borderRadius: 8 }}
+                    >
+                        <h3 className="text-muted-foreground/60" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase', marginBottom: 12 }}>AI-bedömning</h3>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <span style={{ fontSize: 13, color: 'var(--c-ink-2)' }}>Konfidensgrad</span>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--c-red)', background: 'var(--c-red-light)', padding: '2px 8px', borderRadius: 9999 }}>Låg konfidens</span>
+                            <span className="text-muted-foreground" style={{ fontSize: 13 }}>Konfidensgrad</span>
+                            <span className="text-conf-low-fg bg-conf-low-bg" style={{ fontSize: 13, fontWeight: 500, padding: '2px 8px', borderRadius: 9999 }}>Låg konfidens</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 13, color: 'var(--c-ink-2)' }}>Rekommendation</span>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-red)' }}>Avslag</span>
+                            <span className="text-muted-foreground" style={{ fontSize: 13 }}>Rekommendation</span>
+                            <span className="text-conf-low-fg" style={{ fontSize: 13, fontWeight: 600 }}>Avslag</span>
                         </div>
                     </div>
 
-                    <div style={{
-                        border: '1px solid var(--c-border)', borderRadius: 8, padding: 16, background: 'var(--c-white)', opacity: 0.9
-                    }}>
-                        <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--c-ink-4)', textTransform: 'uppercase', marginBottom: 12 }}>Valda Källor</h3>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--c-bg)', borderRadius: 6 }}>
+                    <div
+                        className="border border-border bg-card"
+                        style={{ borderRadius: 8, padding: 16, opacity: 0.9 }}
+                    >
+                        <h3 className="text-muted-foreground/60" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase', marginBottom: 12 }}>Valda Källor</h3>
+                        <div className="bg-muted" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 6 }}>
                             <div>
-                                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--c-ink-2)' }}>Årsredovisning 2024</div>
-                                <div style={{ fontSize: 11, color: 'var(--c-ink-4)', marginTop: 2 }}>Bergström & Co AB</div>
+                                <div className="text-muted-foreground" style={{ fontSize: 13, fontWeight: 500 }}>Årsredovisning 2024</div>
+                                <div className="text-muted-foreground/60" style={{ fontSize: 11, marginTop: 2 }}>Bergström & Co AB</div>
                             </div>
-                            <CheckCircle size={16} style={{ color: 'var(--c-green)' }} />
+                            <CheckCircle size={16} className="text-conf-high-fg" />
                         </div>
                     </div>
                 </div>
 
                 {/* Separator */}
-                <div style={{ width: 1, background: 'var(--c-border)', alignSelf: 'stretch' }} />
+                <div className="bg-border" style={{ width: 1, alignSelf: 'stretch' }} />
 
                 {/* Hypotetiskt läge (Höger) */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-indigo)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <h2 className="text-accent-strong" style={{ fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                         Hypotetiskt läge
                         {removedCurrentSource && addedNewSource && (
-                            <span style={{ fontSize: 11, background: 'var(--c-green-light)', color: 'var(--c-green)', padding: '2px 6px', borderRadius: 4 }}>
+                            <span className="bg-conf-high-bg text-conf-high-fg rounded-sm" style={{ fontSize: 11, padding: '2px 6px' }}>
                                 Godkänn
                             </span>
                         )}
@@ -171,44 +169,47 @@ export default function SimulationView({
                     </div>
 
                     {/* AI Bedömning (Hypotetiskt) */}
-                    <div style={{
-                        marginTop: 8, padding: 16, background: 'var(--c-white)', border: '1px solid var(--c-border)', borderRadius: 8
-                    }}>
-                        <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--c-ink-4)', textTransform: 'uppercase', marginBottom: 12 }}>AI-bedömning</h3>
+                    <div
+                        className="bg-card border border-border"
+                        style={{ marginTop: 8, padding: 16, borderRadius: 8 }}
+                    >
+                        <h3 className="text-muted-foreground/60" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase', marginBottom: 12 }}>AI-bedömning</h3>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <span style={{ fontSize: 13, color: 'var(--c-ink-2)' }}>Konfidensgrad</span>
+                            <span className="text-muted-foreground" style={{ fontSize: 13 }}>Konfidensgrad</span>
                             {removedCurrentSource && addedNewSource ? (
-                                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--c-indigo)', background: 'var(--c-indigo-light)', padding: '2px 8px', borderRadius: 9999 }}>Hög konfidens</span>
+                                <span className="text-accent-strong bg-accent-subtle" style={{ fontSize: 13, fontWeight: 500, padding: '2px 8px', borderRadius: 9999 }}>Hög konfidens</span>
                             ) : (
-                                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--c-red)', background: 'var(--c-red-light)', padding: '2px 8px', borderRadius: 9999 }}>Låg konfidens</span>
+                                <span className="text-conf-low-fg bg-conf-low-bg" style={{ fontSize: 13, fontWeight: 500, padding: '2px 8px', borderRadius: 9999 }}>Låg konfidens</span>
                             )}
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 13, color: 'var(--c-ink-2)' }}>Rekommendation</span>
+                            <span className="text-muted-foreground" style={{ fontSize: 13 }}>Rekommendation</span>
                             {removedCurrentSource && addedNewSource ? (
-                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-green)' }}>Godkänn</span>
+                                <span className="text-conf-high-fg" style={{ fontSize: 13, fontWeight: 600 }}>Godkänn</span>
                             ) : (
-                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-red)' }}>Avslag</span>
+                                <span className="text-conf-low-fg" style={{ fontSize: 13, fontWeight: 600 }}>Avslag</span>
                             )}
                         </div>
                     </div>
 
-                    <div style={{
-                        border: '2px dashed var(--c-border-strong)', borderRadius: 8, padding: 16, background: 'var(--c-white)'
-                    }}>
-                        <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--c-ink-4)', textTransform: 'uppercase', marginBottom: 12 }}>Valda Källor (Simulerade)</h3>
+                    <div
+                        className="border-2 border-dashed border-border bg-card"
+                        style={{ borderRadius: 8, padding: 16 }}
+                    >
+                        <h3 className="text-muted-foreground/60" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase', marginBottom: 12 }}>Valda Källor (Simulerade)</h3>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {!removedCurrentSource ? (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--c-bg)', borderRadius: 6 }}>
+                                <div className="bg-muted" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 6 }}>
                                     <div>
-                                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--c-ink-2)' }}>Årsredovisning 2024</div>
-                                        <div style={{ fontSize: 11, color: 'var(--c-ink-4)', marginTop: 2 }}>Bergström & Co AB</div>
+                                        <div className="text-muted-foreground" style={{ fontSize: 13, fontWeight: 500 }}>Årsredovisning 2024</div>
+                                        <div className="text-muted-foreground/60" style={{ fontSize: 11, marginTop: 2 }}>Bergström & Co AB</div>
                                     </div>
                                     <button
                                         onClick={() => setRemovedCurrentSource(true)}
+                                        className="text-conf-low-fg"
                                         style={{
-                                            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-red)', padding: 4
+                                            background: 'none', border: 'none', cursor: 'pointer', padding: 4
                                         }}
                                         title="Ta bort i simulering"
                                     >
@@ -216,21 +217,22 @@ export default function SimulationView({
                                     </button>
                                 </div>
                             ) : (
-                                <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--c-ink-4)' }}>
+                                <div className="text-muted-foreground/60" style={{ textAlign: 'center', padding: '16px 0', fontSize: 13 }}>
                                     <s>Årsredovisning 2024 (Bergström & Co AB)</s> borttagen.
                                 </div>
                             )}
 
                             {addedNewSource && (
-                                <div className="card-enter" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--c-bg)', borderRadius: 6, border: '1px solid var(--c-border)' }}>
+                                <div className="card-enter bg-muted border border-border" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 6 }}>
                                     <div>
-                                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--c-ink-2)' }}>Preliminärt bokslut Q3 2024</div>
-                                        <div style={{ fontSize: 11, color: 'var(--c-ink-4)', marginTop: 2 }}>Bergström & Co AB (Interimsrapport)</div>
+                                        <div className="text-muted-foreground" style={{ fontSize: 13, fontWeight: 500 }}>Preliminärt bokslut Q3 2024</div>
+                                        <div className="text-muted-foreground/60" style={{ fontSize: 11, marginTop: 2 }}>Bergström & Co AB (Interimsrapport)</div>
                                     </div>
                                     <button
                                         onClick={() => setAddedNewSource(false)}
+                                        className="text-conf-low-fg"
                                         style={{
-                                            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-red)', padding: 4
+                                            background: 'none', border: 'none', cursor: 'pointer', padding: 4
                                         }}
                                     >
                                         <Trash2 size={16} />
@@ -241,20 +243,16 @@ export default function SimulationView({
                             {!addedNewSource && (
                                 <button
                                     onClick={() => setAddedNewSource(true)}
+                                    className="bg-card border border-dashed border-accent-border text-accent-strong hover:bg-accent-subtle"
                                     style={{
                                         width: '100%',
                                         padding: '10px 0',
-                                        background: 'var(--c-white)',
-                                        border: '1px dashed var(--c-indigo)',
-                                        color: 'var(--c-indigo)',
                                         borderRadius: 6,
                                         fontSize: 13,
                                         fontWeight: 500,
                                         cursor: 'pointer',
                                         marginTop: 8
                                     }}
-                                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--c-indigo-light)'}
-                                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--c-white)'}
                                 >
                                     + Konvertera "Kassaflödesdata Q3" till källa
                                 </button>
@@ -263,17 +261,17 @@ export default function SimulationView({
                         </div>
                     </div>
 
-                    <div style={{
-                        marginTop: 'auto',
-                        padding: 16,
-                        background: 'var(--c-bg)',
-                        borderRadius: 8,
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: conclusionColor,
-                        textAlign: 'center',
-                        border: `1px solid ${conclusionColor.replace('var(--c-', 'var(--c-').replace(')', '-light)') || 'var(--c-border-strong)'}` // rough hack for border tint
-                    }}>
+                    <div
+                        className={`bg-muted border ${conclusionClass}`}
+                        style={{
+                            marginTop: 'auto',
+                            padding: 16,
+                            borderRadius: 8,
+                            fontSize: 14,
+                            fontWeight: 500,
+                            textAlign: 'center',
+                        }}
+                    >
                         {conclusionText}
                     </div>
 

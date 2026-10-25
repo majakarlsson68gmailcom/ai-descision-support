@@ -1,32 +1,32 @@
-// Design tokens – mappade från Figma Foundations + Semantic
-// Figma-fil: AI-gränssnitt · Foundations.json + Semantic.json
-// Princip: orange = varning/agera, aldrig rött för osäkerhet
+// Design tokens – tema-reaktiva (ljust/mörkt via CSS-variabler i index.css)
+// Klassnamnen mappar mot semantiska + domän-färger i tailwind.config.js.
+// Princip: orange = varning/agera, rött ENDAST för låg konfidens / konflikt.
+// OBS: export-formerna hålls oförändrade så befintliga konsumenter inte bryts.
 
 // ---------------------------------------------------------------------------
 // Konfidens (ai/confidence/*)
-// Alt A: low = stark orange (ej rött), i linje med CLAUDE.md
 // ---------------------------------------------------------------------------
 export const confidence = {
   high: {
-    bg:     "bg-green-50",
-    border: "border-green-100",
-    text:   "text-green-700",
-    dot:    "bg-green-500",
+    bg:     "bg-conf-high-bg",
+    border: "border-conf-high-border",
+    text:   "text-conf-high-fg",
+    dot:    "bg-conf-high-solid",
     label:  "Hög konfidens",
   },
   medium: {
-    bg:     "bg-orange-50",
-    border: "border-orange-100",
-    text:   "text-orange-700",
-    dot:    "bg-orange-500",
+    bg:     "bg-conf-medium-bg",
+    border: "border-conf-medium-border",
+    text:   "text-conf-medium-fg",
+    dot:    "bg-conf-medium-solid",
     label:  "Medel konfidens",
   },
   low: {
     // Rött – reserverat för låg konfidensgrad (ej för datakvalitetsstatus)
-    bg:     "bg-red-50",
-    border: "border-red-100",
-    text:   "text-red-700",
-    dot:    "bg-red-500",
+    bg:     "bg-conf-low-bg",
+    border: "border-conf-low-border",
+    text:   "text-conf-low-fg",
+    dot:    "bg-conf-low-solid",
     label:  "Låg konfidens",
   },
 };
@@ -35,34 +35,34 @@ export const confidence = {
 // Datakvalitet (U3 Data Quality Tag)
 // ---------------------------------------------------------------------------
 export const dataQuality = {
-  ok:      { bg: "bg-grey-50",   text: "text-grey-600",   border: "border-grey-100"   }, // Neutral – källa aktuell och giltig
-  stale:   { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-100" }, // Inaktuell
-  missing: { bg: "bg-grey-50",   text: "text-grey-400",   border: "border-grey-100"   }, // Saknas – blekare än ok
-  conflict:{ bg: "bg-red-50",    text: "text-red-700",    border: "border-red-100"    }, // Konflikt
+  ok:      { bg: "bg-dq-ok-bg",       text: "text-dq-ok-fg",       border: "border-dq-ok-border",       dot: "bg-dq-ok-solid"       }, // Aktuell
+  stale:   { bg: "bg-dq-stale-bg",    text: "text-dq-stale-fg",    border: "border-dq-stale-border",    dot: "bg-dq-stale-solid"    }, // Inaktuell (orange)
+  missing: { bg: "bg-dq-missing-bg",  text: "text-dq-missing-fg",  border: "border-dq-missing-border",  dot: "bg-dq-missing-solid"  }, // Saknas (blekare)
+  conflict:{ bg: "bg-dq-conflict-bg", text: "text-dq-conflict-fg", border: "border-dq-conflict-border", dot: "bg-dq-conflict-solid" }, // Konflikt (röd)
 };
 
 // ---------------------------------------------------------------------------
 // Status (generella statusfärger)
 // ---------------------------------------------------------------------------
 export const status = {
-  success: { bg: "bg-green-50",  text: "text-green-700",  border: "border-green-100",  dot: "bg-green-500"  },
-  warning: { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-100", dot: "bg-orange-500" },
-  error:   { bg: "bg-red-50",    text: "text-red-700",    border: "border-red-100",    dot: "bg-red-500"    },
-  info:    { bg: "bg-blue-50",   text: "text-blue-800",   border: "border-blue-100",   dot: "bg-blue-500"   },
-  neutral: { bg: "bg-grey-50",   text: "text-grey-700",   border: "border-grey-100",   dot: "bg-grey-400"   },
+  success: { bg: "bg-conf-high-bg",   text: "text-conf-high-fg",   border: "border-conf-high-border",   dot: "bg-conf-high-solid"   },
+  warning: { bg: "bg-dq-stale-bg",    text: "text-dq-stale-fg",    border: "border-dq-stale-border",    dot: "bg-dq-stale-solid"    },
+  error:   { bg: "bg-conf-low-bg",    text: "text-conf-low-fg",    border: "border-conf-low-border",    dot: "bg-conf-low-solid"    },
+  info:    { bg: "bg-accent-subtle",  text: "text-accent-strong",  border: "border-accent-border",      dot: "bg-accent-strong"     },
+  neutral: { bg: "bg-dq-ok-bg",       text: "text-dq-ok-fg",       border: "border-dq-ok-border",       dot: "bg-dq-ok-solid"       },
 };
 
 // ---------------------------------------------------------------------------
 // Ytor (surface/*)
 // ---------------------------------------------------------------------------
 export const surface = {
-  raised:  "bg-white",        // Kort, paneler
-  default: "bg-grey-50",      // Sidans bakgrund
-  sunken:  "bg-grey-100",     // Indragna sektioner, tabeller
+  raised:  "bg-card",          // Kort, paneler
+  default: "bg-background",     // Sidans bakgrund
+  sunken:  "bg-muted",         // Indragna sektioner, tabeller
 };
 
 // ---------------------------------------------------------------------------
-// Override-flöde (ai/override/*)
+// Override-flöde (ai/override/*) – steg 2, legacy-palett tills vidare
 // ---------------------------------------------------------------------------
 export const override = {
   bg:     "bg-purple-50",
@@ -71,7 +71,7 @@ export const override = {
 };
 
 // ---------------------------------------------------------------------------
-// Audit-vy (audit/*)
+// Audit-vy (audit/*) – steg 2, legacy-palett tills vidare
 // ---------------------------------------------------------------------------
 export const audit = {
   bg:     "bg-yellow-100",
@@ -84,14 +84,14 @@ export const audit = {
 // ---------------------------------------------------------------------------
 export const interactive = {
   primary: {
-    default:  "bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700",
-    disabled: "bg-grey-300 text-white cursor-not-allowed",
+    default:  "bg-primary text-primary-foreground hover:bg-primary/90",
+    disabled: "bg-muted text-muted-foreground cursor-not-allowed",
   },
   danger: {
-    default: "bg-red-500 text-white hover:bg-red-600 active:bg-red-700",
+    default: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
   },
   ghost: {
-    default: "bg-transparent border border-grey-300 text-grey-700 hover:bg-grey-50",
+    default: "bg-background border border-input text-foreground hover:bg-accent hover:text-accent-foreground",
   },
 };
 
@@ -99,21 +99,21 @@ export const interactive = {
 // Text (text/*)
 // ---------------------------------------------------------------------------
 export const text = {
-  primary:   "text-grey-900",
-  secondary:  "text-grey-700",
-  subtle:    "text-grey-600",
-  disabled:  "text-grey-400",
-  inverse:   "text-grey-25",
+  primary:   "text-foreground",
+  secondary: "text-foreground/80",
+  subtle:    "text-muted-foreground",
+  disabled:  "text-muted-foreground/60",
+  inverse:   "text-background",
 };
 
 // ---------------------------------------------------------------------------
 // Borders (border/*)
 // ---------------------------------------------------------------------------
 export const border = {
-  default: "border-grey-200",
-  strong:  "border-grey-400",
-  subtle:  "border-grey-100",
-  focus:   "border-blue-500",
+  default: "border-border",
+  strong:  "border-border",
+  subtle:  "border-border",
+  focus:   "border-ring",
 };
 
 // ---------------------------------------------------------------------------

@@ -10,7 +10,7 @@ export default function NextBestActionChip({ actions }) {
         {actions.map((action, i) => (
           <button
             key={i}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-800 bg-white border border-orange-300 rounded-full px-3 py-1 hover:bg-orange-100 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-800 bg-white border border-orange-300 rounded-sm px-3 py-1 hover:bg-orange-100 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
             <span className="text-orange-500">→</span>
             {action}
